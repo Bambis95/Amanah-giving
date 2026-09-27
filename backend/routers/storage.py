@@ -21,7 +21,8 @@ from services.storage import StorageService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/storage", tags=["storage"])
+# The website does not use file storage: only administrators may reach it
+router = APIRouter(prefix="/api/v1/storage", tags=["storage"], dependencies=[Depends(get_admin_user)])
 
 
 @router.post("/create-bucket", response_model=BucketResponse)

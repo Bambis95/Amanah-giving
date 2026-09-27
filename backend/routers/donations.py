@@ -205,10 +205,12 @@ async def get_donations(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+# Donations are created and settled only by the payment flow (payment_checkout): the write
+# routes below are for administrators, otherwise anyone could record a fake paid donation.
 @router.post("", response_model=DonationsResponse, status_code=201)
 async def create_donations(
     data: DonationsData,
-    current_user: UserResponse = Depends(get_current_user),
+    _admin: UserResponse = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new donations"""
@@ -216,7 +218,7 @@ async def create_donations(
     
     service = DonationsService(db)
     try:
-        result = await service.create(data.model_dump(exclude_none=True), user_id=str(current_user.id))
+        result = await service.create(data.model_dump(exclude_none=True))
         if not result:
             raise HTTPException(status_code=400, detail="Failed to create donations")
         
@@ -233,7 +235,7 @@ async def create_donations(
 @router.post("/batch", response_model=List[DonationsResponse], status_code=201)
 async def create_donationss_batch(
     request: DonationsBatchCreateRequest,
-    current_user: UserResponse = Depends(get_current_user),
+    _admin: UserResponse = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Create multiple donationss in a single request"""
@@ -244,7 +246,7 @@ async def create_donationss_batch(
     
     try:
         for item_data in request.items:
-            result = await service.create(item_data.model_dump(exclude_none=True), user_id=str(current_user.id))
+            result = await service.create(item_data.model_dump(exclude_none=True))
             if result:
                 results.append(result)
         
@@ -259,10 +261,10 @@ async def create_donationss_batch(
 @router.put("/batch", response_model=List[DonationsResponse])
 async def update_donationss_batch(
     request: DonationsBatchUpdateRequest,
-    current_user: UserResponse = Depends(get_current_user),
+    _admin: UserResponse = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update multiple donationss in a single request (requires ownership)"""
+    """Update multiple donationss in a single request (admins only)"""
     logger.debug(f"Batch updating {len(request.items)} donationss")
     
     service = DonationsService(db)
@@ -272,7 +274,7 @@ async def update_donationss_batch(
         for item in request.items:
             # Only include non-None values for partial updates
             update_dict = {k: v for k, v in item.updates.model_dump().items() if v is not None}
-            result = await service.update(item.id, update_dict, user_id=str(current_user.id))
+            result = await service.update(item.id, update_dict)
             if result:
                 results.append(result)
         
@@ -288,17 +290,17 @@ async def update_donationss_batch(
 async def update_donations(
     id: int,
     data: DonationsUpdateData,
-    current_user: UserResponse = Depends(get_current_user),
+    _admin: UserResponse = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update an existing donations (requires ownership)"""
+    """Update an existing donations (admins only)"""
     logger.debug(f"Updating donations {id} with data: {data}")
 
     service = DonationsService(db)
     try:
         # Only include non-None values for partial updates
         update_dict = {k: v for k, v in data.model_dump().items() if v is not None}
-        result = await service.update(id, update_dict, user_id=str(current_user.id))
+        result = await service.update(id, update_dict)
         if not result:
             logger.warning(f"Donations with id {id} not found for update")
             raise HTTPException(status_code=404, detail="Donations not found")
@@ -318,10 +320,10 @@ async def update_donations(
 @router.delete("/batch")
 async def delete_donationss_batch(
     request: DonationsBatchDeleteRequest,
-    current_user: UserResponse = Depends(get_current_user),
+    _admin: UserResponse = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete multiple donationss by their IDs (requires ownership)"""
+    """Delete multiple donationss by their IDs (admins only)"""
     logger.debug(f"Batch deleting {len(request.ids)} donationss")
     
     service = DonationsService(db)
@@ -329,7 +331,7 @@ async def delete_donationss_batch(
     
     try:
         for item_id in request.ids:
-            success = await service.delete(item_id, user_id=str(current_user.id))
+            success = await service.delete(item_id)
             if success:
                 deleted_count += 1
         
@@ -344,15 +346,15 @@ async def delete_donationss_batch(
 @router.delete("/{id}")
 async def delete_donations(
     id: int,
-    current_user: UserResponse = Depends(get_current_user),
+    _admin: UserResponse = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a single donations by ID (requires ownership)"""
+    """Delete a single donations by ID (admins only)"""
     logger.debug(f"Deleting donations with id: {id}")
     
     service = DonationsService(db)
     try:
-        success = await service.delete(id, user_id=str(current_user.id))
+        success = await service.delete(id)
         if not success:
             logger.warning(f"Donations with id {id} not found for deletion")
             raise HTTPException(status_code=404, detail="Donations not found")

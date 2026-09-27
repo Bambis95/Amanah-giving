@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { api } from "@/api";
 import { cn } from "@/lib/utils";
+import { CONTACT_EMAIL } from "@/lib/contact";
 import { softTone, textTone, Tone } from "@/lib/tones";
 
 const contactInfo = [
@@ -39,7 +40,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email",
-    details: ["Khadimbaeft@gmail.com"],
+    details: [CONTACT_EMAIL],
     subtitle: "Réponse sous 24h",
     tone: "info" as Tone,
   },

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin } from "lucide-react";
 import Logo from "@/components/Logo";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const navigation = [
   { href: "/", label: "Accueil" },
@@ -73,8 +74,8 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
-                <a href="mailto:Khadimbaeft@gmail.com" className="break-all transition-colors hover:text-white">
-                  Khadimbaeft@gmail.com
+                <a href={`mailto:${CONTACT_EMAIL}`} className="break-all transition-colors hover:text-white">
+                  {CONTACT_EMAIL}
                 </a>
               </li>
               <li className="flex items-start gap-3">

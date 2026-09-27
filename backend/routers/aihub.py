@@ -8,7 +8,8 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from dependencies.auth import get_admin_user
+from fastapi import APIRouter, Depends, HTTPException, status
 from schemas.aihub import GenImgRequest, GenImgResponse, GenTxtRequest
 from services.aihub import AIHubService, InvalidImageInputError
 from sse_starlette.sse import EventSourceResponse
@@ -93,7 +94,8 @@ def extract_error_message(error: Any) -> str:
     return error_str
 
 
-router = APIRouter(prefix="/api/v1/aihub", tags=["aihub"])
+# Paid AI calls: the website does not use them, so only administrators may reach them
+router = APIRouter(prefix="/api/v1/aihub", tags=["aihub"], dependencies=[Depends(get_admin_user)])
 
 
 @router.post("/gentxt")

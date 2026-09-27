@@ -124,14 +124,23 @@ To integrate modules with this template:
 
 ## 🧪 Testing
 
-Run tests with pytest:
+The tests run against a separate PostgreSQL database, `amanah_giving_test`, which is emptied
+before every test (never point them at the real database). Create it once:
 
 ```bash
-pytest tests/ -v
+docker exec amanah_postgres psql -U amanah -d amanah_giving -c "create database amanah_giving_test"
 ```
 
-The template includes:
+Then, from the `backend` folder:
 
-- Basic API endpoint tests
-- Application lifecycle tests
-- Test client configuration in `conftest.py`
+```bash
+venv\Scripts\python.exe -m pytest        # Windows
+venv/bin/python -m pytest                # Linux / macOS
+```
+
+Stripe, PayDunya and email sending are replaced by fakes: no network call, no real payment,
+no email. `TEST_DATABASE_URL` selects another test database (its name must end with `_test`).
+
+- `tests/test_auth.py`: accounts, login lock, sliding sessions, password reset, CSRF
+- `tests/test_payments.py`: donations, Stripe and PayDunya confirmation, project totals, statistics
+- `tests/test_access.py`: what visitors, users and administrators may do
