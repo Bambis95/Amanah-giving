@@ -514,6 +514,11 @@ export default function DonatePage() {
                 <Shield className="w-4 h-4" />
                 <span>Paiement 100% sécurisé</span>
               </div>
+              <p className="mt-3 text-center text-xs text-white/60">
+                En confirmant, vous acceptez nos{" "}
+                <Link to="/conditions" className="underline hover:text-white">conditions d'utilisation</Link> et notre{" "}
+                <Link to="/confidentialite" className="underline hover:text-white">politique de confidentialité</Link>.
+              </p>
             </CardContent>
           </Card>
         </form>

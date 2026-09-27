@@ -233,6 +233,11 @@ export default function LoginPage() {
                       )}
                       Créer mon compte
                     </Button>
+                    <p className="text-center text-xs text-muted-foreground">
+                      En créant un compte, vous acceptez nos{" "}
+                      <Link to="/conditions" className="text-primary hover:underline">conditions d'utilisation</Link> et notre{" "}
+                      <Link to="/confidentialite" className="text-primary hover:underline">politique de confidentialité</Link>.
+                    </p>
                   </form>
                 </TabsContent>
               </Tabs>

@@ -91,10 +91,13 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-center md:flex-row md:text-left">
           <p className="text-sm text-white/50">© {new Date().getFullYear()} Amanah Giving. Tous droits réservés.</p>
-          {/* Legal pages are not written yet: plain text rather than links that lead nowhere */}
-          <div className="flex items-center gap-6 text-xs text-white/50">
-            <span>Politique de Confidentialité</span>
-            <span>Conditions d'Utilisation</span>
+          <div className="flex items-center gap-6 text-xs">
+            <Link to="/confidentialite" className="text-white/50 transition-colors hover:text-white">
+              Politique de Confidentialité
+            </Link>
+            <Link to="/conditions" className="text-white/50 transition-colors hover:text-white">
+              Conditions d'Utilisation
+            </Link>
           </div>
         </div>
       </div>
