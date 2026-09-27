@@ -17,7 +17,9 @@ export default function LoginPage() {
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = (location.state as { from?: string } | null)?.from || "/";
+  // Administrators land on their dashboard; other users go back where they came from
+  const from = (location.state as { from?: string } | null)?.from || "/";
+  const redirectTo = user?.role === "admin" ? "/admin" : from;
 
   const [tab, setTab] = useState("login");
   const [loading, setLoading] = useState(false);
