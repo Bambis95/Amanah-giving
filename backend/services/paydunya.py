@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+import httpx
 import paydunya
 
 from core.config import settings
@@ -59,6 +60,40 @@ def initialize_paydunya() -> None:
     # En mode test, le SDK doit utiliser l'environnement sandbox.
     # En production, PAYDUNYA_MODE doit être "live".
     paydunya.debug = settings.paydunya_mode.lower() == "test"
+
+
+@dataclass
+class PayDunyaInvoiceStatus:
+    status: str  # pending, completed, cancelled (as returned by PayDunya)
+    total_amount: Any = None
+
+
+async def fetch_invoice_status(token: str) -> PayDunyaInvoiceStatus:
+    """Ask PayDunya for the current status of an invoice (checkout-invoice/confirm).
+
+    Called directly rather than through the SDK's Invoice.confirm(), which reuses the
+    invoice payload and may send a POST where the API expects a GET.
+    """
+    initialize_paydunya()
+    base = paydunya.SANDBOX_ENDPOINT if paydunya.debug else paydunya.LIVE_ENDPOINT
+    url = f"{base}checkout-invoice/confirm/{token}"
+    headers = {
+        "PAYDUNYA-MASTER-KEY": settings.paydunya_master_key,
+        "PAYDUNYA-PRIVATE-KEY": settings.paydunya_private_key,
+        "PAYDUNYA-TOKEN": settings.paydunya_token,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url, headers=headers)
+        data = response.json()
+    except Exception as exc:
+        raise PayDunyaError(f"PayDunya status check failed: {exc}") from exc
+
+    if response.status_code != 200 or str(data.get("response_code")) != "00":
+        raise PayDunyaError(f"PayDunya status check rejected: {data.get('response_text')}")
+
+    invoice = data.get("invoice") or {}
+    return PayDunyaInvoiceStatus(status=str(data.get("status", "")), total_amount=invoice.get("total_amount"))
 
 
 def create_checkout(

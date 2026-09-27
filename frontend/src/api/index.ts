@@ -329,6 +329,16 @@ export const api = {
     return response.json();
   },
 
+  async verifyPaydunyaPayment(donationId: number): Promise<VerifyPaymentResponse> {
+    const response = await apiFetch(`${getAPIBase()}/payment/paydunya/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ donation_id: donationId }),
+    });
+    if (!response.ok) throw new Error("Failed to verify payment");
+    return response.json();
+  },
+
   // Contact Messages
   async sendContactMessage(data: ContactMessageRequest): Promise<{ id: number }> {
     const response = await apiFetch(`${getAPIBase()}/entities/contact_messages`, {

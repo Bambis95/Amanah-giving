@@ -15,7 +15,7 @@ from core.config import settings
 from core.database import get_db
 from services.payment import PaymentService, CheckoutSessionRequest, CheckoutError
 from services.donations import DonationsService
-from services.paydunya import create_checkout, PayDunyaError
+from services.paydunya import create_checkout, fetch_invoice_status, PayDunyaError
 from services.email import prepare_donation_confirmation, send_email
 from dependencies.auth import get_optional_user
 from schemas.auth import UserResponse
@@ -101,6 +101,72 @@ async def credit_project(db: AsyncSession, donation) -> None:
             donation.project_id,
             donation.id,
         )
+
+
+PAYDUNYA_STATUSES = {
+    "completed": "paid",
+    "cancelled": "cancelled",
+    "failed": "failed",
+    "pending": "pending",
+}
+
+
+class PayDunyaSettlementError(Exception):
+    """The PayDunya data cannot be applied (amount mismatch, unknown status)."""
+
+
+async def apply_paydunya_status(
+    db: AsyncSession,
+    donation,
+    paydunya_status: str,
+    invoice_amount,
+    token: str,
+    background_tasks: BackgroundTasks,
+) -> str:
+    """Apply a PayDunya invoice status to a donation; shared by the IPN and the return-page check.
+
+    Returns the donation's payment status afterwards. A paid donation never goes back
+    to another state, and the project credit and confirmation email happen only once.
+    """
+    if invoice_amount is not None:
+        try:
+            received_amount = int(float(invoice_amount))
+        except (TypeError, ValueError) as exc:
+            raise PayDunyaSettlementError("Invalid PayDunya amount") from exc
+        if received_amount != donation.amount:
+            logger.error(
+                "PayDunya amount mismatch: donation=%s expected=%s received=%s",
+                donation.id, donation.amount, received_amount,
+            )
+            raise PayDunyaSettlementError("Payment amount mismatch")
+
+    new_status = PAYDUNYA_STATUSES.get(str(paydunya_status).strip().lower())
+    if new_status is None:
+        raise PayDunyaSettlementError(f"Unknown payment status: {paydunya_status}")
+
+    if donation.payment_status == "paid":
+        return "paid"  # already settled: repeated or late notifications change nothing
+
+    donations_service = DonationsService(db)
+    updated = await donations_service.update(
+        donation.id,
+        {
+            "payment_status": new_status,
+            "payment_provider": "paydunya",
+            "payment_reference": token,
+            "paydunya_token": token,
+        },
+    )
+    if not updated:
+        raise RuntimeError(f"Failed to update donation {donation.id}")
+
+    # First transition to paid: credit the project, then email after the response
+    if new_status == "paid":
+        await credit_project(db, updated)
+        confirmation = await prepare_donation_confirmation(db, updated)
+        if confirmation:
+            background_tasks.add_task(send_email, confirmation, f"donation {donation.id} confirmation")
+    return new_status
 
 
 # =============================================================
@@ -586,6 +652,49 @@ async def verify_payment(
 
 
 # =============================================================
+# PAYDUNYA VERIFICATION (return page)
+# =============================================================
+
+class VerifyPayDunyaRequest(BaseModel):
+    donation_id: int
+
+
+@router.post("/paydunya/verify", response_model=VerifyPaymentResponse)
+async def verify_paydunya_payment(
+    data: VerifyPayDunyaRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """Check a Wave/Orange Money payment with PayDunya when the donor comes back.
+
+    The IPN may arrive late (or never, when the callback URL is not reachable), so the
+    return page asks PayDunya directly. Only the status and amount are returned.
+    """
+    donation = await DonationsService(db).get_by_id(data.donation_id)
+    if not donation or donation.payment_provider != "paydunya":
+        raise HTTPException(status_code=404, detail="Don introuvable")
+
+    if donation.payment_status != "paid" and donation.paydunya_token:
+        try:
+            invoice = await fetch_invoice_status(donation.paydunya_token)
+            await apply_paydunya_status(
+                db, donation, invoice.status, invoice.total_amount, donation.paydunya_token, background_tasks
+            )
+        except PayDunyaSettlementError as exc:
+            logger.error("PayDunya verification rejected for donation %s: %s", donation.id, exc)
+        except PayDunyaError as exc:
+            # PayDunya unreachable: answer with the stored status, the page can retry
+            logger.warning("PayDunya status check failed for donation %s: %s", donation.id, exc)
+
+    return VerifyPaymentResponse(
+        status=donation.payment_status,
+        payment_status=donation.payment_status,
+        donation_id=donation.id,
+        amount=donation.amount,
+    )
+
+
+# =============================================================
 # PAYDUNYA IPN
 # =============================================================
 
@@ -788,133 +897,26 @@ async def paydunya_ipn(
             }
 
         # -----------------------------------------------------
-        # 7. Vérification du montant
+        # 7-10. Montant, statut, idempotence, mise à jour
         # -----------------------------------------------------
 
-        invoice_amount = invoice.get("total_amount")
-
-        if invoice_amount is not None:
-
-            try:
-                received_amount = int(
-                    float(invoice_amount)
-                )
-
-            except (TypeError, ValueError) as exc:
-                logger.warning(
-                    "Invalid PayDunya amount for token=%s",
-                    token,
-                )
-
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid PayDunya amount",
-                ) from exc
-
-            if received_amount != donation.amount:
-
-                logger.error(
-                    "PayDunya amount mismatch: "
-                    "donation=%s expected=%s received=%s",
-                    donation.id,
-                    donation.amount,
-                    received_amount,
-                )
-
-                raise HTTPException(
-                    status_code=400,
-                    detail="Payment amount mismatch",
-                )
-
-        # -----------------------------------------------------
-        # 8. Conversion du statut
-        # -----------------------------------------------------
-
-        if status == "completed":
-
-            new_payment_status = "paid"
-
-        elif status == "cancelled":
-
-            new_payment_status = "cancelled"
-
-        elif status == "failed":
-
-            new_payment_status = "failed"
-
-        elif status == "pending":
-
-            new_payment_status = "pending"
-
-        else:
-
-            logger.warning(
-                "Unknown PayDunya status=%s token=%s",
-                status,
-                token,
+        already_paid = donation.payment_status == "paid"
+        try:
+            new_payment_status = await apply_paydunya_status(
+                db, donation, status, invoice.get("total_amount"), token, background_tasks
             )
+        except PayDunyaSettlementError as exc:
+            logger.warning("PayDunya IPN rejected for donation %s: %s", donation.id, exc)
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-            return {
-                "success": False,
-                "message": "Unknown payment status",
-            }
-
-        # -----------------------------------------------------
-        # 9. Idempotence
-        # -----------------------------------------------------
-
-        if (
-            donation.payment_status == "paid"
-            and new_payment_status == "paid"
-        ):
-            logger.info(
-                "PayDunya IPN already processed: "
-                "donation_id=%s",
-                donation.id,
-            )
-
+        if already_paid:
+            logger.info("PayDunya IPN already processed: donation_id=%s", donation.id)
             return {
                 "success": True,
                 "message": "Payment already processed",
                 "donation_id": donation.id,
                 "payment_status": "paid",
             }
-
-        # -----------------------------------------------------
-        # 10. Mise à jour du don
-        # -----------------------------------------------------
-
-        updated_donation = await donations_service.update(
-            donation.id,
-            {
-                "payment_status": new_payment_status,
-                "payment_provider": "paydunya",
-                "payment_reference": token,
-                "paydunya_token": token,
-            },
-        )
-
-        if not updated_donation:
-
-            logger.error(
-                "Failed to update donation %s "
-                "from PayDunya IPN",
-                donation.id,
-            )
-
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to update donation",
-            )
-
-        # Premier passage à paid (l'idempotence ci-dessus écarte
-        # les notifications répétées) : crédit du projet, puis
-        # email envoyé après la réponse.
-        if new_payment_status == "paid":
-            await credit_project(db, updated_donation)
-            confirmation = await prepare_donation_confirmation(db, updated_donation)
-            if confirmation:
-                background_tasks.add_task(send_email, confirmation, f"donation {donation.id} confirmation")
 
         logger.info(
             "PayDunya IPN processed successfully: "
