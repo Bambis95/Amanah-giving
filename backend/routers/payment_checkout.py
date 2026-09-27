@@ -197,6 +197,13 @@ async def create_donation_checkout(
     # VALIDATION
     # ---------------------------------------------------------
 
+    # Pre-launch: no new donation (payments already started can still be confirmed)
+    if not settings.donations_enabled:
+        raise HTTPException(
+            status_code=503,
+            detail="Les dons en ligne seront bientôt disponibles. Merci de votre patience !",
+        )
+
     if data.amount < 500:
         raise HTTPException(
             status_code=400,

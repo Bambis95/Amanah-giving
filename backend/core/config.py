@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     paydunya_token: str = ""
     paydunya_callback_url: str = "http://127.0.0.1:8000/api/v1/payment/paydunya/ipn"
 
+    # Pre-launch ("bientôt disponible"): false refuses new donations; the site stays visible and
+    # payments already started can still be confirmed.
+    donations_enabled: bool = True
+
     # Session cookie (httpOnly: the login token is never readable by JavaScript)
     session_cookie_name: str = "amanah_session"
     # Sliding sessions: each request extends the session; without activity it expires after

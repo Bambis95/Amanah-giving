@@ -23,11 +23,13 @@ import {
   ArrowLeft,
   Loader2,
   Copy,
+  Clock,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { api, Project } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSiteStatus } from "@/hooks/use-site-status";
 
 const presetAmounts = [5000, 10000, 25000, 50000, 100000, 250000];
 
@@ -112,6 +114,7 @@ export default function DonatePage() {
       : 0;
   // Optional: a signed-in donor gets the donation linked to their account
   const { user } = useAuth();
+  const { donationsEnabled } = useSiteStatus();
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
@@ -225,6 +228,44 @@ export default function DonatePage() {
             </CardContent>
           </Card>
         </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Pre-launch: the page explains that donations open soon instead of showing the form
+  if (!donationsEnabled) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <section className="surface-brand px-4 pb-16 pt-24 sm:pt-28">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="mb-4 text-3xl font-bold md:text-4xl">Faire un Don</h1>
+            <p className="mx-auto max-w-xl text-white/80">Chaque don est une amanah.</p>
+          </div>
+        </section>
+        <section className="-mt-6 px-4 py-12">
+          <Card className="mx-auto max-w-lg text-center shadow-sm">
+            <CardContent className="p-8 sm:p-10">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-accent">
+                <Clock className="h-8 w-8 text-primary" aria-hidden="true" />
+              </div>
+              <h2 className="mb-3 text-2xl font-bold text-foreground">Les dons en ligne arrivent bientôt</h2>
+              <p className="mb-6 text-muted-foreground">
+                Nous finalisons les dernières étapes, démarches officielles et paiements sécurisés, avant d'ouvrir les
+                dons. En attendant, découvrez nos projets ou écrivez-nous pour être prévenu de l'ouverture.
+              </p>
+              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                <Button asChild variant="outline" className="rounded-lg border-primary text-primary">
+                  <Link to="/projects">Découvrir les projets</Link>
+                </Button>
+                <Button asChild className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Link to="/contact">Être prévenu</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
         <Footer />
       </div>
     );

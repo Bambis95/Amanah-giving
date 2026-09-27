@@ -213,6 +213,28 @@ def test_stripe_unavailable_gives_friendly_error(client, stripe):
     assert db_fetch("SELECT count(*) AS n FROM donations")[0]["n"] == 0
 
 
+# ---------- pre-launch mode ----------
+
+def test_donations_closed_before_launch(client, paydunya, monkeypatch):
+    from core.config import settings
+
+    started = checkout(client).json()  # started before the switch
+
+    monkeypatch.setattr(settings, "donations_enabled", False)
+    assert client.get("/api/v1/site").json() == {"donations_enabled": False}
+    r = checkout(client)
+    assert r.status_code == 503
+    assert "bientôt" in r.json()["detail"]
+    assert paydunya.created and len(paydunya.created) == 1
+
+    # A payment already under way can still be confirmed
+    assert ipn(client, started["session_id"]).json()["payment_status"] == "paid"
+
+    monkeypatch.setattr(settings, "donations_enabled", True)
+    assert client.get("/api/v1/site").json() == {"donations_enabled": True}
+    assert checkout(client).status_code == 200
+
+
 # ---------- public statistics ----------
 
 def test_stats_count_only_paid_donations(client, paydunya):

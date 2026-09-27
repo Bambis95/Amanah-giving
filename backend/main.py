@@ -115,6 +115,7 @@ from routers.projects import router as projects_router
 from routers.settings import router as settings_router
 from routers.stats import router as stats_router
 from routers.audit import router as audit_router
+from routers.site import router as site_router
 from routers.storage import router as storage_router
 from routers.user import router as user_router
 
@@ -135,6 +136,7 @@ app.include_router(contact_messages_router)
 app.include_router(health_router)
 app.include_router(stats_router)
 app.include_router(audit_router)
+app.include_router(site_router)
 
 
 # ============================================================

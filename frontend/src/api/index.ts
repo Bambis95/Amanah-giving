@@ -228,7 +228,18 @@ export interface PublicStats {
   funded_projects: number;
 }
 
+export interface SiteStatus {
+  donations_enabled: boolean;
+}
+
 export const api = {
+  // Public site switches (donations closed before the official launch)
+  async getSiteStatus(): Promise<SiteStatus> {
+    const response = await apiFetch(`${getAPIBase()}/site`);
+    if (!response.ok) throw new Error("Failed to fetch site status");
+    return response.json();
+  },
+
   // Public platform statistics (aggregates of paid donations and projects)
   async getStats(): Promise<PublicStats> {
     const response = await apiFetch(`${getAPIBase()}/stats`);
