@@ -144,9 +144,10 @@ export default function DonatePage() {
         message: message || undefined,
       });
 
-      if (response.payment_method === "stripe" && response.checkout_url) {
-        // Redirect to Stripe checkout
+      if (response.checkout_url) {
+        // Hosted payment page: Stripe (card) or PayDunya (Wave / Orange Money)
         window.location.href = response.checkout_url;
+        return; // keep the loading state while the browser leaves the page
       } else if (response.instructions) {
         // Show mobile payment instructions
         setMobileInstructions(response.instructions);

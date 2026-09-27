@@ -326,7 +326,7 @@ async def create_donation_checkout(
 
             raise HTTPException(
                 status_code=500,
-                detail=f"Erreur de paiement Stripe: {str(exc)}",
+                detail="Le paiement par carte est momentanément indisponible. Réessayez plus tard ou choisissez Wave / Orange Money.",
             ) from exc
 
     # =========================================================
@@ -444,7 +444,7 @@ async def create_donation_checkout(
 
             raise HTTPException(
                 status_code=502,
-                detail=f"Erreur PayDunya: {str(exc)}",
+                detail="Le paiement Wave / Orange Money est momentanément indisponible. Réessayez dans quelques instants.",
             ) from exc
 
         # -----------------------------------------------------
@@ -647,7 +647,7 @@ async def verify_payment(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Erreur de vérification Stripe: {str(exc)}",
+            detail="Impossible de vérifier le paiement pour le moment. Réessayez dans quelques instants.",
         ) from exc
 
 
