@@ -57,20 +57,20 @@ function Details({ details }: { details: Record<string, unknown> }) {
   const entries = Object.entries(details);
   const isDiff = entries.every(([, v]) => isChange(v));
   return (
-    <div className="mt-3 rounded-lg bg-gray-50 p-3 text-xs overflow-x-auto">
+    <div className="mt-3 rounded-lg bg-muted/50 p-3 text-xs overflow-x-auto">
       <table className="w-full">
         <tbody>
           {entries.map(([field, value]) => (
             <tr key={field} className="align-top">
-              <td className="py-1 pr-4 text-[#6B7280] whitespace-nowrap">{fieldLabels[field] ?? field}</td>
+              <td className="py-1 pr-4 text-muted-foreground whitespace-nowrap">{fieldLabels[field] ?? field}</td>
               {isDiff && isChange(value) ? (
-                <td className="py-1 text-[#374151]">
-                  <span className="line-through text-red-600/80">{formatValue(value.avant)}</span>
-                  <span className="mx-2 text-[#6B7280]">→</span>
-                  <span className="text-[#0D7C66] font-medium">{formatValue(value.apres)}</span>
+                <td className="py-1 text-foreground/80">
+                  <span className="line-through text-destructive/80">{formatValue(value.avant)}</span>
+                  <span className="mx-2 text-muted-foreground">→</span>
+                  <span className="text-primary font-medium">{formatValue(value.apres)}</span>
                 </td>
               ) : (
-                <td className="py-1 text-[#374151] break-words">{formatValue(value)}</td>
+                <td className="py-1 text-foreground/80 break-words">{formatValue(value)}</td>
               )}
             </tr>
           ))}
@@ -88,18 +88,18 @@ function Entry({ entry }: { entry: AuditLogEntry }) {
   const hasDetails = entry.details && Object.keys(entry.details).length > 0;
 
   return (
-    <div className={`rounded-lg border p-4 ${security ? "border-amber-200 bg-amber-50/40" : "border-gray-100"}`}>
+    <div className={`rounded-lg border p-4 ${security ? "border-warning/30 bg-warning/5" : "border-border"}`}>
       <div className="flex items-start gap-3">
         <div
           className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-            security ? "bg-amber-100 text-amber-700" : "bg-[#E8F5F0] text-[#0D7C66]"
+            security ? "bg-warning/15 text-warning" : "bg-accent text-primary"
           }`}
         >
           <Icon className="w-4 h-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-[#1A1A2E] break-words">{entry.summary}</p>
-          <p className="text-xs text-[#6B7280] mt-0.5 break-words">
+          <p className="text-sm font-medium text-foreground break-words">{entry.summary}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 break-words">
             {formatDate(entry.created_at)} · {entry.actor_email ?? "Système"}
             {entry.ip_address ? ` · IP ${entry.ip_address}` : ""}
           </p>
@@ -107,7 +107,7 @@ function Entry({ entry }: { entry: AuditLogEntry }) {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="mt-1 text-xs text-[#0D7C66] hover:underline inline-flex items-center gap-0.5"
+              className="mt-1 text-xs text-primary hover:underline inline-flex items-center gap-0.5"
             >
               {open ? "Masquer le détail" : "Voir le détail"}
               <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -149,7 +149,7 @@ export default function AuditTab() {
   }, [load]);
 
   return (
-    <Card className="border-0 shadow-md">
+    <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
         <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
           {categories.map((c) => (
@@ -158,7 +158,7 @@ export default function AuditTab() {
               type="button"
               onClick={() => setCategory(c.value)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                category === c.value ? "bg-[#0D7C66] text-white" : "bg-gray-100 text-[#374151] hover:bg-gray-200"
+                category === c.value ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/80 hover:bg-muted/80"
               }`}
             >
               {c.label}
@@ -166,20 +166,20 @@ export default function AuditTab() {
           ))}
         </div>
 
-        <p className="text-xs text-[#6B7280] mb-4">
+        <p className="text-xs text-muted-foreground mb-4">
           Toutes les actions d'administration et les événements de sécurité, du plus récent au plus ancien. Le
           journal ne peut pas être modifié.
         </p>
 
         {error ? (
           <div className="text-center py-10">
-            <p className="text-red-600 mb-3">{error}</p>
+            <p className="text-destructive mb-3">{error}</p>
             <Button variant="outline" onClick={() => load()}>
               Réessayer
             </Button>
           </div>
         ) : entries.length === 0 && !loading ? (
-          <p className="text-center text-[#6B7280] py-12">Aucune action enregistrée pour le moment.</p>
+          <p className="text-center text-muted-foreground py-12">Aucune action enregistrée pour le moment.</p>
         ) : (
           <div className="space-y-3">
             {entries.map((e) => (
@@ -190,7 +190,7 @@ export default function AuditTab() {
 
         {loading && (
           <div className="flex justify-center py-6">
-            <Loader2 className="w-6 h-6 text-[#0D7C66] animate-spin" />
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
         )}
 

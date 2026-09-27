@@ -15,15 +15,27 @@ import Admin from './pages/Admin';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from 'next-themes';
+import ScrollToTop from './components/ScrollToTop';
 
 const queryClient = new QueryClient();
 
 const App = () => (
+  // Theme: saved choice, else system preference, else light; applied as the "dark" class
+  // on <html> (the inline script in index.html does the same before first paint).
+  <ThemeProvider
+    attribute="class"
+    defaultTheme="system"
+    enableSystem
+    storageKey="amanah-theme"
+    disableTransitionOnChange
+  >
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
@@ -42,6 +54,7 @@ const App = () => (
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

@@ -163,31 +163,31 @@ export default function DonatePage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8]">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-24 pb-20 px-4 flex items-center justify-center min-h-screen">
-          <Card className="max-w-lg w-full border-0 shadow-xl text-center">
+          <Card className="max-w-lg w-full shadow-sm text-center">
             <CardContent className="p-10">
-              <div className="w-20 h-20 bg-[#E8F5F0] rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-10 h-10 text-[#0D7C66]" />
+              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-10 h-10 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-[#1A1A2E] mb-3">
+              <h2 className="text-2xl font-bold text-foreground mb-3">
                 Don Enregistré !
               </h2>
               {mobileInstructions ? (
                 <>
-                  <p className="text-[#6B7280] mb-4">
+                  <p className="text-muted-foreground mb-4">
                     Votre don de{" "}
-                    <span className="font-bold text-[#0D7C66]">{formatCFA(finalAmount || 0)} FCFA</span>{" "}
+                    <span className="font-bold text-primary">{formatCFA(finalAmount || 0)} FCFA</span>{" "}
                     a été enregistré.
                   </p>
-                  <div className="bg-[#FEF3C7] border border-[#F59E0B]/30 rounded-xl p-4 mb-6 text-left">
-                    <p className="text-sm font-semibold text-[#92400E] mb-2">Instructions de paiement :</p>
-                    <p className="text-sm text-[#78350F]">{mobileInstructions}</p>
+                  <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 mb-6 text-left">
+                    <p className="text-sm font-semibold text-warning mb-2">Instructions de paiement :</p>
+                    <p className="text-sm text-warning">{mobileInstructions}</p>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="mt-2 text-[#92400E]"
+                      className="mt-2 text-warning"
                       onClick={() => {
                         navigator.clipboard.writeText(mobileInstructions);
                         toast.success("Instructions copiées !");
@@ -199,25 +199,23 @@ export default function DonatePage() {
                   </div>
                 </>
               ) : (
-                <p className="text-[#6B7280] mb-6">
+                <p className="text-muted-foreground mb-6">
                   Votre contribution de{" "}
-                  <span className="font-bold text-[#0D7C66]">{formatCFA(finalAmount || 0)} FCFA</span>{" "}
+                  <span className="font-bold text-primary">{formatCFA(finalAmount || 0)} FCFA</span>{" "}
                   a été enregistrée avec succès. Qu'Allah vous récompense pour votre générosité.
                 </p>
               )}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link to="/">
-                  <Button variant="outline" className="rounded-lg border-[#0D7C66] text-[#0D7C66]">
+                <Button asChild variant="outline" className="rounded-lg border-primary text-primary"><Link to="/">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Retour à l'Accueil
-                  </Button>
-                </Link>
+                  </Link></Button>
                 <Button
                   onClick={() => {
                     setSubmitted(false);
                     setMobileInstructions(null);
                   }}
-                  className="bg-[#0D7C66] hover:bg-[#095C4B] text-white rounded-lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
                 >
                   <Heart className="w-4 h-4 mr-2" />
                   Faire un Autre Don
@@ -232,14 +230,14 @@ export default function DonatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Header */}
-      <section className="pt-24 pb-12 px-4 bg-gradient-to-br from-[#0D7C66] to-[#095C4B] text-white">
+      <section className="surface-brand px-4 pb-16 pt-24 sm:pt-28">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/20">
-            <Heart className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B]" />
+            <Heart className="w-4 h-4 text-highlight fill-highlight" />
             <span className="text-sm font-medium">Votre générosité change des vies</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Faire un Don</h1>
@@ -253,50 +251,54 @@ export default function DonatePage() {
       <section className="py-12 px-4 -mt-6">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-8">
           {/* Amount Selection */}
-          <Card className="border-0 shadow-lg">
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-[#1A1A2E] flex items-center gap-2">
-                <span className="w-8 h-8 bg-[#0D7C66] text-white rounded-lg flex items-center justify-center text-sm font-bold">
+              <CardTitle className="text-xl text-foreground flex items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   1
                 </span>
                 Choisissez le Montant
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label="Montants proposés">
                 {presetAmounts.map((amount) => (
                   <button
                     key={amount}
                     type="button"
+                    aria-pressed={selectedAmount === amount && !customAmount}
                     onClick={() => {
                       setSelectedAmount(amount);
                       setCustomAmount("");
                     }}
-                    className={`p-4 rounded-xl border-2 text-center font-bold transition-all ${
+                    className={`min-h-[4.5rem] rounded-xl border-2 p-3 text-center font-bold tabular-nums transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-4 ${
                       selectedAmount === amount && !customAmount
-                        ? "border-[#0D7C66] bg-[#E8F5F0] text-[#0D7C66]"
-                        : "border-gray-200 hover:border-[#0D7C66]/50 text-[#374151]"
+                        ? "border-primary bg-accent text-primary"
+                        : "border-border hover:border-primary/50 text-foreground/80"
                     }`}
                   >
                     {formatCFA(amount)}
-                    <span className="block text-xs font-normal text-[#6B7280]">FCFA</span>
+                    <span className="block text-xs font-normal text-muted-foreground">FCFA</span>
                   </button>
                 ))}
               </div>
               <div>
-                <Label className="text-sm text-[#6B7280]">Ou entrez un montant personnalisé</Label>
+                <Label htmlFor="custom-amount" className="text-sm text-muted-foreground">Ou entrez un montant personnalisé</Label>
                 <div className="relative mt-1">
                   <Input
+                    id="custom-amount"
                     type="number"
+                    inputMode="numeric"
+                    min={500}
                     placeholder="Montant en FCFA"
                     value={customAmount}
                     onChange={(e) => {
                       setCustomAmount(e.target.value);
                       setSelectedAmount(null);
                     }}
-                    className="pl-4 pr-16 h-12 text-lg border-gray-200 focus:border-[#0D7C66] rounded-xl"
+                    className="pl-4 pr-16 h-12 text-lg border-border focus:border-primary rounded-xl"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-[#6B7280] font-medium">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
                     FCFA
                   </span>
                 </div>
@@ -305,19 +307,19 @@ export default function DonatePage() {
           </Card>
 
           {/* Cause Selection */}
-          <Card className="border-0 shadow-lg">
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-[#1A1A2E] flex items-center gap-2">
-                <span className="w-8 h-8 bg-[#F59E0B] text-white rounded-lg flex items-center justify-center text-sm font-bold">
+              <CardTitle className="text-xl text-foreground flex items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   2
                 </span>
                 Choisissez un Projet ou une Cause
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Label className="text-sm text-[#374151]">Projet à soutenir</Label>
+              <Label className="text-sm text-foreground/80">Projet à soutenir</Label>
               <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger className="h-12 rounded-xl border-gray-200 mt-1">
+                <SelectTrigger className="h-12 rounded-xl border-border mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -332,26 +334,26 @@ export default function DonatePage() {
               </Select>
 
               {selectedProject ? (
-                <div className="mt-4 rounded-xl bg-[#E8F5F0] p-4">
-                  <p className="text-sm text-[#374151]">
+                <div className="mt-4 rounded-xl bg-accent p-4">
+                  <p className="text-sm text-foreground/80">
                     Cause : <span className="font-semibold">{causeLabel(selectedProject.category)}</span>
                   </p>
-                  <div className="w-full h-2 bg-white rounded-full overflow-hidden mt-2">
+                  <div className="w-full h-2 bg-card rounded-full overflow-hidden mt-2">
                     <div
-                      className="h-full bg-[#0D7C66] rounded-full"
+                      className="h-full bg-primary rounded-full"
                       style={{ width: `${Math.min(projectProgress, 100)}%` }}
                     />
                   </div>
-                  <p className="text-xs text-[#6B7280] mt-1.5">
+                  <p className="text-xs text-muted-foreground mt-1.5">
                     {formatCFA(selectedProject.raised)} FCFA collectés sur {formatCFA(selectedProject.goal)} FCFA (
                     {projectProgress}%)
                   </p>
                 </div>
               ) : (
                 <div className="mt-4">
-                  <Label className="text-sm text-[#374151]">Cause</Label>
+                  <Label className="text-sm text-foreground/80">Cause</Label>
                   <Select value={cause} onValueChange={setCause}>
-                    <SelectTrigger className="h-12 rounded-xl border-gray-200 mt-1">
+                    <SelectTrigger className="h-12 rounded-xl border-border mt-1">
                       <SelectValue placeholder="Sélectionnez une cause" />
                     </SelectTrigger>
                     <SelectContent>
@@ -368,10 +370,10 @@ export default function DonatePage() {
           </Card>
 
           {/* Payment Method */}
-          <Card className="border-0 shadow-lg">
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-[#1A1A2E] flex items-center gap-2">
-                <span className="w-8 h-8 bg-[#3B82F6] text-white rounded-lg flex items-center justify-center text-sm font-bold">
+              <CardTitle className="text-xl text-foreground flex items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   3
                 </span>
                 Mode de Paiement
@@ -382,10 +384,10 @@ export default function DonatePage() {
                 {paymentMethods.map((method) => (
                   <label
                     key={method.id}
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`flex min-h-[4.5rem] cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background ${
                       paymentMethod === method.id
-                        ? "border-[#0D7C66] bg-[#E8F5F0]"
-                        : "border-gray-200 hover:border-gray-300"
+                        ? "border-primary bg-accent"
+                        : "border-border hover:border-foreground/20"
                     }`}
                   >
                     <RadioGroupItem value={method.id} />
@@ -396,8 +398,8 @@ export default function DonatePage() {
                       <method.icon className="w-5 h-5" style={{ color: method.color }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-[#1A1A2E] text-sm">{method.name}</p>
-                      <p className="text-xs text-[#6B7280]">{method.description}</p>
+                      <p className="font-semibold text-foreground text-sm">{method.name}</p>
+                      <p className="text-xs text-muted-foreground">{method.description}</p>
                     </div>
                   </label>
                 ))}
@@ -406,10 +408,10 @@ export default function DonatePage() {
           </Card>
 
           {/* Donor Info */}
-          <Card className="border-0 shadow-lg">
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-[#1A1A2E] flex items-center gap-2">
-                <span className="w-8 h-8 bg-[#EF4444] text-white rounded-lg flex items-center justify-center text-sm font-bold">
+              <CardTitle className="text-xl text-foreground flex items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   4
                 </span>
                 Vos Informations
@@ -424,7 +426,7 @@ export default function DonatePage() {
                     placeholder="Votre prénom"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="mt-1 h-11 rounded-xl border-gray-200"
+                    className="mt-1 h-11 rounded-xl border-border"
                   />
                 </div>
                 <div>
@@ -434,7 +436,7 @@ export default function DonatePage() {
                     placeholder="Votre nom"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="mt-1 h-11 rounded-xl border-gray-200"
+                    className="mt-1 h-11 rounded-xl border-border"
                   />
                 </div>
               </div>
@@ -447,9 +449,9 @@ export default function DonatePage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required={!user}
-                  className="mt-1 h-11 rounded-xl border-gray-200 scroll-mt-28"
+                  className="mt-1 h-11 rounded-xl border-border scroll-mt-28"
                 />
-                <p className="text-xs text-[#6B7280] mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {user
                     ? "Laissez vide pour utiliser l'email de votre compte."
                     : "Obligatoire pour que nous puissions vous contacter au sujet de votre don."}
@@ -463,7 +465,7 @@ export default function DonatePage() {
                   placeholder="+221 7X XXX XX XX"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="mt-1 h-11 rounded-xl border-gray-200"
+                  className="mt-1 h-11 rounded-xl border-border"
                 />
               </div>
               <div>
@@ -473,7 +475,7 @@ export default function DonatePage() {
                   placeholder="Un mot d'encouragement..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="mt-1 rounded-xl border-gray-200 resize-none"
+                  className="mt-1 rounded-xl border-border resize-none"
                   rows={3}
                 />
               </div>
@@ -481,7 +483,7 @@ export default function DonatePage() {
           </Card>
 
           {/* Summary & Submit */}
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-[#0D7C66] to-[#095C4B] text-white">
+          <Card className="surface-brand border-0 shadow-md">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-white/80">Montant du don</span>
@@ -493,7 +495,7 @@ export default function DonatePage() {
                 type="submit"
                 size="lg"
                 disabled={loading}
-                className="w-full bg-[#F59E0B] hover:bg-[#D97706] text-[#1A1A2E] rounded-xl py-6 text-lg font-bold shadow-lg"
+                className="w-full bg-highlight hover:bg-highlight/90 text-highlight-foreground rounded-xl py-6 text-lg font-bold shadow-lg"
               >
                 {loading ? (
                   <>

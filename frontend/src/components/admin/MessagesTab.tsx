@@ -71,7 +71,7 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
           variant={unreadOnly ? "outline" : "default"}
           size="sm"
           onClick={() => setUnreadOnly(false)}
-          className={unreadOnly ? "" : "bg-[#0D7C66] hover:bg-[#095C4B]"}
+          className={unreadOnly ? "" : "bg-primary hover:bg-primary/90"}
         >
           Tous ({messages.length})
         </Button>
@@ -79,43 +79,43 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
           variant={unreadOnly ? "default" : "outline"}
           size="sm"
           onClick={() => setUnreadOnly(true)}
-          className={unreadOnly ? "bg-[#0D7C66] hover:bg-[#095C4B]" : ""}
+          className={unreadOnly ? "bg-primary hover:bg-primary/90" : ""}
         >
           Non lus ({unreadCount})
         </Button>
       </div>
 
       {visible.length === 0 && (
-        <Card className="border-0 shadow-md">
-          <CardContent className="py-12 text-center text-[#6B7280]">
+        <Card className="shadow-sm">
+          <CardContent className="py-12 text-center text-muted-foreground">
             {unreadOnly ? "Aucun message non lu." : "Aucun message pour le moment."}
           </CardContent>
         </Card>
       )}
 
       {visible.map((m) => (
-        <Card key={m.id} className={`border-0 shadow-md ${m.is_read ? "" : "ring-1 ring-[#0D7C66]/30"}`}>
+        <Card key={m.id} className={`border-0 shadow-md ${m.is_read ? "" : "ring-1 ring-primary/30"}`}>
           <CardContent className="p-5">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-[#1A1A2E]">{m.name}</h3>
+                  <h3 className="font-semibold text-foreground">{m.name}</h3>
                   {!m.is_read && (
-                    <Badge className="bg-[#E8F5F0] text-[#0D7C66] border-0 hover:bg-[#E8F5F0]">Nouveau</Badge>
+                    <Badge className="bg-accent text-primary border-0 hover:bg-accent">Nouveau</Badge>
                   )}
                   {m.subject && (
-                    <Badge variant="outline" className="text-[#374151]">
+                    <Badge variant="outline" className="text-foreground/80">
                       {subjectLabels[m.subject] ?? m.subject}
                     </Badge>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-[#6B7280]">
-                  <a href={`mailto:${m.email}`} className="flex items-center gap-1 hover:text-[#0D7C66]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
+                  <a href={`mailto:${m.email}`} className="flex items-center gap-1 hover:text-primary">
                     <Mail className="w-3.5 h-3.5" />
                     {m.email}
                   </a>
                   {m.phone && (
-                    <a href={`tel:${m.phone}`} className="flex items-center gap-1 hover:text-[#0D7C66]">
+                    <a href={`tel:${m.phone}`} className="flex items-center gap-1 hover:text-primary">
                       <Phone className="w-3.5 h-3.5" />
                       {m.phone}
                     </a>
@@ -135,7 +135,7 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
                       variant="outline"
                       size="sm"
                       disabled={busyId === m.id}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       aria-label="Supprimer le message"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -150,7 +150,7 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Annuler</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove(m)} className="bg-red-600 hover:bg-red-700">
+                      <AlertDialogAction onClick={() => remove(m)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
                         Supprimer
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -158,7 +158,7 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
                 </AlertDialog>
               </div>
             </div>
-            <p className="text-sm text-[#374151] whitespace-pre-line leading-relaxed">{m.message}</p>
+            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">{m.message}</p>
           </CardContent>
         </Card>
       ))}

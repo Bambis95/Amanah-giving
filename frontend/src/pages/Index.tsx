@@ -7,25 +7,42 @@ import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
 import { api, Project, PublicStats } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
-import {
-  Heart,
-  Users,
-  FolderOpen,
-  TrendingUp,
-  ArrowRight,
-} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { softTone, solidTone, Tone } from "@/lib/tones";
+import { Heart, Users, FolderOpen, TrendingUp, ArrowRight } from "lucide-react";
 
 const HERO_IMG = "https://mgx-backend-cdn.metadl.com/generate/images/983496/2026-02-22/20fb421b-e0e3-4aa9-a282-e7aa1dd63cc3.png";
 
 function buildStats(s: PublicStats | null) {
   const show = (value: string) => (s ? value : "…");
   return [
-    { icon: Users, value: show(formatNumber(s?.donors ?? 0)), label: plural(s?.donors ?? 0, "Donateur", "Donateurs"), color: "#0D7C66" },
-    { icon: Heart, value: show(formatAmount(s?.total_raised ?? 0)), label: "FCFA collectés", color: "#F59E0B" },
-    { icon: FolderOpen, value: show(formatNumber(s?.active_projects ?? 0)), label: plural(s?.active_projects ?? 0, "Projet actif", "Projets actifs"), color: "#3B82F6" },
-    { icon: TrendingUp, value: show(formatNumber(s?.funded_projects ?? 0)), label: plural(s?.funded_projects ?? 0, "Projet financé", "Projets financés"), color: "#EF4444" },
+    { icon: Users, value: show(formatNumber(s?.donors ?? 0)), label: plural(s?.donors ?? 0, "Donateur", "Donateurs"), tone: "primary" as Tone },
+    { icon: Heart, value: show(formatAmount(s?.total_raised ?? 0)), label: "FCFA collectés", tone: "highlight" as Tone },
+    { icon: FolderOpen, value: show(formatNumber(s?.active_projects ?? 0)), label: plural(s?.active_projects ?? 0, "Projet actif", "Projets actifs"), tone: "info" as Tone },
+    { icon: TrendingUp, value: show(formatNumber(s?.funded_projects ?? 0)), label: plural(s?.funded_projects ?? 0, "Projet financé", "Projets financés"), tone: "destructive" as Tone },
   ];
 }
+
+const steps: { step: string; title: string; description: string; tone: Tone }[] = [
+  {
+    step: "01",
+    title: "Choisissez une Cause",
+    description: "Parcourez nos projets vérifiés et choisissez la cause qui vous tient à cœur.",
+    tone: "primary",
+  },
+  {
+    step: "02",
+    title: "Faites votre Don",
+    description: "Sélectionnez le montant et payez en toute sécurité via Stripe, Orange Money ou Wave.",
+    tone: "highlight",
+  },
+  {
+    step: "03",
+    title: "Suivez l'Impact",
+    description: "Recevez des rapports réguliers sur l'utilisation de vos dons et leur impact réel.",
+    tone: "info",
+  },
+];
 
 // Projects open to donations (paused ones are hidden, completed ones no longer need support)
 const isOpen = (p: Project) => !p.status || p.status === "active";
@@ -51,190 +68,162 @@ export default function IndexPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Hero: dark photo veil in both themes, so its text stays white */}
+      <section className="relative flex min-h-[92svh] items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${HERO_IMG})` }}
+          aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/80 via-[#1A1A2E]/60 to-[#1A1A2E]/90" />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center text-white pt-16">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-8 border border-white/20">
-            <Heart className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B]" />
+        <div className="hero-overlay absolute inset-0" aria-hidden="true" />
+        <div className="relative z-10 mx-auto max-w-4xl px-4 pb-24 pt-28 text-center text-white sm:pb-28">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
+            <Heart className="h-4 w-4 fill-highlight text-highlight" aria-hidden="true" />
             <span className="text-sm font-medium">Plateforme de dons de confiance</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+          <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
             Chaque Don est une{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D7C66] to-[#10B981]">
-              Amanah
-            </span>
+            <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">Amanah</span>
           </h1>
-          <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Rejoignez des milliers de donateurs à travers le monde. Ensemble, nous pouvons transformer des vies grâce à la générosité et la confiance.
+          <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-white/80 sm:text-xl">
+            Rejoignez des milliers de donateurs à travers le monde. Ensemble, nous pouvons transformer des vies grâce à
+            la générosité et la confiance.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/donate">
-              <Button
-                size="lg"
-                className="bg-[#0D7C66] hover:bg-[#095C4B] text-white rounded-xl px-8 py-6 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
-              >
-                <Heart className="w-5 h-5 mr-2" />
+          <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <Button asChild size="lg" className="h-14 rounded-xl px-8 text-base font-semibold shadow-lg sm:text-lg">
+              <Link to="/donate">
+                <Heart className="mr-2 h-5 w-5" />
                 Faire un Don Maintenant
-              </Button>
-            </Link>
-            <Link to="/projects">
-              <Button
-                size="lg"
-                variant="outline"
-                className="!bg-transparent border-2 border-white/30 text-white !hover:bg-white/10 rounded-xl px-8 py-6 text-lg font-semibold transition-all"
-              >
-                Découvrir nos Projets
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1">
-            <div className="w-1.5 h-3 bg-white/60 rounded-full animate-pulse" />
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section (hidden if the figures cannot be loaded, rather than showing wrong ones) */}
-      {!statsFailed && (
-      <section className="relative -mt-16 z-20 max-w-6xl mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((stat) => (
-            <Card
-              key={stat.label}
-              className="bg-white shadow-lg border-0 hover:shadow-xl transition-shadow"
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="h-14 rounded-xl border-2 border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 hover:text-white sm:text-lg"
             >
-              <CardContent className="p-6 text-center">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
-                  style={{ backgroundColor: stat.color + "15" }}
-                >
-                  <stat.icon className="w-6 h-6" style={{ color: stat.color }} />
-                </div>
-                <p className="text-2xl md:text-3xl font-bold text-[#1A1A2E] tabular-nums">{stat.value}</p>
-                <p className="text-sm text-[#6B7280] mt-1">{stat.label}</p>
-              </CardContent>
-            </Card>
-          ))}
+              <Link to="/projects">
+                Découvrir nos Projets
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Decorative scroll hint: hidden from screen readers, still when motion is reduced */}
+        <div className="absolute bottom-24 left-1/2 hidden -translate-x-1/2 motion-safe:animate-bounce sm:block" aria-hidden="true">
+          <div className="flex h-10 w-6 items-start justify-center rounded-full border-2 border-white/30 p-1">
+            <div className="h-3 w-1.5 rounded-full bg-white/60" />
+          </div>
         </div>
       </section>
+
+      {/* Stats (hidden if the figures cannot be loaded, rather than showing wrong ones) */}
+      {!statsFailed && (
+        <section className="relative z-20 mx-auto -mt-14 max-w-6xl px-4" aria-label="Chiffres clés">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+            {stats.map((stat) => (
+              <Card key={stat.label} className="shadow-sm transition-shadow hover:shadow-md">
+                <CardContent className="p-4 text-center sm:p-6">
+                  <div className={cn("mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl sm:h-12 sm:w-12", softTone[stat.tone])}>
+                    <stat.icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+                  </div>
+                  <p className="text-2xl font-bold tabular-nums text-foreground md:text-3xl">{stat.value}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* Featured Causes */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="inline-block bg-[#E8F5F0] text-[#0D7C66] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+      {/* Featured projects */}
+      <section className="px-4 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 text-center sm:mb-14">
+            <span className="mb-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
               Nos Causes
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A2E] mb-4">
-              Projets en Vedette
-            </h2>
-            <p className="text-[#6B7280] max-w-xl mx-auto">
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Projets en Vedette</h2>
+            <p className="mx-auto max-w-xl text-muted-foreground">
               Découvrez les projets qui ont le plus besoin de votre soutien en ce moment.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {featured === null
               ? [0, 1, 2].map((i) => (
-                  <div key={i} className="h-[26rem] rounded-xl bg-white shadow-md animate-pulse" />
+                  <div key={i} className="h-[26rem] animate-pulse rounded-xl border border-border bg-muted/60" aria-hidden="true" />
                 ))
               : featured.map((project) => <ProjectCard key={project.id} project={project} />)}
           </div>
           {featured?.length === 0 && (
-            <p className="text-center text-[#6B7280]">Aucun projet en cours pour le moment.</p>
+            <p className="text-center text-muted-foreground">Aucun projet en cours pour le moment.</p>
           )}
 
-          <div className="text-center mt-10">
-            <Link to="/projects">
-              <Button variant="outline" size="lg" className="rounded-xl border-[#0D7C66] text-[#0D7C66] hover:bg-[#E8F5F0]">
+          <div className="mt-10 text-center">
+            <Button asChild variant="outline" size="lg" className="rounded-xl border-primary/40 text-primary hover:bg-accent hover:text-accent-foreground">
+              <Link to="/projects">
                 Voir Tous les Projets
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-4 bg-[#F3F4F6]">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="inline-block bg-[#FEF3C7] text-[#F59E0B] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+      {/* How it works */}
+      <section className="border-y border-border bg-muted/60 px-4 py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center sm:mb-14">
+            <span className="mb-4 inline-block rounded-full bg-highlight/15 px-4 py-1.5 text-sm font-semibold text-warning">
               Comment ça marche
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A2E] mb-4">
-              Donner en 3 Étapes Simples
-            </h2>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Donner en 3 Étapes Simples</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "01",
-                title: "Choisissez une Cause",
-                description: "Parcourez nos projets vérifiés et choisissez la cause qui vous tient à cœur.",
-                color: "#0D7C66",
-              },
-              {
-                step: "02",
-                title: "Faites votre Don",
-                description: "Sélectionnez le montant et payez en toute sécurité via Stripe, Orange Money ou Wave.",
-                color: "#F59E0B",
-              },
-              {
-                step: "03",
-                title: "Suivez l'Impact",
-                description: "Recevez des rapports réguliers sur l'utilisation de vos dons et leur impact réel.",
-                color: "#3B82F6",
-              },
-            ].map((item) => (
-              <div key={item.step} className="text-center group">
+          <ol className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
+            {steps.map((item) => (
+              <li key={item.step} className="group text-center">
                 <div
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold group-hover:scale-110 transition-transform"
-                  style={{ backgroundColor: item.color }}
+                  className={cn(
+                    "mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-bold shadow-sm transition-transform duration-200 group-hover:-translate-y-1 sm:h-20 sm:w-20 sm:text-2xl",
+                    solidTone[item.tone]
+                  )}
+                  aria-hidden="true"
                 >
                   {item.step}
                 </div>
-                <h3 className="text-xl font-bold text-[#1A1A2E] mb-3">{item.title}</h3>
-                <p className="text-[#6B7280] leading-relaxed">{item.description}</p>
-              </div>
+                <h3 className="mb-3 text-xl font-bold text-foreground">{item.title}</h3>
+                <p className="mx-auto max-w-sm leading-relaxed text-muted-foreground">{item.description}</p>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-[#0D7C66] to-[#095C4B]">
-        <div className="max-w-3xl mx-auto text-center text-white">
-          <Heart className="w-12 h-12 mx-auto mb-6 text-[#F59E0B] fill-[#F59E0B]" />
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Prêt à Faire la Différence ?
-          </h2>
-          <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            Chaque contribution, aussi petite soit-elle, peut transformer une vie. Rejoignez notre communauté de donateurs aujourd'hui.
+      {/* Call to action */}
+      <section className="surface-brand px-4 py-16 sm:py-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <Heart className="mx-auto mb-6 h-12 w-12 fill-highlight text-highlight" aria-hidden="true" />
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Prêt à Faire la Différence ?</h2>
+          <p className="mx-auto mb-8 max-w-xl text-lg text-white/85">
+            Chaque contribution, aussi petite soit-elle, peut transformer une vie. Rejoignez notre communauté de
+            donateurs aujourd'hui.
           </p>
-          <Link to="/donate">
-            <Button
-              size="lg"
-              className="bg-[#F59E0B] hover:bg-[#D97706] text-[#1A1A2E] rounded-xl px-10 py-6 text-lg font-bold shadow-xl hover:shadow-2xl transition-all"
-            >
+          <Button
+            asChild
+            size="lg"
+            className="h-14 w-full rounded-xl bg-highlight px-10 text-lg font-bold text-highlight-foreground shadow-lg hover:bg-highlight/90 sm:w-auto"
+          >
+            <Link to="/donate">
               Faire un Don Maintenant
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </section>
 

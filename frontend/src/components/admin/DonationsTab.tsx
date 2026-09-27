@@ -49,11 +49,11 @@ export default function DonationsTab({ donations }: { donations: Donation[] }) {
   const filteredTotal = filtered.reduce((sum, d) => sum + d.amount, 0);
 
   return (
-    <Card className="border-0 shadow-md">
+    <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Rechercher un donateur, un email, une cause…"
               value={search}
@@ -76,33 +76,33 @@ export default function DonationsTab({ donations }: { donations: Donation[] }) {
           </Select>
         </div>
 
-        <p className="text-sm text-[#6B7280] mb-3">
+        <p className="text-sm text-muted-foreground mb-3">
           {filtered.length} don{filtered.length > 1 ? "s" : ""} · {formatCFA(filteredTotal)}
         </p>
 
         {filtered.length === 0 ? (
-          <p className="text-center text-[#6B7280] py-12">Aucun don ne correspond à ces critères.</p>
+          <p className="text-center text-muted-foreground py-12">Aucun don ne correspond à ces critères.</p>
         ) : (
           <>
           {/* Mobile: one card per donation instead of a wide table */}
           <div className="md:hidden space-y-3">
             {filtered.map((d) => (
-              <div key={d.id} className="rounded-lg border border-gray-100 p-4">
+              <div key={d.id} className="rounded-lg border border-border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-medium text-[#1A1A2E] truncate">
-                      {donorName(d) || <span className="italic text-[#6B7280]">Anonyme</span>}
+                    <p className="font-medium text-foreground truncate">
+                      {donorName(d) || <span className="italic text-muted-foreground">Anonyme</span>}
                     </p>
-                    {d.donor_email && <p className="text-xs text-[#6B7280] truncate">{d.donor_email}</p>}
+                    {d.donor_email && <p className="text-xs text-muted-foreground truncate">{d.donor_email}</p>}
                   </div>
-                  <p className="font-semibold text-[#1A1A2E] whitespace-nowrap tabular-nums">{formatCFA(d.amount)}</p>
+                  <p className="font-semibold text-foreground whitespace-nowrap tabular-nums">{formatCFA(d.amount)}</p>
                 </div>
-                <p className="text-sm text-[#374151] mt-2">
+                <p className="text-sm text-foreground/80 mt-2">
                   {categoryLabels[d.cause] ?? d.cause} · {paymentMethodLabels[d.payment_method] ?? d.payment_method}
                 </p>
-                {d.message && <p className="text-xs text-[#6B7280] italic mt-1">« {d.message} »</p>}
+                {d.message && <p className="text-xs text-muted-foreground italic mt-1">« {d.message} »</p>}
                 <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs text-[#6B7280]">{formatDate(d.created_at)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(d.created_at)}</span>
                   <PaymentStatusBadge status={d.payment_status} />
                 </div>
               </div>
@@ -123,19 +123,19 @@ export default function DonationsTab({ donations }: { donations: Donation[] }) {
             <TableBody>
               {filtered.map((d) => (
                 <TableRow key={d.id}>
-                  <TableCell className="whitespace-nowrap text-[#6B7280]">{formatDate(d.created_at)}</TableCell>
+                  <TableCell className="whitespace-nowrap text-muted-foreground">{formatDate(d.created_at)}</TableCell>
                   <TableCell>
-                    <p className="font-medium text-[#1A1A2E]">
-                      {donorName(d) || <span className="italic text-[#6B7280]">Anonyme</span>}
+                    <p className="font-medium text-foreground">
+                      {donorName(d) || <span className="italic text-muted-foreground">Anonyme</span>}
                     </p>
-                    {d.donor_email && <p className="text-xs text-[#6B7280]">{d.donor_email}</p>}
+                    {d.donor_email && <p className="text-xs text-muted-foreground">{d.donor_email}</p>}
                     {d.message && (
-                      <p className="text-xs text-[#6B7280] italic mt-1 max-w-xs truncate" title={d.message}>
+                      <p className="text-xs text-muted-foreground italic mt-1 max-w-xs truncate" title={d.message}>
                         « {d.message} »
                       </p>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-[#1A1A2E] whitespace-nowrap tabular-nums">
+                  <TableCell className="text-right font-semibold text-foreground whitespace-nowrap tabular-nums">
                     {formatCFA(d.amount)}
                   </TableCell>
                   <TableCell>{categoryLabels[d.cause] ?? d.cause}</TableCell>

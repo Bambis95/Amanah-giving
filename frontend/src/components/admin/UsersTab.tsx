@@ -37,17 +37,17 @@ function RoleBadge({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
   return (
     <div className="flex flex-wrap gap-1">
       {user.role === "admin" ? (
-        <Badge className="bg-[#E8F5F0] text-[#0D7C66] border-0 hover:bg-[#E8F5F0] gap-1">
+        <Badge className="bg-accent text-primary border-0 hover:bg-accent gap-1">
           <ShieldCheck className="w-3 h-3" />
           Administrateur
         </Badge>
       ) : (
-        <Badge variant="outline" className="text-[#374151]">
+        <Badge variant="outline" className="text-foreground/80">
           Utilisateur
         </Badge>
       )}
       {isSelf && (
-        <Badge variant="outline" className="text-[#6B7280]">
+        <Badge variant="outline" className="text-muted-foreground">
           Vous
         </Badge>
       )}
@@ -64,7 +64,7 @@ interface RoleActionProps {
 
 function RoleAction({ user, isSelf, busy, onConfirm }: RoleActionProps) {
   if (isSelf) {
-    return <span className="text-xs text-[#6B7280]">Votre propre rôle ne peut pas être modifié</span>;
+    return <span className="text-xs text-muted-foreground">Votre propre rôle ne peut pas être modifié</span>;
   }
   const promote = user.role !== "admin";
   const who = user.name || user.email;
@@ -75,7 +75,7 @@ function RoleAction({ user, isSelf, busy, onConfirm }: RoleActionProps) {
           variant="outline"
           size="sm"
           disabled={busy}
-          className={promote ? "" : "text-red-600 hover:text-red-700 hover:bg-red-50"}
+          className={promote ? "" : "text-destructive hover:text-destructive hover:bg-destructive/10"}
         >
           {promote ? <ShieldCheck className="w-4 h-4 mr-1.5" /> : <ShieldOff className="w-4 h-4 mr-1.5" />}
           {promote ? "Promouvoir admin" : "Retirer les droits"}
@@ -96,7 +96,7 @@ function RoleAction({ user, isSelf, busy, onConfirm }: RoleActionProps) {
           <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => onConfirm(user)}
-            className={promote ? "bg-[#0D7C66] hover:bg-[#095C4B]" : "bg-red-600 hover:bg-red-700"}
+            className={promote ? "bg-primary hover:bg-primary/90" : "bg-destructive hover:bg-destructive/90 text-destructive-foreground"}
           >
             {promote ? "Promouvoir" : "Retirer les droits"}
           </AlertDialogAction>
@@ -133,10 +133,10 @@ export default function UsersTab({ users, currentUserId, onChange }: UsersTabPro
   };
 
   return (
-    <Card className="border-0 shadow-md">
+    <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
         <div className="relative mb-4">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Rechercher un nom ou un email…"
             value={search}
@@ -145,24 +145,24 @@ export default function UsersTab({ users, currentUserId, onChange }: UsersTabPro
           />
         </div>
 
-        <p className="text-sm text-[#6B7280] mb-3">
+        <p className="text-sm text-muted-foreground mb-3">
           {users.length} compte{users.length > 1 ? "s" : ""} · {adminCount} administrateur{adminCount > 1 ? "s" : ""}
         </p>
 
         {filtered.length === 0 ? (
-          <p className="text-center text-[#6B7280] py-12">Aucun compte ne correspond à cette recherche.</p>
+          <p className="text-center text-muted-foreground py-12">Aucun compte ne correspond à cette recherche.</p>
         ) : (
           <>
             {/* Mobile: one card per account instead of a wide table */}
             <div className="md:hidden space-y-3">
               {filtered.map((u) => (
-                <div key={u.id} className="rounded-lg border border-gray-100 p-4">
-                  <p className="font-medium text-[#1A1A2E]">{u.name || <span className="italic text-[#6B7280]">Sans nom</span>}</p>
-                  <p className="text-xs text-[#6B7280] break-all">{u.email}</p>
+                <div key={u.id} className="rounded-lg border border-border p-4">
+                  <p className="font-medium text-foreground">{u.name || <span className="italic text-muted-foreground">Sans nom</span>}</p>
+                  <p className="text-xs text-muted-foreground break-all">{u.email}</p>
                   <div className="mt-2">
                     <RoleBadge user={u} isSelf={u.id === currentUserId} />
                   </div>
-                  <p className="text-xs text-[#6B7280] mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Inscrit le {formatDate(u.created_at)} · Dernière connexion : {formatDate(u.last_login)}
                   </p>
                   <div className="mt-3">
@@ -187,16 +187,16 @@ export default function UsersTab({ users, currentUserId, onChange }: UsersTabPro
                   {filtered.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell>
-                        <p className="font-medium text-[#1A1A2E]">
-                          {u.name || <span className="italic text-[#6B7280]">Sans nom</span>}
+                        <p className="font-medium text-foreground">
+                          {u.name || <span className="italic text-muted-foreground">Sans nom</span>}
                         </p>
-                        <p className="text-xs text-[#6B7280]">{u.email}</p>
+                        <p className="text-xs text-muted-foreground">{u.email}</p>
                       </TableCell>
                       <TableCell>
                         <RoleBadge user={u} isSelf={u.id === currentUserId} />
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-[#6B7280]">{formatDate(u.created_at)}</TableCell>
-                      <TableCell className="whitespace-nowrap text-[#6B7280]">{formatDate(u.last_login)}</TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">{formatDate(u.created_at)}</TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">{formatDate(u.last_login)}</TableCell>
                       <TableCell className="text-right">
                         <RoleAction user={u} isSelf={u.id === currentUserId} busy={busyId === u.id} onConfirm={changeRole} />
                       </TableCell>

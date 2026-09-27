@@ -33,61 +33,73 @@ export default function ProjectCard({ project }: { project: Project }) {
   const completed = project.status === "completed";
 
   return (
-    <Card className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <Card className="group flex flex-col overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md motion-safe:hover:-translate-y-1">
       <div className="relative h-48 overflow-hidden">
         {project.image ? (
           <img
             src={project.image}
             alt={project.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#E8F5F0] to-[#C8E6DC] flex items-center justify-center">
-            <IconComponent className="w-14 h-14 text-[#0D7C66]/40" />
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent to-accent/40">
+            <IconComponent className="h-14 w-14 text-primary/40" aria-hidden="true" />
           </div>
         )}
-        <div className="absolute top-4 left-4 flex gap-2">
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2">
-            <IconComponent className="w-4 h-4 text-[#0D7C66]" />
+        {/* Chips over the photo use the theme background, so they stay readable in both modes */}
+        <div className="absolute left-4 top-4 flex gap-2">
+          <div className="rounded-lg bg-background/90 p-2 shadow-sm backdrop-blur-sm">
+            <IconComponent className="h-4 w-4 text-primary" aria-hidden="true" />
           </div>
           {completed ? (
-            <Badge className="bg-[#1A1A2E] text-white border-0 text-xs gap-1">
-              <CheckCircle className="w-3 h-3" />
+            <Badge className="gap-1 border-0 bg-foreground text-xs text-background hover:bg-foreground">
+              <CheckCircle className="h-3 w-3" aria-hidden="true" />
               Terminé
             </Badge>
           ) : (
-            project.urgent && <Badge className="bg-red-500 text-white border-0 text-xs">Urgent</Badge>
+            project.urgent && (
+              <Badge className="border-0 bg-destructive text-xs text-destructive-foreground hover:bg-destructive">Urgent</Badge>
+            )
           )}
         </div>
         {project.location && (
           <div className="absolute bottom-4 right-4">
-            <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-[#374151] text-xs">
+            <Badge variant="secondary" className="bg-background/90 text-xs text-foreground/80 backdrop-blur-sm">
               {project.location}
             </Badge>
           </div>
         )}
       </div>
-      <CardContent className="p-5">
-        <h3 className="text-lg font-bold text-[#1A1A2E] mb-2 group-hover:text-[#0D7C66] transition-colors">
+      <CardContent className="flex flex-1 flex-col p-5">
+        <h3 className="mb-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
           {project.title}
         </h3>
-        <p className="text-sm text-[#6B7280] mb-4 leading-relaxed line-clamp-2">{project.description}</p>
+        <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
 
-        {/* Progress */}
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-1.5">
-            <span className="font-semibold text-[#0D7C66]">{formatCFA(project.raised)} FCFA</span>
-            <span className="text-[#6B7280]">{progress}%</span>
+        {/* Progress (mt-auto keeps buttons aligned across cards of different text length) */}
+        <div className="mb-4 mt-auto">
+          <div className="mb-1.5 flex justify-between text-sm">
+            <span className="font-semibold tabular-nums text-primary">{formatCFA(project.raised)} FCFA</span>
+            <span className="tabular-nums text-muted-foreground">{progress}%</span>
           </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-2 w-full overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.min(progress, 100)}
+            aria-label={`Collecte : ${progress} % de l'objectif`}
+          >
             <div
-              className="h-full bg-gradient-to-r from-[#0D7C66] to-[#10B981] rounded-full"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700"
               style={{ width: `${Math.min(progress, 100)}%` }}
             />
           </div>
           <div className="flex justify-between mt-1.5">
-            <span className="text-xs text-[#6B7280]">Objectif: {formatCFA(project.goal)} FCFA</span>
-            <span className="text-xs text-[#6B7280] flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">Objectif: {formatCFA(project.goal)} FCFA</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Users className="w-3 h-3" />
               {project.donors || 0}
             </span>
@@ -95,18 +107,18 @@ export default function ProjectCard({ project }: { project: Project }) {
         </div>
 
         {completed ? (
-          <Button disabled variant="outline" className="w-full rounded-lg font-semibold">
-            <CheckCircle className="w-4 h-4 mr-2" />
+          <Button disabled variant="outline" className="h-11 w-full font-semibold">
+            <CheckCircle className="mr-2 h-4 w-4" />
             Projet terminé
           </Button>
         ) : (
-          <Link to={`/donate?project=${project.id}`}>
-            <Button className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white rounded-lg font-semibold">
-              <Heart className="w-4 h-4 mr-2" />
+          <Button asChild className="h-11 w-full font-semibold">
+            <Link to={`/donate?project=${project.id}`} aria-label={`Contribuer au projet ${project.title}`}>
+              <Heart className="mr-2 h-4 w-4" />
               Contribuer
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </Link>
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
         )}
       </CardContent>
     </Card>

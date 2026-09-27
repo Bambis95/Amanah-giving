@@ -32,31 +32,31 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <main className="flex-1 pt-28 pb-16 px-4 flex items-start justify-center">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-[#0D7C66] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              {sentMessage ? <MailCheck className="w-7 h-7 text-white" /> : <KeyRound className="w-7 h-7 text-white" />}
+            <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              {sentMessage ? <MailCheck className="w-7 h-7 text-primary-foreground" aria-hidden="true" /> : <KeyRound className="w-7 h-7 text-primary-foreground" aria-hidden="true" />}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A2E]">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
               {sentMessage ? "Vérifiez votre boîte mail" : "Mot de passe oublié"}
             </h1>
-            <p className="text-[#6B7280] mt-2">
+            <p className="text-muted-foreground mt-2">
               {sentMessage
                 ? sentMessage
                 : "Saisissez l'email de votre compte : nous vous enverrons un lien pour choisir un nouveau mot de passe."}
             </p>
           </div>
 
-          <Card className="border-0 shadow-xl">
+          <Card className="shadow-sm">
             <CardContent className="p-6 md:p-8">
               {sentMessage ? (
-                <div className="space-y-4 text-sm text-[#374151]">
+                <div className="space-y-4 text-sm text-foreground/80">
                   <p>Le lien est valable 1 heure et ne peut servir qu'une fois.</p>
-                  <p className="text-[#6B7280]">
+                  <p className="text-muted-foreground">
                     Rien reçu après quelques minutes ? Vérifiez vos courriers indésirables, ou refaites une demande.
                   </p>
                   <Button variant="outline" className="w-full" onClick={() => setSentMessage(null)}>
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white font-semibold h-11"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
                   >
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Envoyer le lien
@@ -90,8 +90,8 @@ export default function ForgotPasswordPage() {
             </CardContent>
           </Card>
 
-          <p className="text-center text-sm text-[#6B7280] mt-6">
-            <Link to="/login" className="text-[#0D7C66] font-medium hover:underline">
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            <Link to="/login" className="text-primary font-medium hover:underline">
               Retour à la connexion
             </Link>
           </p>

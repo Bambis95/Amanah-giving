@@ -4,14 +4,14 @@ import { paymentStatusLabels } from "./format";
 
 // Status always carries an icon and a label, never color alone
 const statusStyles: Record<string, { icon: React.ElementType; className: string }> = {
-  paid: { icon: CheckCircle, className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  pending: { icon: Clock, className: "bg-amber-50 text-amber-700 border-amber-200" },
-  failed: { icon: XCircle, className: "bg-red-50 text-red-700 border-red-200" },
-  cancelled: { icon: Ban, className: "bg-gray-100 text-gray-600 border-gray-200" },
+  paid: { icon: CheckCircle, className: "bg-success/10 text-success border-success/30" },
+  pending: { icon: Clock, className: "bg-warning/10 text-warning border-warning/30" },
+  failed: { icon: XCircle, className: "bg-destructive/10 text-destructive border-destructive/30" },
+  cancelled: { icon: Ban, className: "bg-muted text-muted-foreground border-border" },
 };
 
 export default function PaymentStatusBadge({ status }: { status: string }) {
-  const style = statusStyles[status] ?? { icon: Clock, className: "bg-gray-100 text-gray-600 border-gray-200" };
+  const style = statusStyles[status] ?? { icon: Clock, className: "bg-muted text-muted-foreground border-border" };
   return (
     <Badge variant="outline" className={`gap-1 font-medium whitespace-nowrap ${style.className}`}>
       <style.icon className="w-3 h-3" />

@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/api";
+import { cn } from "@/lib/utils";
+import { softTone, textTone, Tone } from "@/lib/tones";
 
 const contactInfo = [
   {
@@ -32,28 +34,28 @@ const contactInfo = [
     title: "Téléphone",
     details: ["+221 77 939 43 44"],
     subtitle: "Orange Money & Wave",
-    color: "#0D7C66",
+    tone: "primary" as Tone,
   },
   {
     icon: Mail,
     title: "Email",
     details: ["Khadimbaeft@gmail.com"],
     subtitle: "Réponse sous 24h",
-    color: "#3B82F6",
+    tone: "info" as Tone,
   },
   {
     icon: MapPin,
     title: "Adresse",
     details: ["Sacré Cœur 3, Mermoz", "Dakar, Sénégal"],
     subtitle: "",
-    color: "#F59E0B",
+    tone: "highlight" as Tone,
   },
   {
     icon: Clock,
     title: "Horaires",
     details: ["Lun - Ven: 9h - 18h", "Sam: 9h - 13h"],
     subtitle: "Fuseau GMT",
-    color: "#EF4444",
+    tone: "destructive" as Tone,
   },
 ];
 
@@ -102,11 +104,11 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Header */}
-      <section className="pt-24 pb-12 px-4 bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] text-white">
+      <section className="pt-24 pb-12 px-4 surface-hero">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block bg-white/10 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-white/20">
             <MessageCircle className="w-4 h-4 inline mr-1" />
@@ -124,20 +126,19 @@ export default function ContactPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {contactInfo.map((info) => (
-              <Card key={info.title} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <Card key={info.title} className="shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-5 text-center">
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
-                    style={{ backgroundColor: info.color + "15" }}
+                    className={cn("w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3", softTone[info.tone])}
                   >
-                    <info.icon className="w-6 h-6" style={{ color: info.color }} />
+                    <info.icon className="w-6 h-6" aria-hidden="true" />
                   </div>
-                  <h3 className="font-bold text-[#1A1A2E] text-sm mb-1">{info.title}</h3>
+                  <h3 className="font-bold text-foreground text-sm mb-1">{info.title}</h3>
                   {info.details.map((d) => (
-                    <p key={d} className="text-sm text-[#374151]">{d}</p>
+                    <p key={d} className="text-sm text-foreground/80">{d}</p>
                   ))}
                   {info.subtitle && (
-                    <p className="text-xs text-[#6B7280] mt-1">{info.subtitle}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{info.subtitle}</p>
                   )}
                 </CardContent>
               </Card>
@@ -151,15 +152,15 @@ export default function ContactPage() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Form */}
           <div className="lg:col-span-3">
-            <Card className="border-0 shadow-lg">
+            <Card className="shadow-sm">
               <CardContent className="p-8">
                 {submitted ? (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-[#E8F5F0] rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="w-8 h-8 text-[#0D7C66]" />
+                    <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="w-8 h-8 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-[#1A1A2E] mb-2">Message Envoyé !</h3>
-                    <p className="text-[#6B7280] mb-6">
+                    <h3 className="text-xl font-bold text-foreground mb-2">Message Envoyé !</h3>
+                    <p className="text-muted-foreground mb-6">
                       Merci de nous avoir contactés. Nous vous répondrons dans les plus brefs délais.
                     </p>
                     <Button
@@ -171,14 +172,14 @@ export default function ContactPage() {
                         setSubject("general");
                         setMessage("");
                       }}
-                      className="bg-[#0D7C66] hover:bg-[#095C4B] text-white rounded-lg"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
                     >
                       Envoyer un Autre Message
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <h2 className="text-2xl font-bold text-[#1A1A2E] mb-6">Envoyez-nous un Message</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">Envoyez-nous un Message</h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -189,7 +190,7 @@ export default function ContactPage() {
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="mt-1 h-11 rounded-xl border-gray-200"
+                            className="mt-1 h-11 rounded-xl border-border"
                           />
                         </div>
                         <div>
@@ -201,7 +202,7 @@ export default function ContactPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 h-11 rounded-xl border-gray-200"
+                            className="mt-1 h-11 rounded-xl border-border"
                           />
                         </div>
                       </div>
@@ -214,13 +215,13 @@ export default function ContactPage() {
                             placeholder="+221 7X XXX XX XX"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className="mt-1 h-11 rounded-xl border-gray-200"
+                            className="mt-1 h-11 rounded-xl border-border"
                           />
                         </div>
                         <div>
                           <Label htmlFor="subject">Sujet</Label>
                           <Select value={subject} onValueChange={setSubject}>
-                            <SelectTrigger className="mt-1 h-11 rounded-xl border-gray-200">
+                            <SelectTrigger className="mt-1 h-11 rounded-xl border-border">
                               <SelectValue placeholder="Choisir un sujet" />
                             </SelectTrigger>
                             <SelectContent>
@@ -241,7 +242,7 @@ export default function ContactPage() {
                           required
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
-                          className="mt-1 rounded-xl border-gray-200 resize-none"
+                          className="mt-1 rounded-xl border-border resize-none"
                           rows={5}
                         />
                       </div>
@@ -249,7 +250,7 @@ export default function ContactPage() {
                         type="submit"
                         size="lg"
                         disabled={loading}
-                        className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white rounded-xl font-semibold"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold"
                       >
                         {loading ? (
                           <>
@@ -272,8 +273,8 @@ export default function ContactPage() {
 
           {/* Map & Info */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="border-0 shadow-lg overflow-hidden">
-              <div className="h-64 bg-gray-200">
+            <Card className="shadow-sm overflow-hidden">
+              <div className="h-64 bg-muted">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3859.0!2d-17.4677!3d14.7167!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTTCsDQzJzAwLjEiTiAxN8KwMjgnMDMuNyJX!5e0!3m2!1sfr!2ssn!4v1!5m2!1sfr!2ssn"
                   width="100%"
@@ -286,15 +287,15 @@ export default function ContactPage() {
                 />
               </div>
               <CardContent className="p-5">
-                <h3 className="font-bold text-[#1A1A2E] mb-2">Notre Bureau</h3>
-                <p className="text-sm text-[#6B7280]">
+                <h3 className="font-bold text-foreground mb-2">Notre Bureau</h3>
+                <p className="text-sm text-muted-foreground">
                   Sacré Cœur 3, Mermoz<br />
                   Dakar, Sénégal
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-[#0D7C66] to-[#095C4B] text-white">
+            <Card className="border-0 shadow-md surface-brand">
               <CardContent className="p-6">
                 <h3 className="font-bold text-lg mb-3">Modes de Paiement</h3>
                 <p className="text-white/80 text-sm mb-4">
@@ -311,8 +312,8 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                    <div className="w-8 h-8 bg-[#FF6600]/30 rounded-lg flex items-center justify-center">
-                      <span className="text-xs font-bold text-[#FF6600]">OM</span>
+                    <div className="w-8 h-8 bg-[#FF6600]/25 rounded-lg flex items-center justify-center">
+                      <span className="text-xs font-bold text-[#FFB27A]">OM</span>
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Orange Money</p>
@@ -320,8 +321,8 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                    <div className="w-8 h-8 bg-[#1DC3E2]/30 rounded-lg flex items-center justify-center">
-                      <span className="text-xs font-bold text-[#1DC3E2]">W</span>
+                    <div className="w-8 h-8 bg-[#1DC3E2]/25 rounded-lg flex items-center justify-center">
+                      <span className="text-xs font-bold text-[#8BE6F5]">W</span>
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Wave</p>

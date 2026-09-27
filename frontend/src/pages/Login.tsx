@@ -82,7 +82,7 @@ export default function LoginPage() {
     <button
       type="button"
       onClick={() => setShowPassword((v) => !v)}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#0D7C66]"
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
       aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
     >
       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -90,26 +90,26 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <main className="flex-1 pt-28 pb-16 px-4 flex items-start justify-center">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-[#0D7C66] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Heart className="w-7 h-7 text-white fill-white" />
+            <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Heart className="w-7 h-7 text-primary-foreground fill-primary-foreground" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A2E]">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
               {tab === "login" ? "Bon retour parmi nous" : "Rejoignez Amanah Giving"}
             </h1>
-            <p className="text-[#6B7280] mt-2">
+            <p className="text-muted-foreground mt-2">
               {tab === "login"
                 ? "Connectez-vous pour retrouver vos dons et suivre vos contributions."
                 : "Créez votre compte en quelques secondes."}
             </p>
           </div>
 
-          <Card className="border-0 shadow-xl">
+          <Card className="shadow-sm">
             <CardContent className="p-6 md:p-8">
               <Tabs value={tab} onValueChange={setTab}>
                 <TabsList className="grid grid-cols-2 w-full mb-6">
@@ -134,7 +134,7 @@ export default function LoginPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="login-password">Mot de passe</Label>
-                        <Link to="/forgot-password" className="text-xs text-[#0D7C66] hover:underline">
+                        <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                           Mot de passe oublié ?
                         </Link>
                       </div>
@@ -154,7 +154,7 @@ export default function LoginPage() {
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white font-semibold h-11"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
                     >
                       {loading ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -204,7 +204,7 @@ export default function LoginPage() {
                         />
                         {passwordToggle}
                       </div>
-                      <p className="text-xs text-[#6B7280]">
+                      <p className="text-xs text-muted-foreground">
                         Au moins {MIN_PASSWORD_LENGTH} caractères.
                       </p>
                     </div>
@@ -222,7 +222,7 @@ export default function LoginPage() {
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white font-semibold h-11"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
                     >
                       {loading ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -237,8 +237,8 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
-          <p className="text-center text-sm text-[#6B7280] mt-6">
-            <Link to="/" className="text-[#0D7C66] font-medium hover:underline">
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            <Link to="/" className="text-primary font-medium hover:underline">
               Retour à l'accueil
             </Link>
           </p>

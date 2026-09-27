@@ -84,29 +84,29 @@ export default function PaymentSuccessPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-20 px-4 flex items-center justify-center min-h-screen">
-        <Card className="max-w-lg w-full border-0 shadow-xl text-center">
+        <Card className="max-w-lg w-full shadow-sm text-center">
           <CardContent className="p-10">
             {state === "loading" && (
               <div className="py-8">
-                <Loader2 className="w-12 h-12 text-[#0D7C66] animate-spin mx-auto mb-4" />
-                <p className="text-[#6B7280]">Vérification du paiement…</p>
+                <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Vérification du paiement…</p>
               </div>
             )}
 
             {state === "paid" && (
               <>
-                <div className="w-20 h-20 bg-[#E8F5F0] rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-10 h-10 text-[#0D7C66]" />
+                <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-10 h-10 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#1A1A2E] mb-3">Merci pour votre don !</h2>
-                <p className="text-[#6B7280] mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-3">Merci pour votre don !</h2>
+                <p className="text-muted-foreground mb-8">
                   Votre don
                   {amount !== null && (
                     <>
-                      {" "}de <span className="font-bold text-[#0D7C66]">{formatCFA(amount)}</span>
+                      {" "}de <span className="font-bold text-primary">{formatCFA(amount)}</span>
                     </>
                   )}{" "}
                   a bien été reçu. Un email de confirmation vous sera envoyé si vous avez indiqué votre adresse.
@@ -116,11 +116,11 @@ export default function PaymentSuccessPage() {
 
             {state === "pending" && (
               <>
-                <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Clock className="w-10 h-10 text-amber-600" />
+                <div className="w-20 h-20 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Clock className="w-10 h-10 text-warning" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#1A1A2E] mb-3">Paiement en cours de confirmation</h2>
-                <p className="text-[#6B7280] mb-6">
+                <h2 className="text-2xl font-bold text-foreground mb-3">Paiement en cours de confirmation</h2>
+                <p className="text-muted-foreground mb-6">
                   Nous attendons la confirmation de votre opérateur
                   {amount !== null && <> pour votre don de {formatCFA(amount)}</>}. Cela peut prendre quelques
                   minutes.
@@ -134,27 +134,23 @@ export default function PaymentSuccessPage() {
 
             {state === "failed" && (
               <>
-                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <XCircle className="w-10 h-10 text-red-500" />
+                <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <XCircle className="w-10 h-10 text-destructive" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#1A1A2E] mb-3">Paiement non confirmé</h2>
-                <p className="text-sm text-[#6B7280] mb-8">{message}</p>
+                <h2 className="text-2xl font-bold text-foreground mb-3">Paiement non confirmé</h2>
+                <p className="text-sm text-muted-foreground mb-8">{message}</p>
               </>
             )}
 
             {state !== "loading" && (
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link to="/">
-                  <Button variant="outline" className="w-full sm:w-auto">
+                <Button asChild variant="outline" className="w-full sm:w-auto"><Link to="/">
                     Retour à l'accueil
-                  </Button>
-                </Link>
-                <Link to={state === "failed" ? "/donate" : "/projects"}>
-                  <Button className="w-full sm:w-auto bg-[#0D7C66] hover:bg-[#095C4B] text-white">
+                  </Link></Button>
+                <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"><Link to={state === "failed" ? "/donate" : "/projects"}>
                     <Heart className="w-4 h-4 mr-2" />
                     {state === "failed" ? "Réessayer le don" : "Découvrir nos projets"}
-                  </Button>
-                </Link>
+                  </Link></Button>
               </div>
             )}
           </CardContent>

@@ -31,22 +31,22 @@ function ProjectBadges({ project }: { project: Project }) {
   return (
     <div className="flex flex-wrap gap-1 mt-1">
       {project.status === "paused" && (
-        <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50 text-xs">
+        <Badge variant="outline" className="text-warning border-warning/30 bg-warning/10 text-xs">
           En pause · masqué du site
         </Badge>
       )}
       {project.status === "completed" && (
-        <Badge variant="outline" className="text-[#1A1A2E] border-gray-300 bg-gray-50 text-xs">
+        <Badge variant="outline" className="text-foreground border-border bg-muted/50 text-xs">
           Terminé
         </Badge>
       )}
       {project.is_featured && (
-        <Badge variant="outline" className="text-[#0D7C66] border-[#0D7C66]/30 text-xs">
+        <Badge variant="outline" className="text-primary border-primary/30 text-xs">
           Mis en avant
         </Badge>
       )}
       {project.urgent && (
-        <Badge variant="outline" className="text-red-600 border-red-200 text-xs">
+        <Badge variant="outline" className="text-destructive border-destructive/30 text-xs">
           Urgent
         </Badge>
       )}
@@ -60,13 +60,13 @@ function ProjectProgress({ project }: { project: Project }) {
   return (
     <div>
       <div className="flex justify-between text-xs mb-1 tabular-nums">
-        <span className="font-semibold text-[#1A1A2E]">{formatCFA(project.raised)}</span>
-        <span className="text-[#6B7280]">{progress}%</span>
+        <span className="font-semibold text-foreground">{formatCFA(project.raised)}</span>
+        <span className="text-muted-foreground">{progress}%</span>
       </div>
-      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-        <div className="h-full bg-[#0D7C66] rounded-full" style={{ width: `${Math.min(progress, 100)}%` }} />
+      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(progress, 100)}%` }} />
       </div>
-      <p className="text-xs text-[#6B7280] mt-1 tabular-nums">
+      <p className="text-xs text-muted-foreground mt-1 tabular-nums">
         sur {formatCFA(project.goal)} · {donors} donateur{donors > 1 ? "s" : ""}
       </p>
     </div>
@@ -90,7 +90,7 @@ function ProjectActions({ project, onEdit, onDelete }: ProjectActionsProps) {
           <Button
             variant="outline"
             size="sm"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
             aria-label="Supprimer"
           >
             <Trash2 className="w-4 h-4" />
@@ -106,7 +106,7 @@ function ProjectActions({ project, onEdit, onDelete }: ProjectActionsProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onDelete(project)} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={() => onDelete(project)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -151,30 +151,30 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
   };
 
   return (
-    <Card className="border-0 shadow-md">
+    <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
         <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-sm text-[#6B7280]">
+          <p className="text-sm text-muted-foreground">
             {projects.length} projet{projects.length > 1 ? "s" : ""}
           </p>
-          <Button onClick={openCreate} className="bg-[#0D7C66] hover:bg-[#095C4B] text-white">
+          <Button onClick={openCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" />
             Nouveau projet
           </Button>
         </div>
 
         {projects.length === 0 ? (
-          <p className="text-center text-[#6B7280] py-12">Aucun projet. Créez le premier !</p>
+          <p className="text-center text-muted-foreground py-12">Aucun projet. Créez le premier !</p>
         ) : (
           <>
             {/* Mobile: one card per project instead of a wide table */}
             <div className="md:hidden space-y-3">
               {projects.map((p) => (
-                <div key={p.id} className="rounded-lg border border-gray-100 p-4">
+                <div key={p.id} className="rounded-lg border border-border p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-medium text-[#1A1A2E]">{p.title}</p>
-                      <p className="text-xs text-[#6B7280]">
+                      <p className="font-medium text-foreground">{p.title}</p>
+                      <p className="text-xs text-muted-foreground">
                         {[categoryLabels[p.category] ?? p.category, p.location].filter(Boolean).join(" · ")}
                       </p>
                     </div>
@@ -203,8 +203,8 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
                   {projects.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
-                        <p className="font-medium text-[#1A1A2E]">{p.title}</p>
-                        {p.location && <p className="text-xs text-[#6B7280]">{p.location}</p>}
+                        <p className="font-medium text-foreground">{p.title}</p>
+                        {p.location && <p className="text-xs text-muted-foreground">{p.location}</p>}
                         <ProjectBadges project={p} />
                       </TableCell>
                       <TableCell>{categoryLabels[p.category] ?? p.category}</TableCell>

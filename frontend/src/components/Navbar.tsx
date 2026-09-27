@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,9 @@ import {
 import { Menu, Heart, LogIn, LogOut, User, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import Logo from "@/components/Logo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navLinks = [
   { href: "/", label: "Accueil" },
@@ -33,157 +36,153 @@ export default function Navbar() {
     toast.success("Vous êtes déconnecté");
   };
 
+  const isActive = (href: string) => location.pathname === href;
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-[#0D7C66] rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Heart className="w-5 h-5 text-white fill-white" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-[#1A1A2E] leading-tight">Amanah</span>
-              <span className="text-xs text-[#0D7C66] font-semibold -mt-1">GIVING</span>
-            </div>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/70">
+      <nav aria-label="Navigation principale" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-3">
+          <Link to="/" className="rounded-lg transition-opacity hover:opacity-90" aria-label="Amanah Giving, accueil">
+            <Logo />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop links (lg+: below, everything moves to the drawer so nothing overflows on tablets) */}
+          <div className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  location.pathname === link.href
-                    ? "text-[#0D7C66] bg-[#E8F5F0]"
-                    : "text-[#374151] hover:text-[#0D7C66] hover:bg-gray-50"
-                }`}
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={cn(
+                  "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                  isActive(link.href)
+                    ? "bg-accent text-accent-foreground"
+                    : "text-foreground/75 hover:bg-muted hover:text-foreground"
+                )}
               >
                 {link.label}
               </Link>
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="text-[#374151] hover:text-[#0D7C66] font-medium">
-                    <User className="w-4 h-4 mr-2" />
-                    {displayName}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <p className="text-sm font-medium text-[#1A1A2E] truncate">{displayName}</p>
-                    <p className="text-xs text-[#6B7280] truncate">{user.email}</p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {user.role === "admin" && (
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link to="/admin">
-                        <LayoutDashboard className="w-4 h-4 mr-2" />
-                        Administration
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Se déconnecter
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link to="/login" state={{ from: location.pathname }}>
-                <Button variant="ghost" className="text-[#374151] hover:text-[#0D7C66] font-medium">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Se connecter
-                </Button>
-              </Link>
-            )}
-            <Link to="/donate">
-              <Button className="bg-[#0D7C66] hover:bg-[#095C4B] text-white rounded-lg px-6 font-semibold shadow-md hover:shadow-lg transition-all">
-                <Heart className="w-4 h-4 mr-2" />
-                Faire un Don
-              </Button>
-            </Link>
-          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
 
-          {/* Mobile Menu */}
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="w-6 h-6 text-[#1A1A2E]" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] bg-white p-0">
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#0D7C66] rounded-lg flex items-center justify-center">
-                      <Heart className="w-4 h-4 text-white fill-white" />
-                    </div>
-                    <span className="font-bold text-[#1A1A2E]">Amanah Giving</span>
-                  </div>
-                </div>
-                <div className="flex flex-col p-4 gap-1">
+            <div className="hidden items-center gap-2 lg:flex">
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="max-w-[12rem] font-medium text-foreground/80">
+                      <User className="mr-2 h-4 w-4 shrink-0" />
+                      <span className="truncate">{displayName}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="font-normal">
+                      <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                      <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {user.role === "admin" && (
+                      <DropdownMenuItem asChild className="cursor-pointer">
+                        <Link to="/admin">
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          Administration
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Se déconnecter
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button asChild variant="ghost" className="font-medium text-foreground/80">
+                  <Link to="/login" state={{ from: location.pathname }}>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Se connecter
+                  </Link>
+                </Button>
+              )}
+            </div>
+
+            {/* The main action stays reachable from 640px, even when the links are in the drawer */}
+            <Button asChild className="hidden font-semibold shadow-sm sm:inline-flex">
+              <Link to="/donate">
+                <Heart className="mr-2 h-4 w-4" />
+                Faire un Don
+              </Link>
+            </Button>
+
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden" aria-label="Ouvrir le menu">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="flex w-[85vw] max-w-sm flex-col bg-background p-0">
+                <SheetTitle className="border-b border-border p-4">
+                  <Logo size="sm" />
+                </SheetTitle>
+                <nav aria-label="Menu mobile" className="flex flex-col gap-1 p-4">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       to={link.href}
                       onClick={() => setOpen(false)}
-                      className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                        location.pathname === link.href
-                          ? "text-[#0D7C66] bg-[#E8F5F0]"
-                          : "text-[#374151] hover:bg-gray-50"
-                      }`}
+                      aria-current={isActive(link.href) ? "page" : undefined}
+                      className={cn(
+                        "rounded-lg px-4 py-3 text-base font-medium transition-colors",
+                        isActive(link.href)
+                          ? "bg-accent text-accent-foreground"
+                          : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                      )}
                     >
                       {link.label}
                     </Link>
                   ))}
-                </div>
-                <div className="mt-auto p-4 border-t space-y-2">
+                </nav>
+                <div className="mt-auto space-y-2 border-t border-border p-4">
                   {user ? (
                     <>
                       <div className="px-1 pb-1">
-                        <p className="text-sm font-medium text-[#1A1A2E] truncate">{displayName}</p>
-                        <p className="text-xs text-[#6B7280] truncate">{user.email}</p>
+                        <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                       </div>
                       {user.role === "admin" && (
-                        <Link to="/admin" onClick={() => setOpen(false)} className="block">
-                          <Button variant="outline" className="w-full rounded-lg">
-                            <LayoutDashboard className="w-4 h-4 mr-2" />
+                        <Button asChild variant="outline" className="h-11 w-full">
+                          <Link to="/admin" onClick={() => setOpen(false)}>
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
                             Administration
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                       )}
-                      <Button variant="outline" className="w-full rounded-lg" onClick={handleLogout}>
-                        <LogOut className="w-4 h-4 mr-2" />
+                      <Button variant="outline" className="h-11 w-full" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
                         Se déconnecter
                       </Button>
                     </>
                   ) : (
-                    <Link to="/login" state={{ from: location.pathname }} onClick={() => setOpen(false)} className="block">
-                      <Button variant="outline" className="w-full rounded-lg">
-                        <LogIn className="w-4 h-4 mr-2" />
+                    <Button asChild variant="outline" className="h-11 w-full">
+                      <Link to="/login" state={{ from: location.pathname }} onClick={() => setOpen(false)}>
+                        <LogIn className="mr-2 h-4 w-4" />
                         Se connecter
-                      </Button>
-                    </Link>
-                  )}
-                  <Link to="/donate" onClick={() => setOpen(false)} className="block">
-                    <Button className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white rounded-lg font-semibold">
-                      <Heart className="w-4 h-4 mr-2" />
-                      Faire un Don
+                      </Link>
                     </Button>
-                  </Link>
+                  )}
+                  <Button asChild className="h-11 w-full font-semibold">
+                    <Link to="/donate" onClick={() => setOpen(false)}>
+                      <Heart className="mr-2 h-4 w-4" />
+                      Faire un Don
+                    </Link>
+                  </Button>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

@@ -50,27 +50,25 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <main className="flex-1 pt-28 pb-16 px-4 flex items-start justify-center">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-[#0D7C66] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <KeyRound className="w-7 h-7 text-white" />
+            <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <KeyRound className="w-7 h-7 text-primary-foreground" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A2E]">Nouveau mot de passe</h1>
-            <p className="text-[#6B7280] mt-2">Choisissez le nouveau mot de passe de votre compte.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Nouveau mot de passe</h1>
+            <p className="text-muted-foreground mt-2">Choisissez le nouveau mot de passe de votre compte.</p>
           </div>
 
-          <Card className="border-0 shadow-xl">
+          <Card className="shadow-sm">
             <CardContent className="p-6 md:p-8">
               {linkError ? (
                 <div className="space-y-4 text-center">
-                  <p className="text-red-600">{linkError}</p>
-                  <Link to="/forgot-password">
-                    <Button className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white">Faire une nouvelle demande</Button>
-                  </Link>
+                  <p className="text-destructive">{linkError}</p>
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"><Link to="/forgot-password">Faire une nouvelle demande</Link></Button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -89,13 +87,13 @@ export default function ResetPasswordPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#0D7C66]"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                         aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    <p className="text-xs text-[#6B7280]">Au moins {MIN_PASSWORD_LENGTH} caractères.</p>
+                    <p className="text-xs text-muted-foreground">Au moins {MIN_PASSWORD_LENGTH} caractères.</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
@@ -111,7 +109,7 @@ export default function ResetPasswordPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#0D7C66] hover:bg-[#095C4B] text-white font-semibold h-11"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
                   >
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Enregistrer le mot de passe
@@ -121,8 +119,8 @@ export default function ResetPasswordPage() {
             </CardContent>
           </Card>
 
-          <p className="text-center text-sm text-[#6B7280] mt-6">
-            <Link to="/login" className="text-[#0D7C66] font-medium hover:underline">
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            <Link to="/login" className="text-primary font-medium hover:underline">
               Retour à la connexion
             </Link>
           </p>

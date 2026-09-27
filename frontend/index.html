@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="https://public-frontend-cos.metadl.com/mgx/img/favicon_atoms.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FAFAF8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0E1117" media="(prefers-color-scheme: dark)" />
+    <!-- Apply the theme before the first paint (no flash of the wrong theme).
+         Same rules as next-themes: saved choice, else system preference, else light. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('amanah-theme');
+          var dark = saved === 'dark' ||
+            ((!saved || saved === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.classList.toggle('dark', dark);
+          root.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
     <title>Amanah Giving - Plateforme de Dons en Ligne</title>
     <meta name="description" content="Amanah Giving - Plateforme de dons en ligne pour aider les communautés dans le besoin à travers le monde. Faites un don aujourd'hui." />
     <meta name="author" content="Amanah Giving" />

@@ -9,7 +9,6 @@ import {
   UtensilsCrossed,
   Home,
   Filter,
-  Loader2,
 } from "lucide-react";
 import { api, Project } from "@/api";
 
@@ -49,53 +48,60 @@ export default function ProjectsPage() {
   }, [activeCategory]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Header */}
-      <section className="pt-24 pb-12 px-4 bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] text-white">
-        <div className="max-w-6xl mx-auto text-center">
-          <span className="inline-block bg-white/10 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-4 border border-white/20">
+      <section className="surface-hero px-4 pb-12 pt-24 sm:pt-28">
+        <div className="mx-auto max-w-6xl text-center">
+          <span className="mb-4 inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold">
             {total} Projets Actifs
           </span>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Nos Projets & Causes</h1>
-          <p className="text-white/70 max-w-xl mx-auto">
+          <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Nos Projets & Causes</h1>
+          <p className="mx-auto max-w-xl text-white/75">
             Découvrez tous nos projets en cours et choisissez celui qui vous inspire le plus.
           </p>
         </div>
       </section>
 
-      {/* Filters */}
-      <section className="py-6 px-4 border-b bg-white sticky top-16 z-30">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => setActiveCategory(cat.value)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                  activeCategory === cat.value
-                    ? "bg-[#0D7C66] text-white shadow-md"
-                    : "bg-gray-100 text-[#374151] hover:bg-gray-200"
-                }`}
-              >
-                <cat.icon className="w-4 h-4" />
-                {cat.label}
-              </button>
-            ))}
+      {/* Filters: sticky under the header, horizontally scrollable on small screens */}
+      <section className="sticky top-16 z-30 border-b border-border bg-background/85 px-4 py-4 backdrop-blur-lg">
+        <div className="mx-auto max-w-6xl">
+          <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Filtrer par catégorie">
+            {categories.map((cat) => {
+              const active = activeCategory === cat.value;
+              return (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => setActiveCategory(cat.value)}
+                  aria-pressed={active}
+                  className={`flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted text-foreground/80 hover:bg-muted/70 hover:text-foreground"
+                  }`}
+                >
+                  <cat.icon className="h-4 w-4" aria-hidden="true" />
+                  {cat.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Projects Grid */}
-      <section className="py-12 px-4">
-        <div className="max-w-6xl mx-auto">
+      {/* Projects grid */}
+      <section className="px-4 py-10 sm:py-12">
+        <div className="mx-auto max-w-6xl">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-[#0D7C66] animate-spin" />
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8" aria-busy="true" aria-label="Chargement des projets">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-[26rem] animate-pulse rounded-xl border border-border bg-muted/60" />
+              ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
               {projects.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
@@ -104,7 +110,7 @@ export default function ProjectsPage() {
 
           {!loading && projects.length === 0 && (
             <div className="text-center py-20">
-              <p className="text-[#6B7280] text-lg">Aucun projet trouvé dans cette catégorie.</p>
+              <p className="text-muted-foreground text-lg">Aucun projet trouvé dans cette catégorie.</p>
             </div>
           )}
         </div>

@@ -188,7 +188,7 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-[#6B7280]">
+              <p className="text-xs text-muted-foreground">
                 {form.status === "paused"
                   ? "Masqué du site public."
                   : form.status === "completed"
@@ -269,7 +269,7 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={saving} className="bg-[#0D7C66] hover:bg-[#095C4B] text-white">
+            <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {project ? "Enregistrer" : "Créer le projet"}
             </Button>
