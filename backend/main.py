@@ -33,9 +33,12 @@ def setup_logging():
     # Configure log format
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
+    # DEBUG locally; set LOG_LEVEL=INFO in production (debug logs contain donor details)
+    level = os.environ.get("LOG_LEVEL", "DEBUG").upper()
+
     # Configure the root logger
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=level,
         format=log_format,
         handlers=[
             logging.FileHandler(log_file, encoding="utf-8"),
@@ -44,15 +47,15 @@ def setup_logging():
     )
 
     # Set log levels for specific modules
-    logging.getLogger("uvicorn").setLevel(logging.DEBUG)
-    logging.getLogger("fastapi").setLevel(logging.DEBUG)
+    logging.getLogger("uvicorn").setLevel(level)
+    logging.getLogger("fastapi").setLevel(level)
     logging.getLogger("watchfiles").setLevel(logging.WARNING)
 
     # Log configuration details
     logger = logging.getLogger(__name__)
     logger.info("=== Logging system initialized ===")
     logger.info(f"Log file: {log_file}")
-    logger.info("Log level: INFO")
+    logger.info(f"Log level: {level}")
     logger.info(f"Timestamp: {timestamp}")
 
 

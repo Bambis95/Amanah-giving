@@ -116,6 +116,23 @@ def test_admin_changes_roles_but_not_own(client, admin):
     assert client.put(f"/api/v1/users/{admin['id']}/role", json={"role": "user"}).status_code == 400
 
 
+def test_make_admin_script_promotes_first_admin(client):
+    import subprocess
+    import sys
+
+    register(client, "fondateur@example.com")
+    run = lambda email: subprocess.run(  # noqa: E731
+        [sys.executable, "-m", "scripts.make_admin", email], capture_output=True, text=True, encoding="utf-8"
+    )
+    missing = run("personne@example.com")
+    assert missing.returncode == 1
+    done = run("Fondateur@example.com")
+    assert done.returncode == 0, done.stderr
+    assert "administrateur" in done.stdout
+    assert db_fetch("SELECT role FROM users WHERE email = 'fondateur@example.com'")[0]["role"] == "admin"
+    assert login(client, "fondateur@example.com").json()["user"]["role"] == "admin"
+
+
 def test_settings_never_reveal_secrets(client, admin):
     r = client.get("/api/v1/admin/settings")
     assert r.status_code == 200

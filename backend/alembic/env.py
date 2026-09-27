@@ -22,6 +22,10 @@ load_dotenv(env_path)
 database_url = os.getenv("DATABASE_URL")
 if not database_url:
     raise RuntimeError("DATABASE_URL is not defined in backend/.env")
+# Hosts such as Render give postgres:// or postgresql:// URLs: migrations need the async driver
+for prefix in ("postgres://", "postgresql://"):
+    if database_url.startswith(prefix):
+        database_url = "postgresql+asyncpg://" + database_url[len(prefix):]
 
 config = context.config
 config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
