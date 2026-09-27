@@ -1,0 +1,29 @@
+# --- Secrets: never commit real credentials (the *.example files stay) ---
+.env
+.env.*
+!.env.example
+
+# --- Dependencies ---
+node_modules/
+venv/
+.venv/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# --- Build output ---
+frontend/dist/
+
+# --- Runtime files ---
+backend/logs/
+*.log
+backend/app.db
+
+# --- Archives and editor/OS files ---
+*.zip
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

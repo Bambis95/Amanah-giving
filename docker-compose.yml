@@ -1,0 +1,27 @@
+# ==========================================================
+# Amanah Giving - Base de donnees PostgreSQL locale
+# Utilisation :  docker compose up -d   (lance PostgreSQL)
+# Arreter      :  docker compose down
+# Donnees      :  persistees dans le volume amanah_pgdata
+# ==========================================================
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: amanah_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: amanah
+      POSTGRES_PASSWORD: amanah_secret
+      POSTGRES_DB: amanah_giving
+    ports:
+      - "5432:5432"
+    volumes:
+      - amanah_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amanah -d amanah_giving"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  amanah_pgdata:

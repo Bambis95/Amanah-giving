@@ -1,0 +1,71 @@
+{
+    "title": "projects",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "description": "Primary key, auto-increment"
+        },
+        "title": {
+            "type": "string",
+            "description": "Project title"
+        },
+        "description": {
+            "type": "string",
+            "description": "Project description"
+        },
+        "image": {
+            "type": "string",
+            "description": "Project image URL"
+        },
+        "category": {
+            "type": "string",
+            "description": "Project category: education, health, water, food, housing"
+        },
+        "icon": {
+            "type": "string",
+            "description": "Icon name for the project"
+        },
+        "raised": {
+            "type": "integer",
+            "description": "Amount raised in FCFA"
+        },
+        "goal": {
+            "type": "integer",
+            "description": "Goal amount in FCFA"
+        },
+        "donors": {
+            "type": "integer",
+            "description": "Number of donors"
+        },
+        "location": {
+            "type": "string",
+            "description": "Project location"
+        },
+        "urgent": {
+            "type": "boolean",
+            "description": "Whether the project is urgent"
+        },
+        "is_featured": {
+            "type": "boolean",
+            "description": "Whether the project is featured on homepage"
+        },
+        "status": {
+            "type": "string",
+            "description": "Project status: active, completed, paused"
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+        }
+    },
+    "required": [
+        "id",
+        "title",
+        "description",
+        "category",
+        "raised",
+        "goal"
+    ]
+}

@@ -1,0 +1,71 @@
+{
+    "title": "donations",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "description": "Primary key, auto-increment"
+        },
+        "user_id": {
+            "type": "string",
+            "description": "User ID of the donor (if logged in)"
+        },
+        "project_id": {
+            "type": "integer",
+            "description": "ID of the project being donated to"
+        },
+        "amount": {
+            "type": "integer",
+            "description": "Donation amount in FCFA"
+        },
+        "cause": {
+            "type": "string",
+            "description": "Cause category"
+        },
+        "payment_method": {
+            "type": "string",
+            "description": "Payment method: stripe, orange_money, wave"
+        },
+        "payment_status": {
+            "type": "string",
+            "description": "Payment status: pending, paid, failed, cancelled"
+        },
+        "stripe_session_id": {
+            "type": "string",
+            "description": "Stripe checkout session ID"
+        },
+        "donor_first_name": {
+            "type": "string",
+            "description": "Donor first name"
+        },
+        "donor_last_name": {
+            "type": "string",
+            "description": "Donor last name"
+        },
+        "donor_email": {
+            "type": "string",
+            "description": "Donor email address"
+        },
+        "donor_phone": {
+            "type": "string",
+            "description": "Donor phone number"
+        },
+        "message": {
+            "type": "string",
+            "description": "Optional message from donor"
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+        }
+    },
+    "required": [
+        "id",
+        "user_id",
+        "amount",
+        "cause",
+        "payment_method",
+        "payment_status"
+    ]
+}
