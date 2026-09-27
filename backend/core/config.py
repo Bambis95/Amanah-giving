@@ -36,6 +36,11 @@ class Settings(BaseSettings):
 
     # Session cookie (httpOnly: the login token is never readable by JavaScript)
     session_cookie_name: str = "amanah_session"
+    # Sliding sessions: each request extends the session; without activity it expires after
+    # ADMIN_IDLE_MINUTES for admins and JWT_EXPIRE_MINUTES for other users.
+    admin_idle_minutes: int = 15
+    # Absolute limit after login, even for an active session
+    session_max_hours: int = 12
     session_cookie_secure: bool = False  # set to true in production (HTTPS only)
     # Extra origins allowed by CORS, comma-separated; FRONTEND_URL is always allowed
     cors_origins: str = ""

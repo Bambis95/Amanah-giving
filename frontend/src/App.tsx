@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from 'next-themes';
 import ScrollToTop from './components/ScrollToTop';
+import SessionTimeout from './components/SessionTimeout';
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
       <AuthProvider>
       <BrowserRouter>
         <ScrollToTop />
+        <SessionTimeout />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />

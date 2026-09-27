@@ -7,6 +7,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (email: string, password: string, name?: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  /** Extend the server session (sliding idle timeout). False if it had already expired. */
+  keepAlive: () => Promise<boolean>;
 }
 
 // Where the token used to be stored before sessions moved to an httpOnly cookie
@@ -62,8 +64,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const keepAlive = useCallback(async () => {
+    try {
+      const me = await api.getMe(); // any authenticated request slides the session
+      setUser(me);
+      return me !== null;
+    } catch {
+      return true; // network hiccup: don't log the user out for that
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, keepAlive }}>
       {children}
     </AuthContext.Provider>
   );

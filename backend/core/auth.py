@@ -18,7 +18,7 @@ class AccessTokenError(Exception):
         super().__init__(self.message)
 
 
-def create_access_token(claims: Dict[str, Any], expires_minutes: Optional[int] = None) -> str:
+def create_access_token(claims: Dict[str, Any], expires_minutes: Optional[float] = None) -> str:
     """Create signed JWT access token from provided claims."""
     if not settings.jwt_secret_key:
         logger.error("JWT secret key is not configured")

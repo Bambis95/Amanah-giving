@@ -4,7 +4,8 @@ from typing import Optional, Tuple
 from core.auth import AccessTokenError, decode_access_token
 from core.config import settings
 from core.database import get_db
-from fastapi import Depends, HTTPException, Request, status
+from core.session import issue_session, needs_refresh, session_expired
+from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from models.auth import User
 from schemas.auth import UserResponse
@@ -49,13 +50,17 @@ def _check_origin(request: Request) -> None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Origine de la requête non autorisée")
 
 
-async def _load_user(token: str, db: AsyncSession) -> UserResponse:
+SESSION_EXPIRED = "Session expirée, veuillez vous reconnecter"
+
+
+async def _load_user(token: str, db: AsyncSession, response: Optional[Response] = None) -> UserResponse:
+    """Validate the token and the account. With `response` (cookie session), slide the expiry."""
     try:
         payload = decode_access_token(token)
     except AccessTokenError as exc:
-        # Log error type only, not the full exception which may contain sensitive token data
-        logger.warning("Token validation failed: %s", type(exc).__name__)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=exc.message)
+        # Expired token = idle timeout reached. Log the error type only, never token data.
+        logger.info("Token validation failed: %s", type(exc).__name__)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_EXPIRED)
 
     user_id = payload.get("sub")
     if not user_id:
@@ -64,14 +69,20 @@ async def _load_user(token: str, db: AsyncSession) -> UserResponse:
     # The account is read on every request: a deleted account, a changed role or an
     # invalidated session (password reset) takes effect immediately, not at token expiry.
     user = await db.get(User, user_id)
-    if not user or payload.get("tv", 0) != user.token_version:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expirée, veuillez vous reconnecter")
+    if not user or payload.get("tv", 0) != user.token_version or session_expired(payload):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_EXPIRED)
+
+    # Activity extends the session (sliding idle timeout), within the absolute limit
+    if response is not None and needs_refresh(payload, user.role):
+        auth_time = int(payload.get("auth_time") or payload.get("iat") or 0) or None
+        issue_session(response, user, auth_time=auth_time)
 
     return UserResponse(id=user.id, email=user.email, name=user.name, role=user.role, last_login=user.last_login)
 
 
 async def get_current_user(
     request: Request,
+    response: Response,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
@@ -82,11 +93,12 @@ async def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication credentials were not provided")
     if from_cookie:
         _check_origin(request)
-    return await _load_user(token, db)
+    return await _load_user(token, db, response if from_cookie else None)
 
 
 async def get_optional_user(
     request: Request,
+    response: Response,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[UserResponse]:
@@ -97,7 +109,7 @@ async def get_optional_user(
     if from_cookie:
         _check_origin(request)
     try:
-        return await _load_user(token, db)
+        return await _load_user(token, db, response if from_cookie else None)
     except HTTPException:
         # An expired or invalid session must not block an anonymous action
         logger.info("Ignoring invalid session on optional authentication")

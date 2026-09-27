@@ -22,6 +22,8 @@ export interface AuthUser {
   email: string;
   name: string | null;
   role: string;
+  /** Inactivity before automatic logout (set by the server: shorter for admins) */
+  idle_minutes?: number;
 }
 
 export interface LoginResponse {

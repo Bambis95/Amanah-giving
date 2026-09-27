@@ -4,7 +4,7 @@ import math
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from core.auth import create_access_token
+from core.session import clear_session, idle_minutes_for, issue_session
 from core.config import settings
 from core.database import get_db
 from dependencies.auth import client_ip, get_current_user
@@ -131,25 +131,9 @@ async def login(
     user.last_login = datetime.now(timezone.utc)
     await db.commit()
 
-    token = create_access_token(
-        {
-            "sub": user.id,
-            "email": user.email,
-            "role": user.role,
-            "name": user.name,
-            "tv": user.token_version,  # session version: bumping it logs out every session
-        }
-    )
-    # The token lives only in an httpOnly cookie: page scripts (and an XSS) cannot read it
-    response.set_cookie(
-        key=settings.session_cookie_name,
-        value=token,
-        max_age=int(settings.jwt_expire_minutes) * 60,
-        httponly=True,
-        secure=settings.session_cookie_secure,
-        samesite="lax",
-        path="/",
-    )
+    # The token lives only in an httpOnly cookie: page scripts (and an XSS) cannot read it.
+    # It expires after the role's idle time and slides with activity.
+    issue_session(response, user)
 
     return {
         "user": {
@@ -157,6 +141,7 @@ async def login(
             "email": user.email,
             "name": user.name,
             "role": user.role,
+            "idle_minutes": idle_minutes_for(user.role),
         },
     }
 
@@ -164,13 +149,7 @@ async def login(
 @router.post("/logout")
 async def logout(response: Response):
     """End the session in this browser by deleting the cookie."""
-    response.delete_cookie(
-        key=settings.session_cookie_name,
-        path="/",
-        httponly=True,
-        secure=settings.session_cookie_secure,
-        samesite="lax",
-    )
+    clear_session(response)
     return {"message": "Déconnecté"}
 
 
@@ -272,7 +251,12 @@ async def reset_password(payload: ResetPasswordRequest, http_request: Request, d
     return {"message": "Votre mot de passe a été modifié. Vous pouvez vous connecter."}
 
 
-@router.get("/me", response_model=UserResponse)
+class MeResponse(UserResponse):
+    # Inactivity before automatic logout, so the website's timer matches the server
+    idle_minutes: int
+
+
+@router.get("/me", response_model=MeResponse)
 async def get_current_user_info(current_user: UserResponse = Depends(get_current_user)):
-    """Get current user info."""
-    return current_user
+    """Get current user info (also extends the session: see core.session)."""
+    return MeResponse(**current_user.model_dump(), idle_minutes=idle_minutes_for(current_user.role))
