@@ -20,6 +20,7 @@ import { formatDate } from "./format";
 
 const subjectLabels: Record<string, string> = {
   join: "Demande d'adhésion",
+  notify: "Être tenu informé",
   general: "Question générale",
   donation: "Question sur un don",
   project: "Proposer un projet",
@@ -111,10 +112,13 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
-                  <a href={`mailto:${m.email}`} className="flex items-center gap-1 hover:text-primary">
-                    <Mail className="w-3.5 h-3.5" />
-                    {m.email}
-                  </a>
+                  {/* "Keep me informed" requests may come with a phone number only */}
+                  {m.email && (
+                    <a href={`mailto:${m.email}`} className="flex items-center gap-1 hover:text-primary">
+                      <Mail className="w-3.5 h-3.5" />
+                      {m.email}
+                    </a>
+                  )}
                   {m.phone && (
                     <a href={`tel:${m.phone}`} className="flex items-center gap-1 hover:text-primary">
                       <Phone className="w-3.5 h-3.5" />

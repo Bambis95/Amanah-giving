@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { api } from "@/api";
 import { BRAND_SHORT } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
+import { sourceLine, useVisitSource } from "@/hooks/use-visit-source";
 
 // A membership request is stored as a contact message with this subject (admin: "Demande d'adhésion")
 const JOIN_SUBJECT = "join";
@@ -35,6 +36,7 @@ const emptyForm = {
 };
 
 export default function JoinPage() {
+  const source = useVisitSource();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -66,6 +68,7 @@ export default function JoinPage() {
       `Région : ${form.region}`,
       form.stage ? `Stade : ${form.stage}` : null,
       need ? `Besoin estimé : ${new Intl.NumberFormat("fr-FR").format(Number(need))} FCFA` : null,
+      sourceLine(source),
       ``,
       `Description :`,
       form.description.trim(),

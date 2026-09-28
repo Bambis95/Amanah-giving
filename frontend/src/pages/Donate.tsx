@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { api, Project } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteStatus } from "@/hooks/use-site-status";
+import NotifyForm from "@/components/NotifyForm";
 import { CATEGORIES, GENERAL_CAUSE, causeLabel } from "@/lib/categories";
 
 const presetAmounts = [5000, 10000, 25000, 50000, 100000, 250000];
@@ -249,16 +250,12 @@ export default function DonatePage() {
               <h2 className="mb-3 text-2xl font-bold text-foreground">Les dons en ligne arrivent bientôt</h2>
               <p className="mb-6 text-muted-foreground">
                 Nous finalisons les dernières étapes, démarches officielles et paiements sécurisés, avant d'ouvrir les
-                dons. En attendant, découvrez nos projets ou écrivez-nous pour être prévenu de l'ouverture.
+                dons. Laissez-nous vos coordonnées pour être prévenu de l'ouverture.
               </p>
-              <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                <Button asChild variant="outline" className="rounded-lg border-primary text-primary">
-                  <Link to="/projects">Découvrir les projets</Link>
-                </Button>
-                <Button asChild className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Link to="/contact">Être prévenu</Link>
-                </Button>
-              </div>
+              <NotifyForm stacked className="mb-6 text-left" />
+              <Button asChild variant="outline" className="rounded-lg border-primary text-primary">
+                <Link to="/projects">Découvrir les projets</Link>
+              </Button>
             </CardContent>
           </Card>
         </section>

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
+import NotifyForm from "@/components/NotifyForm";
 import { api, Project, PublicStats } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
 import { cn } from "@/lib/utils";
@@ -226,6 +227,17 @@ export default function IndexPage() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
+        </div>
+      </section>
+
+      {/* Keep me informed (phone / WhatsApp first: the way most visitors prefer to be reached) */}
+      <section className="px-4 pb-16 sm:pb-20">
+        <div className="mx-auto max-w-6xl rounded-2xl bg-muted/60 p-6 sm:p-10">
+          <h2 className="mb-2 text-2xl font-bold tracking-tight text-foreground">Restez informé</h2>
+          <p className="mb-5 max-w-2xl text-muted-foreground">
+            Recevez les nouvelles du club : nouveaux projets, événements et ouverture des dons en ligne.
+          </p>
+          <NotifyForm />
         </div>
       </section>
 

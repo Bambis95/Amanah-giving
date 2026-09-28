@@ -11,6 +11,8 @@ const navigation = [
   { href: "/donate", label: "Faire un Don" },
   { href: "/about", label: "À Propos" },
   { href: "/rejoindre", label: "Rejoindre le Club" },
+  { href: "/partenaires", label: "Devenir Partenaire" },
+  { href: "/transparence", label: "Transparence" },
   { href: "/contact", label: "Contact" },
 ];
 

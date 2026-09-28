@@ -17,6 +17,10 @@ import ResetPassword from './pages/ResetPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Join from './pages/Join';
+import Partners from './pages/Partners';
+import Transparency from './pages/Transparency';
+import Stand from './pages/Stand';
+import Poster from './pages/Poster';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from 'next-themes';
 import ScrollToTop from './components/ScrollToTop';
@@ -52,6 +56,11 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/rejoindre" element={<Join />} />
+          <Route path="/partenaires" element={<Partners />} />
+          <Route path="/transparence" element={<Transparency />} />
+          {/* Event material: stand screen and printable poster (not linked from the menus) */}
+          <Route path="/stand" element={<Stand />} />
+          <Route path="/affiche" element={<Poster />} />
           <Route path="/confidentialite" element={<Privacy />} />
           <Route path="/conditions" element={<Terms />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
