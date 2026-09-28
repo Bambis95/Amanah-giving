@@ -55,6 +55,25 @@ export default function StandPage() {
   const slides = useMemo<Slide[]>(() => {
     const list: Slide[] = [
       {
+        // The official logo, large, with the carrier and the partner
+        id: "logo",
+        content: (
+          <div className="flex flex-wrap items-center gap-10">
+            <img
+              src="/logo-senjapo.jpg"
+              alt={`${BRAND_NAME} – ${BRAND_DESCRIPTOR}`}
+              className="h-[60vh] max-h-[640px] w-auto rounded-3xl bg-white p-5 shadow-2xl"
+            />
+            <div className="space-y-6">
+              <p className="text-2xl text-white/80">Une initiative du</p>
+              <img src="/partners/cces.jpg" alt={`${CARRIER_SHORT} – ${CARRIER_NAME}`} className="h-28 w-auto rounded-2xl bg-white p-3" />
+              <p className="text-2xl text-white/80">en partenariat avec</p>
+              <img src="/partners/diaayma-local.jpg" alt={PARTNER_NAME} className="h-28 w-auto rounded-2xl bg-white p-3" />
+            </div>
+          </div>
+        ),
+      },
+      {
         id: "intro",
         content: (
           <div>
@@ -63,7 +82,7 @@ export default function StandPage() {
               {BRAND_NAME} · {BRAND_DESCRIPTOR}
             </p>
             <h1 className="mb-8 text-5xl font-bold leading-tight tracking-tight xl:text-7xl">
-              Une plateforme, plusieurs causes, <span className="text-emerald-300">une solidarité nationale</span>
+              Une plateforme, plusieurs causes, <span className="text-highlight">une solidarité nationale</span>
             </h1>
             <p className="max-w-3xl text-2xl leading-relaxed text-white/80 xl:text-3xl">
               Une initiative du {CARRIER_NAME} ({CARRIER_SHORT}), en partenariat avec {PARTNER_NAME}.
@@ -79,7 +98,7 @@ export default function StandPage() {
             <div className="grid grid-cols-2 gap-5 xl:grid-cols-4">
               {CATEGORIES.map((c) => (
                 <div key={c.value} className="flex items-center gap-4 rounded-2xl bg-white/10 p-5">
-                  <c.icon className="h-9 w-9 shrink-0 text-emerald-300" aria-hidden="true" />
+                  <c.icon className="h-9 w-9 shrink-0 text-highlight" aria-hidden="true" />
                   <span className="text-xl font-semibold xl:text-2xl">{c.label}</span>
                 </div>
               ))}
@@ -107,7 +126,7 @@ export default function StandPage() {
                       </span>
                     </div>
                     <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/15">
-                      <div className="h-full rounded-full bg-emerald-300" style={{ width: `${pct}%` }} />
+                      <div className="h-full rounded-full bg-highlight" style={{ width: `${pct}%` }} />
                     </div>
                     <p className="mt-2 text-lg tabular-nums text-white/80">
                       {formatNumber(p.raised)} FCFA collectés sur {formatNumber(p.goal)} FCFA · {pct} %
@@ -133,7 +152,7 @@ export default function StandPage() {
               ["03", "Vous suivez", "L'utilisation des fonds et les réalisations, en toute transparence."],
             ].map(([n, title, text]) => (
               <li key={n} className="rounded-2xl bg-white/10 p-7">
-                <span className="text-5xl font-bold text-emerald-300">{n}</span>
+                <span className="text-5xl font-bold text-highlight">{n}</span>
                 <h3 className="mt-3 text-2xl font-bold xl:text-3xl">{title}</h3>
                 <p className="mt-2 text-xl leading-relaxed text-white/75">{text}</p>
               </li>
@@ -160,7 +179,7 @@ export default function StandPage() {
               const I = Icon as React.ElementType;
               return (
                 <div key={label as string} className="flex items-center gap-4 rounded-2xl bg-white/10 p-5">
-                  <I className="h-8 w-8 shrink-0 text-emerald-300" aria-hidden="true" />
+                  <I className="h-8 w-8 shrink-0 text-highlight" aria-hidden="true" />
                   <span className="text-xl font-semibold xl:text-2xl">{label as string}</span>
                 </div>
               );
@@ -186,7 +205,7 @@ export default function StandPage() {
                 [formatNumber(stats.funded_projects), plural(stats.funded_projects, "campagne financée", "campagnes financées")],
               ].map(([value, label]) => (
                 <div key={label} className="rounded-2xl bg-white/10 p-7">
-                  <p className="text-5xl font-bold tabular-nums text-emerald-300 xl:text-6xl">{value}</p>
+                  <p className="text-5xl font-bold tabular-nums text-highlight xl:text-6xl">{value}</p>
                   <p className="mt-2 text-2xl text-white/80">{label}</p>
                 </div>
               ))}
@@ -257,7 +276,7 @@ export default function StandPage() {
         </button>
         <div className="flex flex-1 justify-center gap-2" aria-hidden="true">
           {slides.map((s, i) => (
-            <span key={s.id} className={cn("h-1.5 rounded-full transition-all", i === index % count ? "w-10 bg-emerald-300" : "w-4 bg-white/25")} />
+            <span key={s.id} className={cn("h-1.5 rounded-full transition-all", i === index % count ? "w-10 bg-highlight" : "w-4 bg-white/25")} />
           ))}
         </div>
         <button type="button" onClick={() => go(1)} className="rounded-full p-2 text-white/50 hover:bg-white/10 hover:text-white" aria-label="Diapositive suivante">

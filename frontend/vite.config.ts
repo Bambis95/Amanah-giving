@@ -13,7 +13,7 @@ function socialPreview(): Plugin {
     transformIndexHtml() {
       if (!/^https?:\/\//.test(site)) return [];
       const meta = (property: string, content: string) => ({ tag: 'meta', attrs: { property, content }, injectTo: 'head' as const });
-      return [meta('og:url', `${site}/`), meta('og:image', `${site}/og-image.png`)];
+      return [meta('og:url', `${site}/`), meta('og:image', `${site}/og-image.jpg`)];
     },
   };
 }

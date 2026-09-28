@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { AlertTriangle, CheckCircle, HandHeart, Printer } from "lucide-react";
+import { AlertTriangle, CheckCircle, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useVisitSource } from "@/hooks/use-visit-source";
 import { BRAND_DESCRIPTOR, BRAND_NAME, BRAND_SLOGAN, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
@@ -47,37 +47,31 @@ export default function PosterPage() {
 
       {/* A4 sheet */}
       <article className="mx-auto flex h-[297mm] w-[210mm] flex-col overflow-hidden bg-white text-slate-900 shadow-xl print:shadow-none">
-        <header className="bg-[#0D7C66] px-[14mm] pb-[12mm] pt-[14mm] text-white">
-          <div className="mb-[8mm] flex items-center gap-3">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-              <HandHeart className="h-8 w-8" aria-hidden="true" />
-            </span>
-            <span className="text-3xl font-bold tracking-wide">{BRAND_NAME}</span>
-          </div>
-          <p className="text-lg font-medium text-white/85">{BRAND_DESCRIPTOR}</p>
-          <h1 className="mt-3 text-[40px] font-bold leading-tight">{BRAND_SLOGAN}</h1>
+        {/* The official logo already carries the name, the descriptor and the slogan */}
+        <header className="flex justify-center border-b-[3mm] border-[#F57206] px-[14mm] pb-[5mm] pt-[8mm]">
+          <img src="/logo-senjapo.jpg" alt={`${BRAND_NAME} – ${BRAND_DESCRIPTOR} : ${BRAND_SLOGAN}`} className="h-[92mm] w-auto" />
         </header>
 
-        <section className="flex flex-1 flex-col px-[14mm] py-[9mm]">
+        <section className="flex flex-1 flex-col px-[14mm] py-[7mm]">
           <p className="text-xl leading-relaxed text-slate-700">
             Contribuez à des projets à impact social, économique, éducatif et communautaire, vérifiés et suivis en toute
             transparence.
           </p>
 
-          <ul className="mt-[7mm] space-y-3 text-lg">
+          <ul className="mt-[5mm] space-y-2 text-lg">
             {[
               "Soutenez les jeunes, les Daaras, les artisans, les agriculteurs, les femmes et les plus vulnérables.",
               "Vous portez un projet ? Proposez votre campagne.",
               "Suivez l'utilisation des fonds et les réalisations.",
             ].map((item) => (
               <li key={item} className="flex gap-3">
-                <CheckCircle className="mt-1 h-6 w-6 shrink-0 text-[#0D7C66]" aria-hidden="true" />
+                <CheckCircle className="mt-1 h-6 w-6 shrink-0 text-[#044990]" aria-hidden="true" />
                 <span>{item}</span>
               </li>
             ))}
           </ul>
 
-          <div className="mt-[8mm] flex flex-wrap gap-2">
+          <div className="mt-[5mm] flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
               <span key={c.value} className="rounded-full border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700">
                 {c.label}
@@ -85,25 +79,27 @@ export default function PosterPage() {
             ))}
           </div>
 
-          <div className="mt-auto flex items-center gap-[10mm] rounded-3xl border-2 border-[#0D7C66] p-[8mm]">
-            <QRCodeSVG value={siteUrl} size={200} level="M" marginSize={0} title={`QR code : site ${BRAND_NAME}`} />
+          <div className="mt-auto flex items-center gap-[10mm] rounded-3xl border-2 border-[#F57206] p-[6mm]">
+            <QRCodeSVG value={siteUrl} size={180} level="M" marginSize={0} title={`QR code : site ${BRAND_NAME}`} />
             <div>
-              <p className="text-3xl font-bold leading-tight text-[#0D7C66]">Scannez pour découvrir les campagnes</p>
+              <p className="text-3xl font-bold leading-tight text-[#044990]">Scannez pour découvrir les campagnes</p>
               <p className="mt-3 text-lg text-slate-700">ou rendez-vous sur</p>
               <p className="break-all text-xl font-semibold">{host}</p>
             </div>
           </div>
         </section>
 
-        <footer className="space-y-1 border-t border-slate-200 px-[14mm] py-[5mm] text-sm text-slate-600">
-          <p className="flex flex-wrap justify-between gap-2 text-base">
-            <span>{CONTACT_PHONES.join(" / ")}</span>
-            <span>{CONTACT_EMAIL}</span>
-          </p>
-          <p>
-            Une initiative du {CARRIER_NAME} ({CARRIER_SHORT}), récépissé {CARRIER_RECEIPT}, en partenariat avec{" "}
-            {PARTNER_NAME}.
-          </p>
+        <footer className="flex items-center gap-[5mm] border-t border-slate-200 px-[14mm] py-[4mm] text-sm text-slate-600">
+          <img src="/partners/cces.jpg" alt={`${CARRIER_SHORT} – ${CARRIER_NAME}`} className="h-[16mm] w-auto" />
+          <img src="/partners/diaayma-local.jpg" alt={PARTNER_NAME} className="h-[16mm] w-auto" />
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="text-base font-semibold text-slate-800">
+              {CONTACT_PHONES.join(" / ")} · {CONTACT_EMAIL}
+            </p>
+            <p>
+              Une initiative du {CARRIER_SHORT} (récépissé {CARRIER_RECEIPT}), en partenariat avec {PARTNER_NAME}.
+            </p>
+          </div>
         </footer>
       </article>
     </div>

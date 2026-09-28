@@ -32,6 +32,10 @@ export default function Footer() {
             <p className="max-w-sm text-sm leading-relaxed text-white/65">
               {BRAND_NAME} est une initiative du {CARRIER_NAME} ({CARRIER_SHORT}), en partenariat avec {PARTNER_NAME}.
             </p>
+            <div className="flex items-center gap-2">
+              <img src="/partners/cces.jpg" alt={`Logo ${CARRIER_SHORT}`} className="h-12 w-auto rounded-lg bg-white p-1" loading="lazy" />
+              <img src="/partners/diaayma-local.jpg" alt={`Logo ${PARTNER_NAME}`} className="h-12 w-auto rounded-lg bg-white p-1" loading="lazy" />
+            </div>
             <div className="flex flex-wrap gap-2 pt-1">
               <span className="rounded-md bg-[#1DC3E2]/20 px-3 py-1.5 text-xs font-medium text-[#5AD6EE]">Wave</span>
               <span className="rounded-md bg-[#FF6600]/20 px-3 py-1.5 text-xs font-medium text-[#FF8A3D]">Orange Money</span>
@@ -69,7 +73,7 @@ export default function Footer() {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/85">Contact</h3>
             <ul className="space-y-3 text-sm text-white/65">
               <li className="flex items-start gap-3">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-highlight" aria-hidden="true" />
                 <div className="flex flex-col gap-1">
                   {CONTACT_PHONES.map((phone) => (
                     <a key={phone} href={telHref(phone)} className="transition-colors hover:text-white">
@@ -79,13 +83,13 @@ export default function Footer() {
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-highlight" aria-hidden="true" />
                 <a href={`mailto:${CONTACT_EMAIL}`} className="break-all transition-colors hover:text-white">
                   {CONTACT_EMAIL}
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+                <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-highlight" aria-hidden="true" />
                 <span>
                   {CARRIER_SHORT} · Récépissé {CARRIER_RECEIPT}
                 </span>

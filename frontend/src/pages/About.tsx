@@ -123,8 +123,15 @@ export default function AboutPage() {
           </div>
 
           {/* Identity card: who is legally behind the platform */}
-          <Card className="shadow-sm lg:col-span-2">
-            <CardContent className="space-y-4 p-6">
+          <Card className="overflow-hidden shadow-sm lg:col-span-2">
+            <div className="flex justify-center bg-white p-6">
+              <img src="/logo-senjapo.jpg" alt={`Logo ${BRAND_NAME}`} className="h-56 w-auto" loading="lazy" />
+            </div>
+            <CardContent className="space-y-4 border-t p-6">
+              <div className="flex items-center gap-3">
+                <img src="/partners/cces.jpg" alt={`Logo ${CARRIER_SHORT}`} className="h-14 w-auto rounded-lg bg-white p-1 ring-1 ring-black/5" loading="lazy" />
+                <img src="/partners/diaayma-local.jpg" alt={`Logo ${PARTNER_NAME}`} className="h-14 w-auto rounded-lg bg-white p-1 ring-1 ring-black/5" loading="lazy" />
+              </div>
               <h3 className="flex items-center gap-2 font-bold text-foreground">
                 <BadgeCheck className="h-5 w-5 text-primary" aria-hidden="true" />
                 Fiche d'identité

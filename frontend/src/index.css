@@ -18,7 +18,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 28% 14%;
 
-    --primary: 168 81% 27%; /* brand green #0D7C66, white text 5:1 */
+    --primary: 210 95% 29%; /* SENJAPO blue #044990 (logo), white text 9:1 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
@@ -27,8 +27,8 @@
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 44%; /* 4.8:1 on background */
 
-    --accent: 157 40% 93%; /* #E8F5F0 */
-    --accent-foreground: 168 82% 20%;
+    --accent: 210 70% 94%; /* light blue tint */
+    --accent-foreground: 210 90% 24%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -40,30 +40,30 @@
     --info: 221 83% 53%;
     --info-foreground: 0 0% 100%;
 
-    /* Warm call-to-action colour (donate buttons), always with dark text */
-    --highlight: 38 92% 50%; /* #F59E0B */
+    /* SENJAPO orange #F57206 (logo): call-to-action colour, always with dark text (6:1) */
+    --highlight: 27 95% 49%;
     --highlight-foreground: 240 28% 14%;
 
     --border: 220 13% 91%;
     --input: 220 13% 88%;
-    --ring: 168 81% 27%;
+    --ring: 210 95% 29%;
 
     --radius: 0.75rem;
 
     /* Brand sections: page headers and call-to-action bands (white text on top) */
-    --surface-hero-from: 240 28% 14%;
-    --surface-hero-to: 240 28% 24%;
-    --surface-brand-from: 168 81% 27%;
-    --surface-brand-to: 168 82% 20%;
+    --surface-hero-from: 214 64% 13%;
+    --surface-hero-to: 212 58% 21%;
+    --surface-brand-from: 210 95% 29%;
+    --surface-brand-to: 214 90% 19%;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 28% 14%;
-    --sidebar-primary: 168 81% 27%;
+    --sidebar-primary: 210 95% 29%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 157 40% 93%;
-    --sidebar-accent-foreground: 168 82% 20%;
+    --sidebar-accent: 210 70% 94%;
+    --sidebar-accent-foreground: 210 90% 24%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 168 81% 27%;
+    --sidebar-ring: 210 95% 29%;
   }
 
   .dark {
@@ -76,7 +76,7 @@
     --popover: 222 20% 11%;
     --popover-foreground: 210 20% 96%;
 
-    --primary: 166 64% 44%; /* lighter green, dark text on top */
+    --primary: 210 85% 64%; /* lighter SENJAPO blue, dark text on top */
     --primary-foreground: 222 22% 7%;
 
     --secondary: 222 16% 16%;
@@ -85,8 +85,8 @@
     --muted: 222 16% 15%;
     --muted-foreground: 218 11% 66%;
 
-    --accent: 166 35% 15%;
-    --accent-foreground: 166 60% 72%;
+    --accent: 212 45% 16%;
+    --accent-foreground: 210 90% 78%;
 
     --destructive: 0 85% 63%;
     --destructive-foreground: 222 22% 7%;
@@ -98,26 +98,26 @@
     --info: 213 94% 68%;
     --info-foreground: 222 22% 7%;
 
-    --highlight: 38 92% 55%;
+    --highlight: 27 95% 55%;
     --highlight-foreground: 222 22% 7%;
 
     --border: 222 14% 19%;
     --input: 222 14% 24%;
-    --ring: 166 64% 44%;
+    --ring: 210 85% 64%;
 
-    --surface-hero-from: 222 24% 11%;
-    --surface-hero-to: 232 22% 17%;
-    --surface-brand-from: 168 70% 22%;
-    --surface-brand-to: 170 72% 15%;
+    --surface-hero-from: 216 40% 10%;
+    --surface-hero-to: 214 42% 16%;
+    --surface-brand-from: 210 85% 24%;
+    --surface-brand-to: 214 80% 15%;
 
     --sidebar-background: 222 20% 10%;
     --sidebar-foreground: 210 20% 96%;
-    --sidebar-primary: 166 64% 44%;
+    --sidebar-primary: 210 85% 64%;
     --sidebar-primary-foreground: 222 22% 7%;
-    --sidebar-accent: 166 35% 15%;
-    --sidebar-accent-foreground: 166 60% 72%;
+    --sidebar-accent: 212 45% 16%;
+    --sidebar-accent-foreground: 210 90% 78%;
     --sidebar-border: 222 14% 19%;
-    --sidebar-ring: 166 64% 44%;
+    --sidebar-ring: 210 85% 64%;
   }
 }
 
@@ -181,9 +181,9 @@
   .hero-overlay {
     background-image: linear-gradient(
       to bottom,
-      hsl(240 28% 10% / 0.8),
-      hsl(240 28% 10% / 0.6),
-      hsl(240 28% 10% / 0.9)
+      hsl(214 60% 9% / 0.82),
+      hsl(214 60% 9% / 0.6),
+      hsl(214 60% 9% / 0.9)
     );
   }
 
@@ -193,7 +193,7 @@
     color: #fff;
   }
 
-  /* Green brand band (donation header, call-to-action blocks) */
+  /* Blue brand band (donation header, call-to-action blocks) */
   .surface-brand {
     background-image: linear-gradient(
       135deg,
