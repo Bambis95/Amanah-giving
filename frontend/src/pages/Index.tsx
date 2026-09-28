@@ -9,7 +9,8 @@ import { api, Project, PublicStats } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
 import { cn } from "@/lib/utils";
 import { softTone, solidTone, Tone } from "@/lib/tones";
-import { Heart, Users, FolderOpen, TrendingUp, ArrowRight } from "lucide-react";
+import { Heart, Users, FolderOpen, TrendingUp, ArrowRight, Sprout, Lightbulb } from "lucide-react";
+import { BRAND_NAME } from "@/lib/brand";
 
 const HERO_IMG = "https://mgx-backend-cdn.metadl.com/generate/images/983496/2026-02-22/20fb421b-e0e3-4aa9-a282-e7aa1dd63cc3.png";
 
@@ -26,20 +27,20 @@ function buildStats(s: PublicStats | null) {
 const steps: { step: string; title: string; description: string; tone: Tone }[] = [
   {
     step: "01",
-    title: "Choisissez une Cause",
-    description: "Parcourez nos projets vérifiés et choisissez la cause qui vous tient à cœur.",
+    title: "Choisissez un Projet",
+    description: "Soutenez un projet précis, ou faites un don général que le club affecte là où il est le plus utile.",
     tone: "primary",
   },
   {
     step: "02",
     title: "Faites votre Don",
-    description: "Sélectionnez le montant et payez en toute sécurité via Stripe, Orange Money ou Wave.",
+    description: "Sélectionnez le montant et payez en toute sécurité par Wave, Orange Money ou carte bancaire.",
     tone: "highlight",
   },
   {
     step: "03",
-    title: "Suivez l'Impact",
-    description: "Recevez des rapports réguliers sur l'utilisation de vos dons et leur impact réel.",
+    title: "Le Club Redistribue",
+    description: "Les fonds sont versés aux projets nationaux et régionaux, dont vous suivez l'avancement sur le site.",
     tone: "info",
   },
 ];
@@ -81,16 +82,16 @@ export default function IndexPage() {
         <div className="hero-overlay absolute inset-0" aria-hidden="true" />
         <div className="relative z-10 mx-auto max-w-4xl px-4 pb-24 pt-28 text-center text-white sm:pb-28">
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
-            <Heart className="h-4 w-4 fill-highlight text-highlight" aria-hidden="true" />
-            <span className="text-sm font-medium">Plateforme de dons de confiance</span>
+            <Sprout className="h-4 w-4 text-highlight" aria-hidden="true" />
+            <span className="text-sm font-medium">{BRAND_NAME}</span>
           </div>
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Chaque Don est une{" "}
-            <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">Amanah</span>
+            Ensemble, faisons grandir{" "}
+            <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">nos régions</span>
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-white/80 sm:text-xl">
-            Rejoignez des milliers de donateurs à travers le monde. Ensemble, nous pouvons transformer des vies grâce à
-            la générosité et la confiance.
+            Un club de créateurs qui rassemble vos dons et les redistribue à des projets nationaux et régionaux :
+            agriculture, éducation, assainissement, création d'activités et bien d'autres.
           </p>
           <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button asChild size="lg" className="h-14 rounded-xl px-8 text-base font-semibold shadow-lg sm:text-lg">
@@ -205,14 +206,37 @@ export default function IndexPage() {
         </div>
       </section>
 
+      {/* Creators' club: anyone with a project can join */}
+      <section className="px-4 py-16 sm:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-10 md:grid-cols-[1fr_auto]">
+          <div>
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
+              <Lightbulb className="h-4 w-4" aria-hidden="true" />
+              Club de créateurs
+            </span>
+            <h2 className="mb-3 text-2xl font-bold tracking-tight text-foreground md:text-3xl">Vous avez un projet ?</h2>
+            <p className="max-w-2xl text-muted-foreground">
+              Le club rassemble des créateurs de tous les secteurs. Agriculture, commerce, artisanat, services,
+              éducation… Présentez votre projet : les projets retenus peuvent être accompagnés et financés grâce aux dons.
+            </p>
+          </div>
+          <Button asChild size="lg" className="h-12 rounded-xl px-8 font-semibold">
+            <Link to="/rejoindre">
+              Rejoindre le club
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
       {/* Call to action */}
       <section className="surface-brand px-4 py-16 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <Heart className="mx-auto mb-6 h-12 w-12 fill-highlight text-highlight" aria-hidden="true" />
           <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Prêt à Faire la Différence ?</h2>
           <p className="mx-auto mb-8 max-w-xl text-lg text-white/85">
-            Chaque contribution, aussi petite soit-elle, peut transformer une vie. Rejoignez notre communauté de
-            donateurs aujourd'hui.
+            Chaque contribution, aussi petite soit-elle, fait avancer un projet près de chez vous. Rejoignez les
+            donateurs du club dès aujourd'hui.
           </p>
           <Button
             asChild

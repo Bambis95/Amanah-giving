@@ -2,26 +2,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  CheckCircle,
-  ChevronRight,
-  Droplets,
-  GraduationCap,
-  Heart,
-  Home,
-  Stethoscope,
-  Users,
-  UtensilsCrossed,
-} from "lucide-react";
+import { CheckCircle, ChevronRight, Heart, Users } from "lucide-react";
 import { Project } from "@/api";
-
-const iconMap: Record<string, React.ElementType> = {
-  GraduationCap,
-  Stethoscope,
-  Droplets,
-  UtensilsCrossed,
-  Home,
-};
+import { iconByName } from "@/lib/categories";
 
 function formatCFA(amount: number) {
   return new Intl.NumberFormat("fr-FR").format(amount);
@@ -29,7 +12,7 @@ function formatCFA(amount: number) {
 
 export default function ProjectCard({ project }: { project: Project }) {
   const progress = project.goal > 0 ? Math.round((project.raised / project.goal) * 100) : 0;
-  const IconComponent = iconMap[project.icon || ""] || Heart;
+  const IconComponent = iconByName(project.icon);
   const completed = project.status === "completed";
 
   return (

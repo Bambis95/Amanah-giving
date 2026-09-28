@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import { Heart, Loader2, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { BRAND_SHORT } from "@/lib/brand";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -102,7 +103,7 @@ export default function LoginPage() {
               <Heart className="w-7 h-7 text-primary-foreground fill-primary-foreground" aria-hidden="true" />
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              {tab === "login" ? "Bon retour parmi nous" : "Rejoignez Amanah Giving"}
+              {tab === "login" ? "Bon retour parmi nous" : `Rejoignez la ${BRAND_SHORT}`}
             </h1>
             <p className="text-muted-foreground mt-2">
               {tab === "login"

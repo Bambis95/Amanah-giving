@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import LegalLayout, { LegalSection } from "@/components/LegalLayout";
 import { CONTACT_ADDRESS, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
+import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
 
 // The donation rules below mirror the backend (routers/payment_checkout.py): keep them in sync.
 const UPDATED = "27 septembre 2026";
@@ -13,7 +14,7 @@ const sections: LegalSection[] = [
     title: "Éditeur du site",
     content: (
       <p>
-        Le site Amanah Giving est édité par <strong>Amanah Giving</strong>, {CONTACT_ADDRESS}. Contact : {email} ·{" "}
+        Ce site est édité par la <strong>{BRAND_NAME}</strong> ({BRAND_SHORT}), {CONTACT_ADDRESS}. Contact : {email} ·{" "}
         {CONTACT_PHONE}.
       </p>
     ),
@@ -23,9 +24,10 @@ const sections: LegalSection[] = [
     title: "Objet",
     content: (
       <p>
-        Amanah Giving est une plateforme de dons en ligne qui permet de soutenir des projets solidaires (éducation, santé,
-        eau potable, alimentation, logement). Les présentes conditions encadrent l'utilisation du site et les dons qui y
-        sont faits. En utilisant le site ou en faisant un don, vous les acceptez.
+        La {BRAND_SHORT} est un club qui collecte des dons via cette plateforme et les redistribue à des projets de
+        développement nationaux et régionaux (agriculture, éducation, assainissement, création d'activités…). Les
+        présentes conditions encadrent l'utilisation du site et les dons qui y sont faits. En utilisant le site ou en
+        faisant un don, vous les acceptez.
       </p>
     ),
   },
@@ -77,8 +79,9 @@ const sections: LegalSection[] = [
     content: (
       <p>
         Les dons, hors frais prélevés par les prestataires de paiement, sont affectés au projet ou à la cause que vous avez
-        choisi. Si un projet ne pouvait pas être mené à son terme, les fonds collectés seraient réaffectés à un projet de
-        même nature, et les donateurs concernés en seraient informés.
+        choisi. Un don général est réparti par le club entre les projets en cours, selon leurs besoins. Si un projet ne
+        pouvait pas être mené à son terme, les fonds collectés seraient réaffectés à un projet de même nature, et les
+        donateurs concernés en seraient informés.
       </p>
     ),
   },
@@ -90,7 +93,7 @@ const sections: LegalSection[] = [
         <p>
           Un don est en principe définitif. Nous remboursons toutefois un don fait par erreur (mauvais montant, paiement
           en double) ou un paiement non autorisé, sur demande envoyée à {email} dans les <strong>30 jours</strong>, en
-          indiquant la référence du don (par exemple AMG-000123) figurant dans l'email de confirmation.
+          indiquant la référence du don (par exemple {BRAND_SHORT}-000123) figurant dans l'email de confirmation.
         </p>
         <p>
           Le remboursement est effectué par le même moyen de paiement. Les frais déjà prélevés par le prestataire de
@@ -115,7 +118,7 @@ const sections: LegalSection[] = [
     title: "Propriété intellectuelle",
     content: (
       <p>
-        Les textes, logos et éléments graphiques du site appartiennent à Amanah Giving ou sont utilisés avec autorisation.
+        Les textes, logos et éléments graphiques du site appartiennent à la {BRAND_SHORT} ou sont utilisés avec autorisation.
         Ils ne peuvent pas être reproduits sans accord préalable.
       </p>
     ),
@@ -171,7 +174,7 @@ export default function TermsPage() {
       updated={UPDATED}
       intro={
         <p>
-          Ces conditions expliquent comment fonctionne Amanah Giving, ce que vous pouvez attendre de nous et ce que nous
+          Ces conditions expliquent comment fonctionne la plateforme de la {BRAND_SHORT}, ce que vous pouvez attendre de nous et ce que nous
           attendons de vous lorsque vous utilisez le site ou faites un don.
         </p>
       }

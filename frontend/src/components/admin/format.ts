@@ -7,14 +7,7 @@ export function formatDate(value: string | null) {
   return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }
 
-export const categoryLabels: Record<string, string> = {
-  education: "Éducation",
-  health: "Santé",
-  water: "Eau",
-  food: "Alimentation",
-  housing: "Logement",
-  general: "Don général",
-};
+export { categoryLabel } from "@/lib/categories";
 
 export const paymentMethodLabels: Record<string, string> = {
   stripe: "Carte (Stripe)",

@@ -22,21 +22,13 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi, Project, ProjectInput } from "@/api";
-import { categoryLabels, projectStatuses } from "./format";
-
-// The public pages pick the card icon from this field
-const categoryIcons: Record<string, string> = {
-  education: "GraduationCap",
-  health: "Stethoscope",
-  water: "Droplets",
-  food: "UtensilsCrossed",
-  housing: "Home",
-};
+import { projectStatuses } from "./format";
+import { CATEGORIES, categoryLabel, iconNameFor } from "@/lib/categories";
 
 const emptyForm = {
   title: "",
   description: "",
-  category: "education",
+  category: "agriculture",
   image: "",
   location: "",
   goal: "",
@@ -101,7 +93,8 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
       title: form.title.trim(),
       description: form.description.trim(),
       category: form.category,
-      icon: categoryIcons[form.category] ?? null,
+      // The public pages pick the card icon from this field
+      icon: iconNameFor(form.category),
       image: form.image.trim() || null,
       location: form.location.trim() || null,
       goal,
@@ -166,11 +159,15 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(categoryIcons).map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {categoryLabels[c]}
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
                     </SelectItem>
                   ))}
+                  {/* A project in a category no longer offered keeps it until changed */}
+                  {!CATEGORIES.some((c) => c.value === form.category) && (
+                    <SelectItem value={form.category}>{categoryLabel(form.category)}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>

@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     donations_enabled: bool = True
 
     # Session cookie (httpOnly: the login token is never readable by JavaScript)
-    session_cookie_name: str = "amanah_session"
+    session_cookie_name: str = "cndsa_session"
     # Sliding sessions: each request extends the session; without activity it expires after
     # ADMIN_IDLE_MINUTES for admins and JWT_EXPIRE_MINUTES for other users.
     admin_idle_minutes: int = 15
@@ -61,7 +61,11 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_use_ssl: bool = False  # True for port 465 (implicit TLS); otherwise STARTTLS is used
     email_from: str = ""
-    email_from_name: str = "Amanah Giving"
+    email_from_name: str = "CNDSA - Collecte Nationale"
+
+    # Organisation running the platform (emails, payment page); the website has the same in src/lib/brand.ts
+    site_name: str = "Collecte Nationale pour le Développement du Secteur Agricole"
+    site_short_name: str = "CNDSA"
 
     # Database: PostgreSQL is the official database of this project
     # (security, transactions, backups). Set DATABASE_URL to connect to it:

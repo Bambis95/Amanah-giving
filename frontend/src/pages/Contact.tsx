@@ -284,7 +284,7 @@ export default function ContactPage() {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Localisation Amanah Giving"
+                  title="Localisation du club"
                 />
               </div>
               <CardContent className="p-5">

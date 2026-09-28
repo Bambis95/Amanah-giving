@@ -193,7 +193,7 @@ export default function AdminPage() {
             <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">Tableau de bord</h1>
               <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-                Suivez les dons, les messages et les projets d'Amanah Giving.
+                Suivez les dons, les messages et les projets du club.
               </p>
             </div>
             <Button variant="outline" onClick={load} disabled={loading} className="shrink-0" aria-label="Actualiser les données">

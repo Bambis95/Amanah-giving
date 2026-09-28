@@ -30,22 +30,18 @@ import { toast } from "sonner";
 import { api, Project } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteStatus } from "@/hooks/use-site-status";
+import { CATEGORIES, GENERAL_CAUSE, causeLabel } from "@/lib/categories";
 
 const presetAmounts = [5000, 10000, 25000, 50000, 100000, 250000];
 
+// A general donation comes first: the club allocates it where it is most needed
 const causes = [
-  { value: "education", label: "Éducation pour Tous" },
-  { value: "health", label: "Santé & Bien-être" },
-  { value: "water", label: "Eau Potable" },
-  { value: "food", label: "Alimentation" },
-  { value: "housing", label: "Logement" },
-  { value: "general", label: "Don Général (là où c'est le plus nécessaire)" },
+  { value: GENERAL_CAUSE.value, label: GENERAL_CAUSE.causeLabel },
+  ...CATEGORIES.map((c) => ({ value: c.value, label: c.causeLabel })),
 ];
 
 // Select value for "donate to a cause, not a specific project"
 const NO_PROJECT = "none";
-
-const causeLabel = (value: string) => causes.find((c) => c.value === value)?.label ?? value;
 
 const paymentMethods = [
   {
@@ -241,7 +237,7 @@ export default function DonatePage() {
         <section className="surface-brand px-4 pb-16 pt-24 sm:pt-28">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="mb-4 text-3xl font-bold md:text-4xl">Faire un Don</h1>
-            <p className="mx-auto max-w-xl text-white/80">Chaque don est une amanah.</p>
+            <p className="mx-auto max-w-xl text-white/80">Chaque don compte pour le développement de nos régions.</p>
           </div>
         </section>
         <section className="-mt-6 px-4 py-12">
@@ -284,7 +280,8 @@ export default function DonatePage() {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Faire un Don</h1>
           <p className="text-white/80 max-w-xl mx-auto">
-            Choisissez le montant, la cause et le mode de paiement qui vous conviennent. Chaque don est une amanah.
+            Choisissez le montant, le projet ou la cause, et le mode de paiement qui vous conviennent. Le club
+            affecte votre don au projet choisi.
           </p>
         </div>
       </section>

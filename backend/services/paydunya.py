@@ -1,6 +1,6 @@
 
 """
-PayDunya payment service for Amanah Giving.
+PayDunya payment service (Wave / Orange Money).
 
 This module isolates PayDunya integration from the FastAPI routers.
 Secrets are loaded from core.config and are never logged.
@@ -119,8 +119,8 @@ def create_checkout(
     initialize_paydunya()
 
     store = paydunya.Store(
-        name="Amanah Giving",
-        tagline="Plateforme de dons et de collecte solidaire",
+        name=settings.site_short_name,
+        tagline=settings.site_name,
         website_url=settings.frontend_url,
     )
 

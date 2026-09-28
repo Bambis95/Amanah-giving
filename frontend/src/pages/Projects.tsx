@@ -2,29 +2,17 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
-import {
-  GraduationCap,
-  Stethoscope,
-  Droplets,
-  UtensilsCrossed,
-  Home,
-  Filter,
-} from "lucide-react";
+import { Filter } from "lucide-react";
 import { api, Project } from "@/api";
+import { CATEGORIES } from "@/lib/categories";
 
-type Category = "all" | "education" | "health" | "water" | "food" | "housing";
-
-const categories: { value: Category; label: string; icon: React.ElementType }[] = [
+const categories: { value: string; label: string; icon: React.ElementType }[] = [
   { value: "all", label: "Tous", icon: Filter },
-  { value: "education", label: "Éducation", icon: GraduationCap },
-  { value: "health", label: "Santé", icon: Stethoscope },
-  { value: "water", label: "Eau", icon: Droplets },
-  { value: "food", label: "Alimentation", icon: UtensilsCrossed },
-  { value: "housing", label: "Logement", icon: Home },
+  ...CATEGORIES,
 ];
 
 export default function ProjectsPage() {
-  const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -59,7 +47,7 @@ export default function ProjectsPage() {
           </span>
           <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Nos Projets & Causes</h1>
           <p className="mx-auto max-w-xl text-white/75">
-            Découvrez tous nos projets en cours et choisissez celui qui vous inspire le plus.
+            Projets nationaux et régionaux soutenus par le club : choisissez celui qui vous inspire le plus.
           </p>
         </div>
       </section>

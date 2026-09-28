@@ -16,13 +16,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
+# Same categories as the website (frontend/src/lib/categories.ts)
 CAUSE_LABELS = {
-    "education": "Éducation pour Tous",
-    "health": "Santé & Bien-être",
-    "water": "Eau Potable",
+    "agriculture": "Agriculture & élevage",
+    "education": "Éducation",
+    "sanitation": "Assainissement & cadre de vie",
+    "entrepreneurship": "Création d'activités & emploi",
+    "health": "Santé",
+    "water": "Eau potable",
+    "other": "Autres projets nationaux et régionaux",
     "food": "Alimentation",
     "housing": "Logement",
-    "general": "Don Général",
+    "general": "Don général",
 }
 
 METHOD_LABELS = {
@@ -51,7 +56,7 @@ def build_donation_confirmation(
     destination = project_title or CAUSE_LABELS.get(donation.cause, donation.cause)
     method = METHOD_LABELS.get(donation.payment_method, donation.payment_method)
     date = (donation.created_at or datetime.now(timezone.utc)).strftime("%d/%m/%Y")
-    reference = f"AMG-{donation.id:06d}"
+    reference = f"{settings.site_short_name}-{donation.id:06d}"
 
     details = [
         ("Montant", amount),
@@ -65,7 +70,7 @@ def build_donation_confirmation(
         [
             greeting,
             "",
-            f"Merci pour votre don de {amount} à Amanah Giving. Votre paiement a bien été reçu.",
+            f"Merci pour votre don de {amount} à la {settings.site_name}. Votre paiement a bien été reçu.",
             "",
             *[f"{label} : {value}" for label, value in details],
             "",
@@ -73,7 +78,7 @@ def build_donation_confirmation(
             "Pour toute question, répondez simplement à ce message.",
             "",
             "Avec toute notre gratitude,",
-            "L'équipe Amanah Giving",
+            f"L'équipe de la {settings.site_short_name}",
         ]
     )
 
@@ -89,7 +94,7 @@ def build_donation_confirmation(
 <body style="margin:0;padding:24px;background:#FAFAF8;font-family:Arial,Helvetica,sans-serif;color:#374151">
   <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
     <tr><td style="background:#0D7C66;padding:24px;color:#ffffff">
-      <div style="font-size:20px;font-weight:bold">Amanah Giving</div>
+      <div style="font-size:20px;font-weight:bold">{html.escape(settings.site_short_name)}</div>
       <div style="font-size:14px;opacity:.85">Merci pour votre générosité</div>
     </td></tr>
     <tr><td style="padding:24px">
@@ -99,7 +104,7 @@ def build_donation_confirmation(
       <table role="presentation" width="100%" style="border-top:1px solid #E5E7EB;border-bottom:1px solid #E5E7EB;margin-bottom:20px">{rows}</table>
       <p style="margin:0 0 8px;font-size:13px;color:#6B7280">Conservez cet email comme justificatif de votre don.
         Pour toute question, répondez simplement à ce message.</p>
-      <p style="margin:20px 0 0">Avec toute notre gratitude,<br>L'équipe Amanah Giving</p>
+      <p style="margin:20px 0 0">Avec toute notre gratitude,<br>L'équipe de la {html.escape(settings.site_short_name)}</p>
     </td></tr>
   </table>
 </body>
@@ -174,14 +179,14 @@ def build_password_reset_email(recipient: str, name: Optional[str], reset_url: s
         [
             greeting,
             "",
-            "Vous avez demandé à réinitialiser le mot de passe de votre compte Amanah Giving.",
+            f"Vous avez demandé à réinitialiser le mot de passe de votre compte {settings.site_short_name}.",
             f"Ouvrez ce lien pour choisir un nouveau mot de passe (valable {valid_minutes} minutes) :",
             "",
             reset_url,
             "",
             "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe reste inchangé.",
             "",
-            "L'équipe Amanah Giving",
+            f"L'équipe de la {settings.site_short_name}",
         ]
     )
     body_html = f"""\
@@ -191,7 +196,7 @@ def build_password_reset_email(recipient: str, name: Optional[str], reset_url: s
 <body style="margin:0;padding:24px;background:#FAFAF8;font-family:Arial,Helvetica,sans-serif;color:#374151">
   <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
     <tr><td style="background:#0D7C66;padding:24px;color:#ffffff">
-      <div style="font-size:20px;font-weight:bold">Amanah Giving</div>
+      <div style="font-size:20px;font-weight:bold">{html.escape(settings.site_short_name)}</div>
       <div style="font-size:14px;opacity:.85">Réinitialisation du mot de passe</div>
     </td></tr>
     <tr><td style="padding:24px">
@@ -210,7 +215,7 @@ def build_password_reset_email(recipient: str, name: Optional[str], reset_url: s
 </body>
 </html>"""
     message = EmailMessage()
-    message["Subject"] = "Réinitialisation de votre mot de passe Amanah Giving"
+    message["Subject"] = f"Réinitialisation de votre mot de passe {settings.site_short_name}"
     message["From"] = formataddr((settings.email_from_name, settings.email_from))
     message["To"] = recipient
     message.set_content(text)

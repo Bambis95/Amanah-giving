@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { softTone, textTone, Tone } from "@/lib/tones";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
+import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
 import {
   Heart,
   Shield,
@@ -21,8 +22,8 @@ import {
 const values = [
   {
     icon: Shield,
-    title: "Amanah (Confiance)",
-    description: "Chaque don est une amanah, un dépôt sacré. Nous garantissons que vos contributions sont utilisées exactement comme prévu.",
+    title: "Confiance",
+    description: "Chaque don nous est confié. Nous veillons à ce que vos contributions soient utilisées exactement comme prévu.",
     tone: "primary" as Tone,
   },
   {
@@ -33,24 +34,24 @@ const values = [
   },
   {
     icon: HandHeart,
-    title: "Compassion",
-    description: "Nous croyons en la dignité de chaque être humain et travaillons pour améliorer les conditions de vie des plus vulnérables.",
+    title: "Solidarité",
+    description: "Nous croyons que le développement se construit ensemble, au service des communautés et des producteurs.",
     tone: "highlight" as Tone,
   },
   {
     icon: Globe,
-    title: "Impact Global",
-    description: "De Dakar au monde entier, nous connectons les donateurs avec les communautés qui ont le plus besoin d'aide.",
+    title: "Impact National et Régional",
+    description: "Des projets menés dans tout le pays et dans chaque région, là où les besoins sont réels.",
     tone: "destructive" as Tone,
   },
 ];
 
+// How the club works (what donors can rely on), rather than a history
 const milestones = [
-  { year: "2020", event: "Fondation d'Amanah Giving à Dakar" },
-  { year: "2021", event: "Premier projet financé : École de Thiès" },
-  { year: "2022", event: "Expansion dans 5 régions du Sénégal" },
-  { year: "2024", event: "Ouverture aux projets internationaux" },
-  { year: "2025", event: "Lancement de la plateforme en ligne" },
+  { year: "01", event: "Collecte : les dons sont rassemblés sur la plateforme, en toute sécurité." },
+  { year: "02", event: "Sélection : le club choisit les projets nationaux et régionaux à soutenir." },
+  { year: "03", event: "Redistribution : les fonds sont affectés au projet ou à la cause choisis par chaque donateur." },
+  { year: "04", event: "Suivi : l'avancement de chaque projet est publié sur le site." },
 ];
 
 const commitments = [
@@ -78,13 +79,14 @@ export default function AboutPage() {
       <section className="pt-24 pb-16 px-4 surface-brand">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block bg-white/10 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-white/20">
-            Notre Histoire
+            Qui Sommes-Nous
           </span>
           <h1 className="text-3xl md:text-5xl font-bold mb-6">
-            À Propos d'Amanah Giving
+            {BRAND_NAME}
           </h1>
           <p className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Née de la conviction que chaque acte de générosité est un dépôt sacré, Amanah Giving connecte les cœurs généreux du monde entier avec les communautés qui en ont le plus besoin.
+            Un club qui rassemble les dons de tous ceux qui veulent agir, et les redistribue à des projets de
+            développement nationaux et régionaux.
           </p>
         </div>
       </section>
@@ -101,10 +103,18 @@ export default function AboutPage() {
                 Faciliter la Générosité, Maximiser l'Impact
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                Amanah Giving est une plateforme de dons en ligne fondée à Dakar, Sénégal, avec pour mission de rendre le don accessible, transparent et impactant. Nous croyons que la générosité ne connaît pas de frontières et que chaque contribution, aussi petite soit-elle, peut transformer des vies.
+                La {BRAND_NAME} ({BRAND_SHORT}) collecte les dons via cette plateforme et les redistribue à des
+                projets de développement. Le secteur agricole est au cœur de notre action, mais nous soutenons aussi
+                l'éducation, l'assainissement, la création d'activités et d'autres projets d'intérêt national ou régional.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                Notre plateforme permet aux donateurs du monde entier de soutenir des projets vérifiés dans les domaines de l'éducation, la santé, l'eau potable, l'alimentation et le logement, avec une transparence totale sur l'utilisation des fonds.
+                Chaque donateur choisit le projet ou la cause qu'il veut soutenir, ou confie au club le soin d'affecter
+                son don là où il est le plus utile, avec une transparence totale sur l'utilisation des fonds.
+              </p>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                La {BRAND_SHORT} est aussi un <strong className="text-foreground">club de créateurs</strong> : toute
+                personne qui porte un projet, quel que soit son secteur, peut{" "}
+                <Link to="/rejoindre" className="font-medium text-primary hover:underline">rejoindre le club</Link>.
               </p>
               {/* Real figures; hidden if they cannot be loaded rather than showing wrong ones */}
               {!statsFailed && (
@@ -147,9 +157,9 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <span className="inline-block bg-highlight/15 text-warning text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-              Notre Parcours
+              Notre Démarche
             </span>
-            <h2 className="text-3xl font-bold text-foreground">Étapes Clés</h2>
+            <h2 className="text-3xl font-bold text-foreground">De Votre Don au Projet</h2>
           </div>
 
           <div className="space-y-6">

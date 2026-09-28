@@ -15,12 +15,14 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
+import { BRAND_NAME } from "@/lib/brand";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const navLinks = [
   { href: "/", label: "Accueil" },
   { href: "/projects", label: "Nos Projets" },
   { href: "/about", label: "À Propos" },
+  { href: "/rejoindre", label: "Rejoindre le Club" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -42,7 +44,7 @@ export default function Navbar() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/70">
       <nav aria-label="Navigation principale" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-3">
-          <Link to="/" className="rounded-lg transition-opacity hover:opacity-90" aria-label="Amanah Giving, accueil">
+          <Link to="/" className="rounded-lg transition-opacity hover:opacity-90" aria-label={`${BRAND_NAME}, accueil`}>
             <Logo />
           </Link>
 

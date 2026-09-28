@@ -2,16 +2,19 @@ import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin } from "lucide-react";
 import Logo from "@/components/Logo";
 import { CONTACT_EMAIL } from "@/lib/contact";
+import { BRAND_NAME } from "@/lib/brand";
+import { CATEGORIES } from "@/lib/categories";
 
 const navigation = [
   { href: "/", label: "Accueil" },
   { href: "/projects", label: "Nos Projets" },
   { href: "/donate", label: "Faire un Don" },
   { href: "/about", label: "À Propos" },
+  { href: "/rejoindre", label: "Rejoindre le Club" },
   { href: "/contact", label: "Contact" },
 ];
 
-const causes = ["Éducation", "Santé", "Eau Potable", "Alimentation", "Logement"];
+const causes = CATEGORIES.map((c) => c.label);
 
 const linkClass = "text-sm text-white/65 transition-colors hover:text-white";
 
@@ -24,8 +27,8 @@ export default function Footer() {
           <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <Logo variant="onDark" />
             <p className="max-w-sm text-sm leading-relaxed text-white/65">
-              Amanah Giving est une plateforme de dons en ligne dédiée à connecter les donateurs du monde entier avec
-              des causes qui changent des vies.
+              La {BRAND_NAME} rassemble les dons et les redistribue à des projets nationaux et régionaux :
+              agriculture, éducation, assainissement, création d'activités…
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <span className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium">Stripe</span>
@@ -90,7 +93,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-center md:flex-row md:text-left">
-          <p className="text-sm text-white/50">© {new Date().getFullYear()} Amanah Giving. Tous droits réservés.</p>
+          <p className="text-sm text-white/50">© {new Date().getFullYear()} {BRAND_NAME}. Tous droits réservés.</p>
           <div className="flex items-center gap-6 text-xs">
             <Link to="/confidentialite" className="text-white/50 transition-colors hover:text-white">
               Politique de Confidentialité

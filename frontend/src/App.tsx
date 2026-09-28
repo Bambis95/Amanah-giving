@@ -16,6 +16,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Join from './pages/Join';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from 'next-themes';
 import ScrollToTop from './components/ScrollToTop';
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/projects" element={<Projects />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/rejoindre" element={<Join />} />
           <Route path="/confidentialite" element={<Privacy />} />
           <Route path="/conditions" element={<Terms />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />

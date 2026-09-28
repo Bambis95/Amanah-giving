@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import LegalLayout, { LegalSection } from "@/components/LegalLayout";
 import { CONTACT_ADDRESS, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
+import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
 
 // Describes what the site actually collects and stores (see backend models, services/login_throttle.py,
 // core/session.py). Update this page whenever that changes.
@@ -14,7 +15,8 @@ const sections: LegalSection[] = [
     title: "Responsable du traitement",
     content: (
       <p>
-        Les données personnelles collectées sur ce site sont traitées par <strong>Amanah Giving</strong>, {CONTACT_ADDRESS}.
+        Les données personnelles collectées sur ce site sont traitées par la <strong>{BRAND_NAME}</strong> ({BRAND_SHORT}),{" "}
+        {CONTACT_ADDRESS}.
         Pour toute question sur vos données : {email} ou {CONTACT_PHONE}.
       </p>
     ),
@@ -39,6 +41,10 @@ const sections: LegalSection[] = [
             sujet et message.
           </li>
           <li>
+            <strong>Si vous demandez à rejoindre le club</strong> : nom, email, téléphone, région, et les informations
+            sur votre projet (nom, secteur, stade, besoin de financement, description).
+          </li>
+          <li>
             <strong>Pour la sécurité</strong> : l'adresse IP et l'email utilisés lors des tentatives de connexion
             échouées, et l'historique des actions effectuées par les administrateurs.
           </li>
@@ -57,7 +63,7 @@ const sections: LegalSection[] = [
       <ul>
         <li>Enregistrer votre don, l'affecter au projet choisi et vous envoyer un email de confirmation (exécution de votre demande).</li>
         <li>Gérer votre compte et votre connexion (exécution du service).</li>
-        <li>Répondre à vos messages et à vos propositions de projets (votre demande).</li>
+        <li>Répondre à vos messages et étudier vos demandes d'adhésion au club (votre demande).</li>
         <li>Protéger les comptes contre les tentatives d'intrusion et garder une trace des actions d'administration (intérêt légitime de sécurité).</li>
         <li>Conserver les justificatifs des dons reçus (obligations comptables).</li>
         <li>Publier des statistiques globales (montant total collecté, nombre de donateurs), qui ne permettent pas de vous identifier.</li>
@@ -70,7 +76,7 @@ const sections: LegalSection[] = [
     content: (
       <>
         <p>
-          Vos données sont accessibles uniquement aux administrateurs d'Amanah Giving et aux prestataires strictement
+          Vos données sont accessibles uniquement aux administrateurs du club et aux prestataires strictement
           nécessaires au fonctionnement du service :
         </p>
         <ul>
@@ -108,7 +114,7 @@ const sections: LegalSection[] = [
         <p>Le site n'utilise <strong>aucun cookie publicitaire ni outil de mesure d'audience</strong>. Il utilise uniquement :</p>
         <ul>
           <li>
-            un cookie de session (<code>amanah_session</code>), déposé seulement si vous vous connectez. Il est
+            un cookie de session (<code>cndsa_session</code>), déposé seulement si vous vous connectez. Il est
             inaccessible aux scripts de la page et expire après une période d'inactivité (15 minutes pour les
             administrateurs, 60 minutes pour les autres comptes) et au plus tard 12 heures après la connexion ;
           </li>
@@ -184,7 +190,7 @@ export default function PrivacyPage() {
       updated={UPDATED}
       intro={
         <p>
-          Chez Amanah Giving, la confiance est au cœur de notre démarche, y compris pour vos données personnelles. Cette
+          À la {BRAND_SHORT}, la confiance est au cœur de notre démarche, y compris pour vos données personnelles. Cette
           page explique simplement ce que nous collectons, pourquoi, avec qui nous le partageons et comment exercer vos
           droits.
         </p>

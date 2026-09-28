@@ -20,7 +20,7 @@ import { Search } from "lucide-react";
 import { Donation } from "@/api";
 import PaymentStatusBadge from "./PaymentStatusBadge";
 import {
-  categoryLabels,
+  categoryLabel,
   formatCFA,
   formatDate,
   paymentMethodLabels,
@@ -98,7 +98,7 @@ export default function DonationsTab({ donations }: { donations: Donation[] }) {
                   <p className="font-semibold text-foreground whitespace-nowrap tabular-nums">{formatCFA(d.amount)}</p>
                 </div>
                 <p className="text-sm text-foreground/80 mt-2">
-                  {categoryLabels[d.cause] ?? d.cause} · {paymentMethodLabels[d.payment_method] ?? d.payment_method}
+                  {categoryLabel(d.cause)} · {paymentMethodLabels[d.payment_method] ?? d.payment_method}
                 </p>
                 {d.message && <p className="text-xs text-muted-foreground italic mt-1">« {d.message} »</p>}
                 <div className="flex items-center justify-between mt-3">
@@ -138,7 +138,7 @@ export default function DonationsTab({ donations }: { donations: Donation[] }) {
                   <TableCell className="text-right font-semibold text-foreground whitespace-nowrap tabular-nums">
                     {formatCFA(d.amount)}
                   </TableCell>
-                  <TableCell>{categoryLabels[d.cause] ?? d.cause}</TableCell>
+                  <TableCell>{categoryLabel(d.cause)}</TableCell>
                   <TableCell className="whitespace-nowrap">
                     {paymentMethodLabels[d.payment_method] ?? d.payment_method}
                   </TableCell>

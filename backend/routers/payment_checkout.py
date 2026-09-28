@@ -418,7 +418,7 @@ async def create_donation_checkout(
             checkout = create_checkout(
                 amount=data.amount,
                 description=(
-                    f"Don Amanah Giving #{donation.id} - "
+                    f"Don {settings.site_short_name} #{donation.id} - "
                     f"{method_name}"
                 ),
                 customer_name=donor_name or None,

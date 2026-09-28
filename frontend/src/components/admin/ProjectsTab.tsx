@@ -24,7 +24,7 @@ import {
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi, Project } from "@/api";
-import { categoryLabels, formatCFA, projectStatuses } from "./format";
+import { categoryLabel, formatCFA, projectStatuses } from "./format";
 import ProjectFormDialog from "./ProjectFormDialog";
 
 function ProjectBadges({ project }: { project: Project }) {
@@ -175,7 +175,7 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
                     <div className="min-w-0">
                       <p className="font-medium text-foreground">{p.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {[categoryLabels[p.category] ?? p.category, p.location].filter(Boolean).join(" · ")}
+                        {[categoryLabel(p.category), p.location].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                     <ProjectActions project={p} onEdit={openEdit} onDelete={remove} />
@@ -207,7 +207,7 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
                         {p.location && <p className="text-xs text-muted-foreground">{p.location}</p>}
                         <ProjectBadges project={p} />
                       </TableCell>
-                      <TableCell>{categoryLabels[p.category] ?? p.category}</TableCell>
+                      <TableCell>{categoryLabel(p.category)}</TableCell>
                       <TableCell>
                         <ProjectProgress project={p} />
                       </TableCell>
