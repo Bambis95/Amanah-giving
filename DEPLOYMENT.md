@@ -1,119 +1,103 @@
-# Amanah Giving — Mise en ligne sur Render
+# SENJAPO — Mise en ligne sur Render
 
 Ce guide met le site en ligne en **mode « bientôt disponible »** : toutes les pages sont
-visibles, mais les dons restent fermés (`DONATIONS_ENABLED=false`) jusqu'au lancement
-officiel. Le fichier [`render.yaml`](render.yaml) décrit toute l'installation ; Render la
-crée en une fois.
+visibles et le tableau de bord fonctionne, mais les dons en ligne restent fermés
+(`DONATIONS_ENABLED=false`) jusqu'au lancement officiel. Le fichier
+[`render.yaml`](render.yaml) décrit toute l'installation ; Render la crée en une fois.
 
-| Élément | Service Render | Adresse finale (exemple) |
+| Élément | Service Render | Adresse |
 |---|---|---|
-| Base PostgreSQL | `amanah-db` (Basic, ~6 $/mois) | — (privée) |
-| API FastAPI | `amanah-api` (Starter, ~7 $/mois) | `https://api.amanahgiving.org` |
-| Site React | `amanah-site` (Static Site, gratuit) | `https://www.amanahgiving.org` |
+| Base PostgreSQL | `senjapo-db` (Basic, ~6 $/mois) | privée |
+| API FastAPI | `senjapo-api` (Starter, ~7 $/mois) | `https://senjapo-api.onrender.com` (jamais appelée directement) |
+| Site React | `senjapo` (Static Site, gratuit) | `https://senjapo.onrender.com`, puis votre domaine |
 
 Prix indicatifs : vérifiez-les sur render.com au moment de souscrire.
+
+Le site relaie `/api/*` vers l'API (règle `rewrite` dans `render.yaml`) : le navigateur ne
+parle qu'à l'adresse du site, donc la connexion fonctionne **même sans nom de domaine**.
 
 ---
 
 ## 1. Ce qu'il faut avant de commencer
 
-- Un **nom de domaine** (par ex. `amanahgiving.org`). Il est indispensable : la connexion
-  utilise un cookie sécurisé qui ne fonctionne que si le site et l'API partagent le même
-  domaine (`www.` et `api.`). Avec les adresses `onrender.com`, les pages s'affichent mais
-  la connexion au compte et à l'admin ne marche pas.
-- Un compte **GitHub** (gratuit) et un compte **Render** (carte bancaire internationale).
-- Vos clés **PayDunya** (tableau de bord PayDunya → Intégrations) et le **mot de passe
-  d'application Gmail** utilisé pour les emails (celui de `backend/.env`).
+- Un compte **Render** (render.com, connexion avec GitHub conseillée) et une **carte
+  bancaire internationale** pour les services payants.
+- L'accès au dépôt GitHub privé `Bambis95/Amanah-giving` (déjà en place).
+- Pour les emails (mot de passe oublié, confirmations) : l'adresse Gmail d'envoi et son
+  **mot de passe d'application** (celui de `backend/.env`). Facultatif au premier jour.
+- Les clés de paiement ne sont **pas** nécessaires tant que les dons sont fermés.
 
-## 2. Mettre le code sur GitHub (dépôt privé)
+## 2. Créer les services
 
-1. Sur github.com : **New repository** → nom `amanah-giving` → **Private** → *Create*
-   (sans README ni .gitignore).
-2. Dans le dossier du projet :
-   ```bash
-   git remote add origin https://github.com/<votre-compte>/amanah-giving.git
-   git push -u origin main
-   ```
-Les fichiers `.env` (mots de passe, clés) sont exclus par `.gitignore` et ne partent pas
-sur GitHub. Les secrets de production se saisissent uniquement dans Render.
-
-## 3. Créer les services sur Render
-
-1. render.com → **New** → **Blueprint** → autorisez l'accès au dépôt `amanah-giving`.
-2. Render lit `render.yaml` et demande les valeurs secrètes :
+1. render.com → **New** → **Blueprint** → choisissez le dépôt `Amanah-giving`, branche `main`.
+2. Render lit `render.yaml` et demande les valeurs suivantes :
 
 | Variable | Valeur |
 |---|---|
-| `FRONTEND_URL` | `https://www.amanahgiving.org` |
-| `CORS_ORIGINS` | `https://amanahgiving.org` |
-| `VITE_API_BASE_URL` (site) | `https://api.amanahgiving.org` |
-| `VITE_SITE_URL` (site) | `https://www.amanahgiving.org` (image d'aperçu sur WhatsApp) |
-| `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`, `PAYDUNYA_PUBLIC_KEY`, `PAYDUNYA_TOKEN` | vos clés PayDunya **de test** |
-| `PAYDUNYA_CALLBACK_URL` | `https://api.amanahgiving.org/api/v1/payment/paydunya/ipn` |
-| `STRIPE_SECRET_KEY` | laisser vide (cartes indisponibles) |
-| `SMTP_USERNAME`, `EMAIL_FROM` | votre adresse Gmail |
-| `SMTP_PASSWORD` | le mot de passe d'application Gmail |
+| `FRONTEND_URL` (API) | `https://senjapo.onrender.com` |
+| `CORS_ORIGINS` (API) | laisser vide |
+| `VITE_SITE_URL` (site) | `https://senjapo.onrender.com` (image d'aperçu WhatsApp) |
+| `PAYDUNYA_*`, `STRIPE_SECRET_KEY` | laisser vide pour l'instant |
+| `SMTP_USERNAME`, `EMAIL_FROM` | l'adresse Gmail d'envoi (ou vide) |
+| `SMTP_PASSWORD` | le mot de passe d'application Gmail (ou vide) |
 
-3. **Apply**. Le premier déploiement prend quelques minutes. La clé de session
-   (`JWT_SECRET_KEY`) est générée automatiquement par Render.
+3. **Apply**. Le premier déploiement prend 5 à 10 minutes.
+4. Vérifiez les adresses données par Render : si le nom `senjapo` ou `senjapo-api` était
+   déjà pris, Render ajoute un suffixe (ex. `senjapo-api-x1y2.onrender.com`). Dans ce cas,
+   corrigez la ligne `destination` de la règle `/api/*` dans `render.yaml` et `FRONTEND_URL`,
+   puis poussez sur `main`.
 
-## 4. Brancher le nom de domaine
-
-1. Service **amanah-site** → *Settings* → **Custom Domains** → ajoutez
-   `www.amanahgiving.org` (Render propose aussi la redirection depuis `amanahgiving.org`).
-2. Service **amanah-api** → *Settings* → **Custom Domains** → ajoutez `api.amanahgiving.org`.
-3. Chez votre registraire, créez les enregistrements DNS que Render affiche (en général des
-   `CNAME` vers `….onrender.com`, et un enregistrement pour le domaine nu).
-4. Attendez la vérification : Render active le **HTTPS** tout seul.
-
-## 5. Créer le premier administrateur
+## 3. Créer le premier administrateur
 
 1. Sur le site en ligne : **Se connecter** → **Créer un compte** avec votre email.
-2. Render → service **amanah-api** → onglet **Shell** :
+2. Render → service **senjapo-api** → onglet **Shell** :
    ```bash
    python -m scripts.make_admin votre@email.com
    ```
-3. Reconnectez-vous : vous arrivez sur `/admin`. Les administrateurs suivants se nomment
-   depuis l'onglet **Utilisateurs** du tableau de bord.
+3. Reconnectez-vous : vous arrivez sur le tableau de bord. Les présidents et membres du club
+   se nomment ensuite depuis **Membres & comptes**.
 
-Le site démarre **sans projet** (les projets de démonstration, avec des montants inventés,
-ne sont pas chargés en production). Ajoutez vos vrais projets depuis l'admin.
+Le site démarre **sans campagne** (les campagnes de démonstration, aux montants inventés, ne
+sont pas chargées en production). Ajoutez les vraies campagnes depuis le tableau de bord.
 
-## 6. Vérifications après la mise en ligne
+## 4. Vérifications après la mise en ligne
 
-- [ ] `https://api.amanahgiving.org/database/health` répond `healthy`
+- [ ] `https://senjapo-api.onrender.com/database/health` répond `healthy`
 - [ ] Le site s'affiche en HTTPS, `/donate` montre « Les dons en ligne arrivent bientôt »
-- [ ] Création de compte, connexion, déconnexion automatique, mot de passe oublié (email reçu)
-- [ ] Formulaire de contact : le message apparaît dans l'admin
-- [ ] Pages Confidentialité et Conditions accessibles depuis le pied de page
+- [ ] Création de compte, connexion, déconnexion automatique
+- [ ] Formulaire de contact et d'adhésion : le message apparaît dans le tableau de bord
+- [ ] Aperçu du lien dans WhatsApp (logo et titre SENJAPO)
 
-## 7. Le jour du lancement
+## 5. Plus tard : brancher le nom de domaine
 
-À faire seulement quand l'association est déclarée et le compte PayDunya réel validé :
+1. Service **senjapo** → *Settings* → **Custom Domains** → ajoutez `www.<votre-domaine>`
+   (et le domaine nu, redirigé).
+2. Chez le registraire, créez les enregistrements DNS affichés par Render ; le HTTPS s'active seul.
+3. Mettez à jour `FRONTEND_URL` (API) et `VITE_SITE_URL` (site) avec la nouvelle adresse,
+   puis redéployez le site. L'API n'a pas besoin de domaine propre.
 
-1. Render → **amanah-api** → **Environment** :
-   - `PAYDUNYA_MODE` = `live` et les 4 clés PayDunya **de production** ;
-   - `DONATIONS_ENABLED` = `true`.
+## 6. Le jour du lancement des dons
+
+Quand le compte marchand (PayTech ou autre) est validé :
+
+1. Render → **senjapo-api** → **Environment** : clés de paiement de production,
+   `DONATIONS_ENABLED` = `true`.
 2. **Save changes** : l'API redémarre avec les nouvelles valeurs.
-3. Faites un vrai petit don (500 FCFA) et vérifiez : paiement, email de confirmation,
-   montant ajouté au projet, don visible dans l'admin.
-4. Complétez les pages légales (forme juridique, numéro d'enregistrement, hébergeur :
-   Render Services, Inc.).
+3. Faites un vrai petit don (500 FCFA) et vérifiez paiement, email, montant de la campagne,
+   don visible dans le tableau de bord.
 
 ---
 
 ## Bon à savoir
 
-- **Réglages en production** : modifiez les variables dans l'onglet *Environment* de Render.
-  L'écran *Paramètres* de l'admin écrit dans un fichier `.env` qui n'est pas utilisé sur Render.
-- **Mises à jour du site** : chaque `git push` sur `main` redéploie automatiquement ; les
-  migrations de la base (`alembic upgrade head`) s'appliquent avant le démarrage.
-- **Sauvegardes** : vérifiez dans la page de la base (`amanah-db`) les sauvegardes incluses
-  dans votre offre, et faites en plus un export régulier avant chaque changement important.
-- **Journaux** : onglet *Logs* du service `amanah-api` (niveau `INFO` : les détails des
-  donateurs n'y figurent pas).
-- **Emails** : Gmail limite l'envoi à quelques centaines d'emails par jour. Au-delà, passez à
-  un service d'envoi (Brevo, Mailjet…) avec une adresse à votre nom de domaine.
+- **Réglages en production** : dans l'onglet *Environment* de Render (l'écran *Paramètres*
+  du tableau de bord écrit un fichier `.env` qui n'est pas utilisé sur Render).
+- **Mises à jour** : chaque `git push` sur `main` redéploie automatiquement ; les migrations
+  de la base (`alembic upgrade head`) s'appliquent avant le démarrage.
+- **Sauvegardes** : vérifiez celles incluses dans l'offre de `senjapo-db` et faites un export
+  avant chaque changement important.
+- **Emails** : Gmail limite l'envoi à quelques centaines par jour ; au-delà, passez à un
+  service d'envoi (Brevo, Mailjet…) avec une adresse à votre nom de domaine.
 
 ---
 
