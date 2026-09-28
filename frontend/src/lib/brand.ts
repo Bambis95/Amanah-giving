@@ -9,3 +9,11 @@ export const CARRIER_NAME = "Club des Créateurs et Entrepreneurs du Sénégal";
 export const CARRIER_SHORT = "CCES";
 export const CARRIER_RECEIPT = "n° 022399/MISP/DGAT/DAPA";
 export const PARTNER_NAME = "Diaayma Local";
+// Partner's company registration (RCCM receipt of 23/04/2025 and ANSD notice)
+export const PARTNER_LEGAL = {
+  form: "GIE",
+  fullName: "GIE Diaayma Local",
+  rccm: "SN.THS.2025.C.2316",
+  ninea: "012139821",
+  seat: "Fahu, Thiès Ouest, Thiès",
+};

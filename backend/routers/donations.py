@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from services.donations import DonationsService
-from dependencies.auth import get_admin_user, get_current_user
+from dependencies.auth import ROLE_LEVELS, get_admin_user, get_current_user, get_staff_user, role_level
 from schemas.auth import UserResponse
 
 # Set up logging
@@ -152,10 +152,10 @@ async def query_donationss_all(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=2000, description="Max number of records to return"),
     fields: str = Query(None, description="Comma-separated list of fields to return"),
-    _admin: UserResponse = Depends(get_admin_user),
+    viewer: UserResponse = Depends(get_staff_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Query all donations without user limitation: exposes donor contact details, so admins only
+    # All donations: club staff only. Members see them without the donors' contact details.
     logger.debug(f"Querying donationss: query={query}, sort={sort}, skip={skip}, limit={limit}, fields={fields}")
 
     service = DonationsService(db)
@@ -175,6 +175,12 @@ async def query_donationss_all(
             sort=sort
         )
         logger.debug(f"Found {result['total']} donationss")
+        if role_level(viewer.role) < ROLE_LEVELS["president"]:
+            # Members: amounts, causes and names only, never the donors' email or phone
+            result["items"] = [
+                DonationsResponse.model_validate(d).model_copy(update={"donor_email": None, "donor_phone": None})
+                for d in result["items"]
+            ]
         return result
     except HTTPException:
         raise

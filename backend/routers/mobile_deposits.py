@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from dependencies.auth import get_admin_actor, get_optional_user
+from dependencies.auth import get_manager_actor, get_optional_user
 from models.donations import Donations
 from models.projects import Projects
 from routers.payment_checkout import credit_project
@@ -127,7 +127,7 @@ def _describe(donation: Donations) -> str:
 async def confirm_deposit(
     donation_id: int,
     background_tasks: BackgroundTasks,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Admin: the deposit was found in the operator account; count it and thank the donor."""
@@ -149,7 +149,7 @@ async def confirm_deposit(
 @router.post("/{donation_id}/reject", response_model=DepositDeclared)
 async def reject_deposit(
     donation_id: int,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Admin: no matching transaction in the operator account."""

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { BadgeCheck, Phone, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import { CONTACT_EMAIL, CONTACT_PHONES, telHref } from "@/lib/contact";
-import { BRAND_NAME, BRAND_SLOGAN, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
+import { BRAND_NAME, BRAND_SLOGAN, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_LEGAL, PARTNER_NAME } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
 
 const navigation = [
@@ -93,6 +93,8 @@ export default function Footer() {
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-highlight" aria-hidden="true" />
                 <span>
                   {CARRIER_SHORT} · Récépissé {CARRIER_RECEIPT}
+                  <br />
+                  {PARTNER_NAME} · RCCM {PARTNER_LEGAL.rccm} · NINEA {PARTNER_LEGAL.ninea}
                 </span>
               </li>
             </ul>

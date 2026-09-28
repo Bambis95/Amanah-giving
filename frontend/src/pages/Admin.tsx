@@ -2,16 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import {
   Clock,
   FolderOpen,
-  HandCoins,
   Heart,
   History,
   LayoutDashboard,
   Loader2,
   Mail,
+  PieChart,
   RefreshCw,
   ShieldAlert,
   Users,
@@ -24,11 +25,13 @@ import MessagesTab from "@/components/admin/MessagesTab";
 import ProjectsTab from "@/components/admin/ProjectsTab";
 import UsersTab from "@/components/admin/UsersTab";
 import AuditTab from "@/components/admin/AuditTab";
+import OverviewTab, { OverviewTarget } from "@/components/admin/OverviewTab";
 import { formatCFA } from "@/components/admin/format";
+import { canManage as roleCanManage, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
 
-type Section = "donations" | "messages" | "projects" | "users" | "audit";
+type Section = "overview" | "donations" | "messages" | "projects" | "users" | "audit";
 
 interface StatTileProps {
   icon: React.ElementType;
@@ -63,34 +66,37 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [section, setSection] = useState<Section>("donations");
+  const [section, setSection] = useState<Section>("overview");
+  const [messageKind, setMessageKind] = useState("all");
 
-  const isAdmin = user?.role === "admin";
+  const staff = isStaff(user?.role);
+  // President and admins run the club; members read the dashboard only
+  const manager = roleCanManage(user?.role);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [d, m, p, u] = await Promise.all([
+      const [d, p, m, u] = await Promise.all([
         adminApi.getDonations(),
-        adminApi.getContactMessages(),
         adminApi.getProjects(),
-        adminApi.getUsers(),
+        manager ? adminApi.getContactMessages() : Promise.resolve([] as ContactMessage[]),
+        manager ? adminApi.getUsers() : Promise.resolve([] as AdminUser[]),
       ]);
       setDonations(d);
-      setMessages(m);
       setProjects(p);
+      setMessages(m);
       setUsers(u);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chargement impossible");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [manager]);
 
   useEffect(() => {
-    if (isAdmin) load();
-  }, [isAdmin, load]);
+    if (staff) load();
+  }, [staff, load]);
 
   if (authLoading) {
     return (
@@ -102,7 +108,7 @@ export default function AdminPage() {
 
   if (!user) return <Navigate to="/login" replace state={{ from: "/admin" }} />;
 
-  if (!isAdmin) {
+  if (!staff) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -113,7 +119,9 @@ export default function AdminPage() {
                 <ShieldAlert className="h-7 w-7 text-destructive" aria-hidden="true" />
               </div>
               <h1 className="mb-2 text-xl font-bold text-foreground">Accès réservé</h1>
-              <p className="mb-6 text-muted-foreground">Le compte {user.email} n'a pas les droits d'administration.</p>
+              <p className="mb-6 text-muted-foreground">
+                Le tableau de bord est réservé aux membres du club. Le compte {user.email} n'y a pas accès.
+              </p>
               <Button asChild>
                 <Link to="/">Retour à l'accueil</Link>
               </Button>
@@ -127,32 +135,44 @@ export default function AdminPage() {
   const paid = donations.filter((d) => d.payment_status === "paid");
   const pending = donations.filter((d) => d.payment_status === "pending");
   const unread = messages.filter((m) => !m.is_read).length;
-  const anonymous = donations.filter((d) => !d.user_id).length;
+  const activeCampaigns = projects.filter((p) => !p.status || p.status === "active").length;
+  const pendingDeposits = donations.filter((d) => d.payment_provider === "mobile_qr" && d.payment_status === "pending").length;
 
-  const sections: { id: Section; label: string; icon: React.ElementType; count?: number }[] = [
-    { id: "donations", label: "Dons", icon: Heart, count: donations.length },
-    { id: "messages", label: "Messages", icon: Mail, count: unread || undefined },
-    { id: "projects", label: "Projets", icon: FolderOpen, count: projects.length },
-    { id: "users", label: "Utilisateurs", icon: Users, count: users.length },
-    { id: "audit", label: "Journal", icon: History },
+  const sections: { id: Section; label: string; icon: React.ElementType; count?: number; alert?: boolean }[] = [
+    { id: "overview", label: "Vue d'ensemble", icon: PieChart },
+    { id: "donations", label: "Dons", icon: Heart, count: manager && pendingDeposits ? pendingDeposits : donations.length, alert: manager && pendingDeposits > 0 },
+    ...(manager ? [{ id: "messages" as Section, label: "Messages", icon: Mail, count: unread || undefined, alert: unread > 0 }] : []),
+    { id: "projects", label: "Campagnes", icon: FolderOpen, count: projects.length },
+    ...(manager
+      ? [
+          { id: "users" as Section, label: "Membres & comptes", icon: Users, count: users.length },
+          { id: "audit" as Section, label: "Journal", icon: History },
+        ]
+      : []),
   ];
-  const current = sections.find((s) => s.id === section)!;
+  const current = sections.find((s) => s.id === section) ?? sections[0];
   const initialLoading = loading && donations.length === 0 && projects.length === 0;
 
+  const go = (target: OverviewTarget) => {
+    if (target.section === "messages") setMessageKind(target.kind);
+    setSection(target.section);
+  };
+
   const navButton = (s: (typeof sections)[number], layout: "sidebar" | "bar") => {
-    const active = s.id === section;
+    const active = s.id === current.id;
     return (
       <button
         key={s.id}
         type="button"
-        onClick={() => setSection(s.id)}
+        onClick={() => {
+          if (s.id === "messages") setMessageKind("all");
+          setSection(s.id);
+        }}
         aria-current={active ? "page" : undefined}
         className={cn(
           "flex items-center gap-2.5 rounded-lg text-sm font-medium transition-colors",
           layout === "sidebar" ? "w-full px-3 py-2.5" : "h-10 shrink-0 px-3.5",
-          active
-            ? "bg-accent text-accent-foreground"
-            : "text-foreground/75 hover:bg-muted hover:text-foreground"
+          active ? "bg-accent text-accent-foreground" : "text-foreground/75 hover:bg-muted hover:text-foreground"
         )}
       >
         <s.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -161,8 +181,8 @@ export default function AdminPage() {
           <span
             className={cn(
               "rounded-full px-1.5 text-xs tabular-nums",
-              s.id === "messages" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
-              active && s.id !== "messages" && "bg-background/70"
+              s.alert ? "bg-highlight text-highlight-foreground" : "bg-muted text-muted-foreground",
+              active && !s.alert && "bg-background/70"
             )}
           >
             {s.count}
@@ -172,6 +192,8 @@ export default function AdminPage() {
     );
   };
 
+  const role = (user.role as Role) in ROLE_LABELS ? (user.role as Role) : "user";
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -179,10 +201,10 @@ export default function AdminPage() {
       <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8 lg:px-8 lg:pt-24">
         {/* Sidebar (desktop) */}
         <aside className="hidden lg:block">
-          <nav aria-label="Sections d'administration" className="sticky top-24 space-y-1 rounded-xl border border-border bg-card p-3 shadow-sm">
+          <nav aria-label="Sections du tableau de bord" className="sticky top-24 space-y-1 rounded-xl border border-border bg-card p-3 shadow-sm">
             <p className="flex items-center gap-2 px-3 pb-3 pt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-              Administration
+              Tableau de bord
             </p>
             {sections.map((s) => navButton(s, "sidebar"))}
           </nav>
@@ -192,8 +214,11 @@ export default function AdminPage() {
           <div className="mb-6 flex items-start justify-between gap-4 pt-4 lg:pt-0">
             <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">Tableau de bord</h1>
-              <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-                Suivez les dons, les messages et les campagnes de la plateforme.
+              <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:text-base">
+                Bonjour {user.name || user.email}
+                <Badge variant="outline" className="border-primary/40 text-primary">
+                  {ROLE_LABELS[role]}
+                </Badge>
               </p>
             </div>
             <Button variant="outline" onClick={load} disabled={loading} className="shrink-0" aria-label="Actualiser les données">
@@ -223,36 +248,46 @@ export default function AdminPage() {
                       tone="primary"
                       label="Total collecté"
                       value={formatCFA(paid.reduce((sum, d) => sum + d.amount, 0))}
-                      detail={`${paid.length} don${paid.length > 1 ? "s" : ""} payé${paid.length > 1 ? "s" : ""}`}
+                      detail={`${paid.length} don${paid.length > 1 ? "s" : ""} confirmé${paid.length > 1 ? "s" : ""}`}
                     />
                     <StatTile
                       icon={Clock}
                       tone="highlight"
                       label="En attente"
                       value={String(pending.length)}
-                      detail={formatCFA(pending.reduce((sum, d) => sum + d.amount, 0))}
+                      detail={`${formatCFA(pending.reduce((sum, d) => sum + d.amount, 0))}${pendingDeposits ? ` · ${pendingDeposits} dépôt${pendingDeposits > 1 ? "s" : ""} QR` : ""}`}
                     />
                     <StatTile
-                      icon={HandCoins}
+                      icon={FolderOpen}
                       tone="info"
-                      label="Dons enregistrés"
-                      value={String(donations.length)}
-                      detail={`dont ${anonymous} anonyme${anonymous > 1 ? "s" : ""}`}
+                      label="Campagnes actives"
+                      value={String(activeCampaigns)}
+                      detail={`sur ${projects.length} campagne${projects.length > 1 ? "s" : ""}`}
                     />
-                    <StatTile
-                      icon={Mail}
-                      tone="destructive"
-                      label="Messages non lus"
-                      value={String(unread)}
-                      detail={`sur ${messages.length} message${messages.length > 1 ? "s" : ""}`}
-                    />
+                    {manager ? (
+                      <StatTile
+                        icon={Mail}
+                        tone="destructive"
+                        label="Messages non lus"
+                        value={String(unread)}
+                        detail={`sur ${messages.length} message${messages.length > 1 ? "s" : ""}`}
+                      />
+                    ) : (
+                      <StatTile
+                        icon={Users}
+                        tone="destructive"
+                        label="Donateurs"
+                        value={String(new Set(paid.map((d) => d.user_id || d.donor_first_name || d.id)).size)}
+                        detail="ayant un don confirmé"
+                      />
+                    )}
                   </>
                 )}
               </div>
 
               {/* Section bar (mobile & tablet): same navigation as the sidebar */}
               <nav
-                aria-label="Sections d'administration"
+                aria-label="Sections du tableau de bord"
                 className="scrollbar-hide -mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-border px-4 pb-3 sm:-mx-6 sm:px-6 lg:hidden"
               >
                 {sections.map((s) => navButton(s, "bar"))}
@@ -260,12 +295,17 @@ export default function AdminPage() {
 
               <h2 className="sr-only">{current.label}</h2>
               {!initialLoading && (
-                <div key={section} className="animate-in fade-in-0 duration-200">
-                  {section === "donations" && <DonationsTab donations={donations} onChange={setDonations} />}
-                  {section === "messages" && <MessagesTab messages={messages} onChange={setMessages} />}
-                  {section === "projects" && <ProjectsTab projects={projects} onChange={setProjects} />}
-                  {section === "users" && <UsersTab users={users} currentUserId={user.id} onChange={setUsers} />}
-                  {section === "audit" && <AuditTab />}
+                <div key={`${current.id}-${messageKind}`} className="animate-in fade-in-0 duration-200">
+                  {current.id === "overview" && (
+                    <OverviewTab donations={donations} messages={messages} projects={projects} canManage={manager} onGo={go} />
+                  )}
+                  {current.id === "donations" && <DonationsTab donations={donations} onChange={setDonations} canManage={manager} />}
+                  {current.id === "messages" && <MessagesTab messages={messages} onChange={setMessages} initialKind={messageKind} />}
+                  {current.id === "projects" && <ProjectsTab projects={projects} onChange={setProjects} readOnly={!manager} />}
+                  {current.id === "users" && (
+                    <UsersTab users={users} currentUserId={user.id} currentRole={user.role} onChange={setUsers} />
+                  )}
+                  {current.id === "audit" && <AuditTab />}
                 </div>
               )}
             </>

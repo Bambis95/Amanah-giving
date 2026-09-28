@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import LegalLayout, { LegalSection } from "@/components/LegalLayout";
 import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
-import { BRAND_DESCRIPTOR, BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
+import { BRAND_DESCRIPTOR, BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_LEGAL } from "@/lib/brand";
 
 // The donation rules below mirror the backend (routers/payment_checkout.py): keep them in sync.
 const UPDATED = "27 septembre 2026";
@@ -16,7 +16,8 @@ const sections: LegalSection[] = [
       <p>
         La plateforme <strong>{BRAND_NAME}</strong> – {BRAND_DESCRIPTOR} est éditée par le{" "}
         <strong>{CARRIER_NAME} ({CARRIER_SHORT})</strong>, récépissé {CARRIER_RECEIPT}, en partenariat avec{" "}
-        {PARTNER_NAME}. Contact : {email} · {CONTACT_PHONES.join(" / ")}.
+        {PARTNER_LEGAL.fullName} ({PARTNER_LEGAL.form}, RCCM {PARTNER_LEGAL.rccm}, NINEA {PARTNER_LEGAL.ninea}, siège :{" "}
+        {PARTNER_LEGAL.seat}). Contact : {email} · {CONTACT_PHONES.join(" / ")}.
       </p>
     ),
   },

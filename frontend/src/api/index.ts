@@ -125,7 +125,7 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string | null;
-  role: "user" | "admin";
+  role: "user" | "member" | "president" | "admin";
   created_at: string | null;
   last_login: string | null;
 }

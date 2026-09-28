@@ -119,9 +119,11 @@ function ProjectActions({ project, onEdit, onDelete }: ProjectActionsProps) {
 interface ProjectsTabProps {
   projects: Project[];
   onChange: (projects: Project[]) => void;
+  /** Members of the club see the campaigns without editing them */
+  readOnly?: boolean;
 }
 
-export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
+export default function ProjectsTab({ projects, onChange, readOnly = false }: ProjectsTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
 
@@ -144,7 +146,7 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
     try {
       await adminApi.deleteProject(project.id);
       onChange(projects.filter((p) => p.id !== project.id));
-      toast.success("Projet supprimé");
+      toast.success("Campagne supprimée");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Suppression impossible");
     }
@@ -155,16 +157,16 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
       <CardContent className="p-4 md:p-6">
         <div className="flex items-center justify-between gap-3 mb-4">
           <p className="text-sm text-muted-foreground">
-            {projects.length} projet{projects.length > 1 ? "s" : ""}
+            {projects.length} campagne{projects.length > 1 ? "s" : ""}
           </p>
-          <Button onClick={openCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+          {!readOnly && (<Button onClick={openCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" />
-            Nouveau projet
-          </Button>
+            Nouvelle campagne
+          </Button>)}
         </div>
 
         {projects.length === 0 ? (
-          <p className="text-center text-muted-foreground py-12">Aucun projet. Créez le premier !</p>
+          <p className="text-center text-muted-foreground py-12">Aucune campagne pour le moment.</p>
         ) : (
           <>
             {/* Mobile: one card per project instead of a wide table */}
@@ -178,7 +180,7 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
                         {[categoryLabel(p.category), p.location].filter(Boolean).join(" · ")}
                       </p>
                     </div>
-                    <ProjectActions project={p} onEdit={openEdit} onDelete={remove} />
+                    {!readOnly && <ProjectActions project={p} onEdit={openEdit} onDelete={remove} />}
                   </div>
                   <ProjectBadges project={p} />
                   <div className="mt-3">
@@ -192,11 +194,11 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Projet</TableHead>
-                    <TableHead>Catégorie</TableHead>
+                    <TableHead>Campagne</TableHead>
+                    <TableHead>Cause</TableHead>
                     <TableHead className="min-w-48">Collecte</TableHead>
                     <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    {!readOnly && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -214,9 +216,11 @@ export default function ProjectsTab({ projects, onChange }: ProjectsTabProps) {
                       <TableCell className="whitespace-nowrap">
                         {projectStatuses[p.status ?? ""] ?? p.status ?? "—"}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <ProjectActions project={p} onEdit={openEdit} onDelete={remove} />
-                      </TableCell>
+                      {!readOnly && (
+                        <TableCell className="text-right">
+                          <ProjectActions project={p} onEdit={openEdit} onDelete={remove} />
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

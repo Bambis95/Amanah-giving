@@ -2,10 +2,10 @@ from datetime import datetime
 from typing import List, Literal, Optional
 
 from core.database import get_db
-from dependencies.auth import get_admin_actor, get_admin_user, get_current_user
+from dependencies.auth import client_ip, get_current_user, get_manager_user
 from services import audit
 from services.audit import Actor
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from models.auth import User
 from pydantic import BaseModel
 from schemas.auth import UserResponse
@@ -33,15 +33,20 @@ class AdminUserResponse(BaseModel):
 
 
 class UpdateRoleRequest(BaseModel):
-    role: Literal["user", "admin"]
+    role: Literal["user", "member", "president", "admin"]
+
+
+ROLE_LABELS = {"user": "utilisateur", "member": "membre du club", "president": "président", "admin": "administrateur"}
+# What a president may grant or take away: membership only
+PRESIDENT_MANAGED = ("user", "member")
 
 
 @router.get("", response_model=List[AdminUserResponse])
 async def list_users(
     db: AsyncSession = Depends(get_db),
-    _admin: UserResponse = Depends(get_admin_user),
+    _manager: UserResponse = Depends(get_manager_user),
 ):
-    """List all accounts (admins only)."""
+    """List all accounts (president and admins)."""
     result = await db.execute(select(User).order_by(User.created_at.desc()))
     return result.scalars().all()
 
@@ -50,12 +55,13 @@ async def list_users(
 async def update_user_role(
     user_id: str,
     payload: UpdateRoleRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
-    actor: Actor = Depends(get_admin_actor),
+    manager: UserResponse = Depends(get_manager_user),
 ):
-    """Promote or demote an account (admins only)."""
+    """Change an account's role. Admins: any role. President: makes accounts members of the club or not."""
     # Changing your own role is refused: it guarantees at least one admin remains
-    if user_id == actor.id:
+    if user_id == manager.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Vous ne pouvez pas modifier votre propre rôle.",
@@ -63,14 +69,20 @@ async def update_user_role(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur introuvable.")
+    if manager.role != "admin" and (user.role not in PRESIDENT_MANAGED or payload.role not in PRESIDENT_MANAGED):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seul un administrateur peut nommer ou retirer un président ou un administrateur.",
+        )
     previous = user.role
     user.role = payload.role
     await db.commit()
     await db.refresh(user)
     if previous != user.role:
+        actor = Actor(id=manager.id, email=manager.email, ip=client_ip(request))
         await audit.record(
             db, actor, "user.role_change",
-            f"{user.email} : {'promu administrateur' if user.role == 'admin' else 'droits administrateur retirés'}",
+            f"{user.email} : {ROLE_LABELS.get(previous, previous)} → {ROLE_LABELS.get(user.role, user.role)}",
             target_type="user", target_id=user.id,
             details={"role": {"avant": previous, "apres": user.role}},
         )

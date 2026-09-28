@@ -9,9 +9,17 @@ export function formatDate(value: string | null) {
 
 export { categoryLabel } from "@/lib/categories";
 
+// Request types the club handles separately (contact message subjects); the rest are plain messages
+export const MESSAGE_KINDS: { id: string; label: string; subjects: string[] }[] = [
+  { id: "membership", label: "Adhésions", subjects: ["membership"] },
+  { id: "join", label: "Campagnes proposées", subjects: ["join", "project"] },
+  { id: "partnership", label: "Partenariats", subjects: ["partnership"] },
+  { id: "notify", label: "Tenez-moi informé", subjects: ["notify"] },
+];
+
 export const paymentMethodLabels: Record<string, string> = {
-  stripe: "Carte (Stripe)",
-  card: "Carte (Stripe)",
+  stripe: "Carte bancaire",
+  card: "Carte bancaire",
   wave: "Wave",
   orange_money: "Orange Money",
 };

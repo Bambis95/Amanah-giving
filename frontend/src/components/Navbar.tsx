@@ -16,14 +16,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { BRAND_NAME } from "@/lib/brand";
+import { isStaff } from "@/lib/roles";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const navLinks = [
   { href: "/", label: "Accueil" },
   { href: "/projects", label: "Campagnes" },
   { href: "/about", label: "À Propos" },
-  { href: "/adherer", label: "Rejoindre le Club" },
-  { href: "/proposer", label: "Proposer une Campagne" },
+  // Short labels keep the desktop bar on one line; the drawer shows the full ones
+  { href: "/adherer", label: "Rejoindre le Club", short: "Adhérer" },
+  { href: "/proposer", label: "Proposer une Campagne", short: "Proposer" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -50,20 +52,20 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop links (lg+: below, everything moves to the drawer so nothing overflows on tablets) */}
-          <div className="hidden items-center gap-1 lg:flex">
+          <div className="hidden items-center gap-0.5 lg:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
                 aria-current={isActive(link.href) ? "page" : undefined}
                 className={cn(
-                  "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                  "whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive(link.href)
                     ? "bg-accent text-accent-foreground"
                     : "text-foreground/75 hover:bg-muted hover:text-foreground"
                 )}
               >
-                {link.label}
+                {"short" in link ? link.short : link.label}
               </Link>
             ))}
           </div>
@@ -75,9 +77,10 @@ export default function Navbar() {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="max-w-[12rem] font-medium text-foreground/80">
-                      <User className="mr-2 h-4 w-4 shrink-0" />
-                      <span className="truncate">{displayName}</span>
+                    <Button variant="ghost" className="max-w-[12rem] px-3 font-medium text-foreground/80" aria-label={`Compte : ${displayName}`}>
+                      <User className="h-4 w-4 shrink-0 xl:mr-2" />
+                      {/* Name only on wide screens so the bar fits at 1024px */}
+                      <span className="hidden truncate xl:inline">{displayName}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -86,11 +89,11 @@ export default function Navbar() {
                       <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {user.role === "admin" && (
+                    {isStaff(user.role) && (
                       <DropdownMenuItem asChild className="cursor-pointer">
                         <Link to="/admin">
                           <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Administration
+                          Tableau de bord
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -101,10 +104,10 @@ export default function Navbar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button asChild variant="ghost" className="font-medium text-foreground/80">
-                  <Link to="/login" state={{ from: location.pathname }}>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Se connecter
+                <Button asChild variant="ghost" className="px-3 font-medium text-foreground/80">
+                  <Link to="/login" state={{ from: location.pathname }} aria-label="Se connecter" title="Se connecter">
+                    <LogIn className="h-4 w-4 xl:mr-2" />
+                    <span className="hidden xl:inline">Se connecter</span>
                   </Link>
                 </Button>
               )}
@@ -153,11 +156,11 @@ export default function Navbar() {
                         <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
                         <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                       </div>
-                      {user.role === "admin" && (
+                      {isStaff(user.role) && (
                         <Button asChild variant="outline" className="h-11 w-full">
                           <Link to="/admin" onClick={() => setOpen(false)}>
                             <LayoutDashboard className="mr-2 h-4 w-4" />
-                            Administration
+                            Tableau de bord
                           </Link>
                         </Button>
                       )}

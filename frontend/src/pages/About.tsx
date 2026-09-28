@@ -13,6 +13,7 @@ import {
   CARRIER_NAME,
   CARRIER_RECEIPT,
   CARRIER_SHORT,
+  PARTNER_LEGAL,
   PARTNER_NAME,
 } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
@@ -143,7 +144,10 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Partenaire</dt>
-                  <dd className="font-medium text-foreground">{PARTNER_NAME}</dd>
+                  <dd className="font-medium text-foreground">{PARTNER_LEGAL.fullName}</dd>
+                  <dd className="text-xs text-muted-foreground">
+                    RCCM {PARTNER_LEGAL.rccm} · NINEA {PARTNER_LEGAL.ninea} · {PARTNER_LEGAL.seat}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Récépissé {CARRIER_SHORT}</dt>

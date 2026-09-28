@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from dependencies.auth import get_admin_actor, get_admin_user
+from dependencies.auth import get_manager_actor, get_manager_user
 from services import audit
 from services.audit import Actor
 from schemas.auth import UserResponse
@@ -96,7 +96,7 @@ async def query_contact_messagess(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=2000, description="Max number of records to return"),
     fields: str = Query(None, description="Comma-separated list of fields to return"),
-    _admin: UserResponse = Depends(get_admin_user),
+    _admin: UserResponse = Depends(get_manager_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Query contact_messagess with filtering, sorting, and pagination"""
@@ -134,7 +134,7 @@ async def query_contact_messagess_all(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=2000, description="Max number of records to return"),
     fields: str = Query(None, description="Comma-separated list of fields to return"),
-    _admin: UserResponse = Depends(get_admin_user),
+    _admin: UserResponse = Depends(get_manager_user),
     db: AsyncSession = Depends(get_db),
 ):
     # Query all contact messages: exposes senders' contact details, so admins only
@@ -169,7 +169,7 @@ async def query_contact_messagess_all(
 async def get_contact_messages(
     id: int,
     fields: str = Query(None, description="Comma-separated list of fields to return"),
-    _admin: UserResponse = Depends(get_admin_user),
+    _admin: UserResponse = Depends(get_manager_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a single contact_messages by ID"""
@@ -255,7 +255,7 @@ async def create_contact_messages(
 @router.post("/batch", response_model=List[Contact_messagesResponse], status_code=201)
 async def create_contact_messagess_batch(
     request: Contact_messagesBatchCreateRequest,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Create multiple contact_messagess in a single request"""
@@ -285,7 +285,7 @@ async def create_contact_messagess_batch(
 @router.put("/batch", response_model=List[Contact_messagesResponse])
 async def update_contact_messagess_batch(
     request: Contact_messagesBatchUpdateRequest,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Update multiple contact_messagess in a single request"""
@@ -314,7 +314,7 @@ async def update_contact_messagess_batch(
 async def update_contact_messages(
     id: int,
     data: Contact_messagesUpdateData,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Update an existing contact_messages"""
@@ -344,7 +344,7 @@ async def update_contact_messages(
 @router.delete("/batch")
 async def delete_contact_messagess_batch(
     request: Contact_messagesBatchDeleteRequest,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete multiple contact_messagess by their IDs"""
@@ -370,7 +370,7 @@ async def delete_contact_messagess_batch(
 @router.delete("/{id}")
 async def delete_contact_messages(
     id: int,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a single contact_messages by ID"""

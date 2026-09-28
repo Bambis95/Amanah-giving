@@ -11,6 +11,7 @@ import { Heart, Loader2, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { BRAND_NAME } from "@/lib/brand";
+import { isStaff } from "@/lib/roles";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -18,9 +19,9 @@ export default function LoginPage() {
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  // Administrators land on their dashboard; other users go back where they came from
+  // Club staff (members, president, admins) land on the dashboard; other users go back where they came from
   const from = (location.state as { from?: string } | null)?.from || "/";
-  const redirectTo = user?.role === "admin" ? "/admin" : from;
+  const redirectTo = isStaff(user?.role) ? "/admin" : from;
 
   const [tab, setTab] = useState("login");
   const [loading, setLoading] = useState(false);

@@ -16,8 +16,12 @@ from fastapi import Response
 REFRESH_MARGIN_SECONDS = 60
 
 
+# Accounts that see the dashboard (donor data) get the short idle timeout
+STAFF_ROLES = ("member", "president", "admin")
+
+
 def idle_minutes_for(role: Optional[str]) -> int:
-    return int(settings.admin_idle_minutes) if role == "admin" else int(settings.jwt_expire_minutes)
+    return int(settings.admin_idle_minutes) if role in STAFF_ROLES else int(settings.jwt_expire_minutes)
 
 
 def _expiry(role: Optional[str], auth_time: int, now: int) -> int:

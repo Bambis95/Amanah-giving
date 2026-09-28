@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from dependencies.auth import get_admin_actor
+from dependencies.auth import get_manager_actor
 from services import audit
 from services.audit import Actor
 from services.projects import ProjectsService
@@ -252,7 +252,7 @@ async def _delete_with_audit(service: ProjectsService, actor: Actor, project_id:
 @router.post("", response_model=ProjectsResponse, status_code=201)
 async def create_projects(
     data: ProjectsData,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new projects"""
@@ -280,7 +280,7 @@ async def create_projects(
 @router.post("/batch", response_model=List[ProjectsResponse], status_code=201)
 async def create_projectss_batch(
     request: ProjectsBatchCreateRequest,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Create multiple projectss in a single request"""
@@ -307,7 +307,7 @@ async def create_projectss_batch(
 @router.put("/batch", response_model=List[ProjectsResponse])
 async def update_projectss_batch(
     request: ProjectsBatchUpdateRequest,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Update multiple projectss in a single request"""
@@ -336,7 +336,7 @@ async def update_projectss_batch(
 async def update_projects(
     id: int,
     data: ProjectsUpdateData,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Update an existing projects"""
@@ -366,7 +366,7 @@ async def update_projects(
 @router.delete("/batch")
 async def delete_projectss_batch(
     request: ProjectsBatchDeleteRequest,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete multiple projectss by their IDs"""
@@ -391,7 +391,7 @@ async def delete_projectss_batch(
 @router.delete("/{id}")
 async def delete_projects(
     id: int,
-    actor: Actor = Depends(get_admin_actor),
+    actor: Actor = Depends(get_manager_actor),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a single projects by ID"""

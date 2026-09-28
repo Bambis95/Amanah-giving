@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Check, Loader2, QrCode, Search, X } from "lucide-react";
+import { Check, Download, Loader2, QrCode, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { adminApi, Donation } from "@/api";
@@ -26,6 +26,7 @@ import {
   formatCFA,
   formatDate,
   paymentMethodLabels,
+  paymentStatusLabels,
   paymentStatuses,
 } from "./format";
 
@@ -92,12 +93,39 @@ function PendingDeposits({ donations, onChange }: { donations: Donation[]; onCha
   );
 }
 
+// CSV for Excel (French locale): ";" separator, UTF-8 with BOM so accents display correctly
+function exportCsv(rows: Donation[]) {
+  const cell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const header = ["Date", "Donateur", "Email", "Téléphone", "Montant (FCFA)", "Cause", "Moyen", "Statut", "Référence"];
+  const lines = rows.map((d) => [
+    d.created_at ? new Date(d.created_at).toLocaleString("fr-FR") : "",
+    donorName(d),
+    d.donor_email,
+    d.donor_phone,
+    d.amount,
+    categoryLabel(d.cause),
+    paymentMethodLabels[d.payment_method] ?? d.payment_method,
+    paymentStatusLabels[d.payment_status] ?? d.payment_status,
+    d.payment_reference,
+  ].map(cell).join(";"));
+  const blob = new Blob(["﻿" + [header.map(cell).join(";"), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `dons-senjapo-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function DonationsTab({
   donations,
   onChange,
+  canManage = false,
 }: {
   donations: Donation[];
   onChange: (donations: Donation[]) => void;
+  /** President / admin: confirms the QR deposits */
+  canManage?: boolean;
 }) {
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
@@ -118,7 +146,7 @@ export default function DonationsTab({
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
-        <PendingDeposits donations={donations} onChange={onChange} />
+        {canManage && <PendingDeposits donations={donations} onChange={onChange} />}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -144,9 +172,15 @@ export default function DonationsTab({
           </Select>
         </div>
 
-        <p className="text-sm text-muted-foreground mb-3">
-          {filtered.length} don{filtered.length > 1 ? "s" : ""} · {formatCFA(filteredTotal)}
-        </p>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} don{filtered.length > 1 ? "s" : ""} · {formatCFA(filteredTotal)}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => exportCsv(filtered)} disabled={filtered.length === 0}>
+            <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Exporter (Excel)
+          </Button>
+        </div>
 
         {filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">Aucun don ne correspond à ces critères.</p>

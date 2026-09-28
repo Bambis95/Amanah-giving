@@ -116,11 +116,36 @@ async def get_optional_user(
         return None
 
 
-async def get_admin_user(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
-    """Dependency to ensure current user has admin role (read from the database, so demotion is immediate)."""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    return current_user
+# Club roles, from least to most rights (the role is read from the database on every request,
+# so a change takes effect immediately):
+#   member    : reads the dashboard (figures, campaigns, donations without donor contact details)
+#   president : runs the club day to day (campaigns, deposits, messages, audit log, members)
+#   admin     : everything, including technical settings and president/admin accounts
+ROLE_LEVELS = {"user": 0, "member": 1, "president": 2, "admin": 3}
+STAFF_ROLES = ("member", "president", "admin")
+
+
+def role_level(role: Optional[str]) -> int:
+    return ROLE_LEVELS.get(role or "user", 0)
+
+
+def _require(min_role: str, detail: str):
+    async def dependency(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
+        if role_level(current_user.role) < ROLE_LEVELS[min_role]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+        return current_user
+
+    return dependency
+
+
+get_staff_user = _require("member", "Accès réservé aux membres du club")
+get_manager_user = _require("president", "Accès réservé au président et aux administrateurs")
+get_admin_user = _require("admin", "Admin access required")
+
+
+async def get_manager_actor(request: Request, manager: UserResponse = Depends(get_manager_user)) -> Actor:
+    """President/admin check plus who/where, for the audit log."""
+    return Actor(id=manager.id, email=manager.email, ip=client_ip(request))
 
 
 async def get_admin_actor(request: Request, admin: UserResponse = Depends(get_admin_user)) -> Actor:

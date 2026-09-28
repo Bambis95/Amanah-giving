@@ -16,7 +16,8 @@ import {
 import { Mail, MailOpen, Phone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi, ContactMessage } from "@/api";
-import { formatDate } from "./format";
+import { cn } from "@/lib/utils";
+import { formatDate, MESSAGE_KINDS } from "./format";
 
 const subjectLabels: Record<string, string> = {
   membership: "Adhésion au club",
@@ -30,17 +31,34 @@ const subjectLabels: Record<string, string> = {
   other: "Autre",
 };
 
+const KNOWN = MESSAGE_KINDS.flatMap((k) => k.subjects);
+
 interface MessagesTabProps {
   messages: ContactMessage[];
   onChange: (messages: ContactMessage[]) => void;
+  /** Open on one request type (from the dashboard overview) */
+  initialKind?: string;
 }
 
-export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
+export default function MessagesTab({ messages, onChange, initialKind = "all" }: MessagesTabProps) {
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const [kind, setKind] = useState(initialKind);
   const [busyId, setBusyId] = useState<number | null>(null);
 
-  const visible = unreadOnly ? messages.filter((m) => !m.is_read) : messages;
-  const unreadCount = messages.filter((m) => !m.is_read).length;
+  const ofKind = (k: string) =>
+    k === "all"
+      ? messages
+      : k === "other"
+        ? messages.filter((m) => !KNOWN.includes(m.subject ?? ""))
+        : messages.filter((m) => MESSAGE_KINDS.find((x) => x.id === k)?.subjects.includes(m.subject ?? ""));
+  const byKind = ofKind(kind);
+  const visible = unreadOnly ? byKind.filter((m) => !m.is_read) : byKind;
+  const unreadCount = byKind.filter((m) => !m.is_read).length;
+  const kinds = [
+    { id: "all", label: "Tout" },
+    ...MESSAGE_KINDS,
+    { id: "other", label: "Autres messages" },
+  ].map((k) => ({ ...k, unread: ofKind(k.id).filter((m) => !m.is_read).length }));
 
   const toggleRead = async (message: ContactMessage) => {
     setBusyId(message.id);
@@ -69,6 +87,27 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
 
   return (
     <div className="space-y-4">
+      <div className="scrollbar-hide -mx-1 flex gap-2 overflow-x-auto px-1" role="group" aria-label="Type de demande">
+        {kinds.map((k) => (
+          <button
+            key={k.id}
+            type="button"
+            onClick={() => setKind(k.id)}
+            aria-pressed={kind === k.id}
+            className={cn(
+              "flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-sm font-medium transition-colors",
+              kind === k.id ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/80 hover:text-foreground"
+            )}
+          >
+            {k.label}
+            {k.unread > 0 && (
+              <span className={cn("rounded-full px-1.5 text-xs tabular-nums", kind === k.id ? "bg-white/25" : "bg-highlight text-highlight-foreground")}>
+                {k.unread}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
       <div className="flex gap-2">
         <Button
           variant={unreadOnly ? "outline" : "default"}
@@ -76,7 +115,7 @@ export default function MessagesTab({ messages, onChange }: MessagesTabProps) {
           onClick={() => setUnreadOnly(false)}
           className={unreadOnly ? "" : "bg-primary hover:bg-primary/90"}
         >
-          Tous ({messages.length})
+          Tous ({byKind.length})
         </Button>
         <Button
           variant={unreadOnly ? "default" : "outline"}

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, List, Literal, Optional
 
 from core.database import get_db
-from dependencies.auth import get_admin_user
+from dependencies.auth import get_manager_user
 from fastapi import APIRouter, Depends, Query
 from models.audit_log import AuditLog
 from pydantic import BaseModel
@@ -42,7 +42,7 @@ async def list_audit_logs(
     before_id: Optional[int] = Query(None, description="Return entries older than this id"),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
-    _admin: UserResponse = Depends(get_admin_user),
+    _admin: UserResponse = Depends(get_manager_user),
 ):
     """Most recent audit entries first (admins only)."""
     query = select(AuditLog).order_by(AuditLog.id.desc()).limit(limit + 1)
