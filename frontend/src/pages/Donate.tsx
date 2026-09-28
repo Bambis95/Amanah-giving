@@ -35,7 +35,7 @@ import MobileMoneyQR from "@/components/MobileMoneyQR";
 import { hasPaymentQr } from "@/lib/payment-qr";
 import { CATEGORIES, GENERAL_CAUSE, causeLabel } from "@/lib/categories";
 
-const presetAmounts = [5000, 10000, 25000, 50000, 100000, 250000];
+const presetAmounts = [1000, 3000, 5000, 10000, 50000, 100000];
 
 // A general donation comes first: it is allocated where it is most needed
 const causes = [
@@ -75,7 +75,7 @@ function formatCFA(amount: number) {
 }
 
 export default function DonatePage() {
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(25000);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(5000);
   const [customAmount, setCustomAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [cause, setCause] = useState("general");

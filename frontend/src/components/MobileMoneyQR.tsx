@@ -115,14 +115,7 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
               </p>
             </div>
           ) : (
-            <form onSubmit={submit} className="space-y-4" noValidate>
-              <div>
-                <h3 className="text-lg font-bold text-foreground">J'ai fait mon dépôt</h3>
-                <p className="text-sm text-muted-foreground">
-                  La référence de la transaction figure dans le SMS ou l'historique de votre application.
-                </p>
-              </div>
-
+            <form onSubmit={submit} className="space-y-4" noValidate aria-label="Déclarer mon dépôt">
               <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Opérateur utilisé">
                 {PAYMENT_QR.map((qr) => (
                   <button
