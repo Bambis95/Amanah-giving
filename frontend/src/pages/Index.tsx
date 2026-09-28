@@ -225,12 +225,17 @@ export default function IndexPage() {
               vérification et validation, elle sera publiée sur {BRAND_NAME} pour recevoir des contributions.
             </p>
           </div>
-          <Button asChild size="lg" className="h-12 rounded-xl px-8 font-semibold">
-            <Link to="/proposer">
-              Proposer une campagne
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button asChild size="lg" className="h-12 rounded-xl px-8 font-semibold">
+              <Link to="/proposer">
+                Proposer une campagne
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="h-12 rounded-xl px-8 font-semibold">
+              <Link to="/adherer">Rejoindre le club</Link>
+            </Button>
+          </div>
         </div>
       </section>
 

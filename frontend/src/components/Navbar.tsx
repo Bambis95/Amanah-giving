@@ -22,6 +22,7 @@ const navLinks = [
   { href: "/", label: "Accueil" },
   { href: "/projects", label: "Campagnes" },
   { href: "/about", label: "À Propos" },
+  { href: "/adherer", label: "Rejoindre le Club" },
   { href: "/proposer", label: "Proposer une Campagne" },
   { href: "/contact", label: "Contact" },
 ];

@@ -21,6 +21,8 @@ import Partners from './pages/Partners';
 import Transparency from './pages/Transparency';
 import Stand from './pages/Stand';
 import Poster from './pages/Poster';
+import Membership from './pages/Membership';
+import MembershipPrint from './pages/MembershipPrint';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from 'next-themes';
 import ScrollToTop from './components/ScrollToTop';
@@ -55,6 +57,8 @@ const App = () => (
           <Route path="/projects" element={<Projects />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/adherer" element={<Membership />} />
+          <Route path="/adherer/imprimer" element={<MembershipPrint />} />
           <Route path="/proposer" element={<Join />} />
           {/* Former address of the form, kept so older links still work */}
           <Route path="/rejoindre" element={<Join />} />

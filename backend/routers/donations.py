@@ -61,6 +61,9 @@ class DonationsResponse(BaseModel):
     cause: str
     payment_method: str
     payment_status: str
+    # "mobile_qr" = Wave / Orange Money deposit declared by the donor, confirmed by an admin
+    payment_provider: Optional[str] = None
+    payment_reference: Optional[str] = None
     stripe_session_id: Optional[str] = None
     donor_first_name: Optional[str] = None
     donor_last_name: Optional[str] = None

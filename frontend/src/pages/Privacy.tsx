@@ -41,6 +41,14 @@ const sections: LegalSection[] = [
             sujet et message.
           </li>
           <li>
+            <strong>Si vous demandez à rejoindre le club</strong> : prénom, nom, téléphone, email, région et commune,
+            profil, activité, secteur, structure, attentes et motivation.
+          </li>
+          <li>
+            <strong>Si vous déclarez un dépôt Wave ou Orange Money</strong> : montant, opérateur, référence de la
+            transaction, numéro utilisé, et, si vous les indiquez, vos nom, prénom et email.
+          </li>
+          <li>
             <strong>Si vous proposez une campagne</strong> : nom, structure, email, téléphone, région, et les
             informations sur votre projet (nom, cause, stade, besoin de financement, description).
           </li>

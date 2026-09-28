@@ -31,6 +31,8 @@ import { api, Project } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteStatus } from "@/hooks/use-site-status";
 import NotifyForm from "@/components/NotifyForm";
+import MobileMoneyQR from "@/components/MobileMoneyQR";
+import { hasPaymentQr } from "@/lib/payment-qr";
 import { CATEGORIES, GENERAL_CAUSE, causeLabel } from "@/lib/categories";
 
 const presetAmounts = [5000, 10000, 25000, 50000, 100000, 250000];
@@ -259,6 +261,8 @@ export default function DonatePage() {
             </CardContent>
           </Card>
         </section>
+        {/* Deposits with the official QR codes do not depend on online payments */}
+        {hasPaymentQr && <MobileMoneyQR projects={projects} className="mx-auto max-w-3xl px-4 pb-16" />}
         <Footer />
       </div>
     );
@@ -558,6 +562,9 @@ export default function DonatePage() {
           </Card>
         </form>
       </section>
+
+      {/* Alternative: pay with the official Wave / Orange Money QR code, then declare the deposit */}
+      <MobileMoneyQR projects={projects} className="mx-auto max-w-3xl px-4 pb-16" />
 
       <Footer />
     </div>

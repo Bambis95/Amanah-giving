@@ -261,7 +261,7 @@ export default function AdminPage() {
               <h2 className="sr-only">{current.label}</h2>
               {!initialLoading && (
                 <div key={section} className="animate-in fade-in-0 duration-200">
-                  {section === "donations" && <DonationsTab donations={donations} />}
+                  {section === "donations" && <DonationsTab donations={donations} onChange={setDonations} />}
                   {section === "messages" && <MessagesTab messages={messages} onChange={setMessages} />}
                   {section === "projects" && <ProjectsTab projects={projects} onChange={setProjects} />}
                   {section === "users" && <UsersTab users={users} currentUserId={user.id} onChange={setUsers} />}

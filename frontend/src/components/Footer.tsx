@@ -10,6 +10,7 @@ const navigation = [
   { href: "/projects", label: "Campagnes" },
   { href: "/donate", label: "Faire un Don" },
   { href: "/about", label: "À Propos" },
+  { href: "/adherer", label: "Rejoindre le Club" },
   { href: "/proposer", label: "Proposer une Campagne" },
   { href: "/partenaires", label: "Devenir Partenaire" },
   { href: "/transparence", label: "Transparence" },

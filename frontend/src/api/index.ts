@@ -97,6 +97,9 @@ export interface Donation {
   cause: string;
   payment_method: string;
   payment_status: string;
+  /** "mobile_qr" = deposit made with the Wave / Orange Money QR code, confirmed by an admin */
+  payment_provider?: string | null;
+  payment_reference?: string | null;
   donor_first_name: string | null;
   donor_last_name: string | null;
   donor_email: string | null;
@@ -132,7 +135,20 @@ interface ListResponse<T> {
   total: number;
 }
 
-export type AuditCategory = "project" | "message" | "user" | "setting" | "security";
+export type AuditCategory = "project" | "donation" | "message" | "user" | "setting" | "security";
+
+export interface MobileDepositDeclaration {
+  amount: number;
+  payment_method: "wave" | "orange_money";
+  transaction_ref: string;
+  donor_phone: string;
+  donor_first_name?: string;
+  donor_last_name?: string;
+  donor_email?: string;
+  project_id?: number;
+  cause?: string;
+  message?: string;
+}
 
 export interface AuditLogEntry {
   id: number;
@@ -217,6 +233,15 @@ export const adminApi = {
       method: "PUT",
       body: JSON.stringify({ role }),
     });
+  },
+
+  // Wave / Orange Money QR deposits: checked in the operator app, then confirmed or rejected here
+  confirmDeposit(donationId: number): Promise<{ donation_id: number; payment_status: string }> {
+    return adminRequest(`/payment/mobile-deposit/${donationId}/confirm`, { method: "POST" });
+  },
+
+  rejectDeposit(donationId: number): Promise<{ donation_id: number; payment_status: string }> {
+    return adminRequest(`/payment/mobile-deposit/${donationId}/reject`, { method: "POST" });
   },
 };
 
@@ -353,6 +378,17 @@ export const api = {
   },
 
   // Contact Messages
+  async declareMobileDeposit(data: MobileDepositDeclaration): Promise<{ donation_id: number; payment_status: string }> {
+    const response = await apiFetch(`${getAPIBase()}/payment/mobile-deposit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (response.status === 409) throw new Error("Cette transaction a déjà été déclarée.");
+    if (!response.ok) throw new Error(await errorDetail(response, "La déclaration n'a pas pu être envoyée."));
+    return response.json();
+  },
+
   async sendContactMessage(data: ContactMessageRequest): Promise<{ id: number }> {
     const response = await apiFetch(`${getAPIBase()}/entities/contact_messages`, {
       method: "POST",

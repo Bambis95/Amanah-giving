@@ -16,8 +16,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search } from "lucide-react";
-import { Donation } from "@/api";
+import { Check, Loader2, QrCode, Search, X } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { adminApi, Donation } from "@/api";
 import PaymentStatusBadge from "./PaymentStatusBadge";
 import {
   categoryLabel,
@@ -31,7 +33,72 @@ function donorName(d: Donation) {
   return [d.donor_first_name, d.donor_last_name].filter(Boolean).join(" ");
 }
 
-export default function DonationsTab({ donations }: { donations: Donation[] }) {
+// Wave / Orange Money deposits made with the QR code, waiting for a check in the operator app
+const isPendingDeposit = (d: Donation) => d.payment_provider === "mobile_qr" && d.payment_status === "pending";
+
+function PendingDeposits({ donations, onChange }: { donations: Donation[]; onChange: (donations: Donation[]) => void }) {
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const pending = donations.filter(isPendingDeposit);
+  if (pending.length === 0) return null;
+
+  const decide = async (d: Donation, confirm: boolean) => {
+    setBusyId(d.id);
+    try {
+      const result = confirm ? await adminApi.confirmDeposit(d.id) : await adminApi.rejectDeposit(d.id);
+      onChange(donations.map((x) => (x.id === d.id ? { ...x, payment_status: result.payment_status } : x)));
+      toast.success(confirm ? "Dépôt confirmé : il est compté dans la campagne" : "Dépôt rejeté");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Action impossible");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div className="mb-6 rounded-xl border border-highlight/40 bg-highlight/10 p-4">
+      <h3 className="flex items-center gap-2 font-semibold text-foreground">
+        <QrCode className="h-4 w-4" aria-hidden="true" />
+        Dépôts par QR code à confirmer ({pending.length})
+      </h3>
+      <p className="mb-3 text-sm text-muted-foreground">
+        Vérifiez chaque transaction dans l'application Wave ou Orange Money du compte officiel avant de la confirmer.
+      </p>
+      <ul className="space-y-2">
+        {pending.map((d) => (
+          <li key={d.id} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 text-sm">
+              <p className="font-semibold text-foreground">
+                {formatCFA(d.amount)} · {paymentMethodLabels[d.payment_method] ?? d.payment_method} · réf.{" "}
+                <span className="font-mono">{d.payment_reference}</span>
+              </p>
+              <p className="text-muted-foreground">
+                {[donorName(d) || "Donateur", d.donor_phone, categoryLabel(d.cause), formatDate(d.created_at)].filter(Boolean).join(" · ")}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Button size="sm" disabled={busyId === d.id} onClick={() => decide(d, true)}>
+                {busyId === d.id ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Check className="mr-1.5 h-4 w-4" />}
+                Confirmer
+              </Button>
+              <Button size="sm" variant="outline" disabled={busyId === d.id} onClick={() => decide(d, false)}>
+                <X className="mr-1.5 h-4 w-4" />
+                Rejeter
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default function DonationsTab({
+  donations,
+  onChange,
+}: {
+  donations: Donation[];
+  onChange: (donations: Donation[]) => void;
+}) {
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
 
@@ -40,7 +107,7 @@ export default function DonationsTab({ donations }: { donations: Donation[] }) {
     return donations.filter((d) => {
       if (status !== "all" && d.payment_status !== status) return false;
       if (!term) return true;
-      return [donorName(d), d.donor_email, d.donor_phone, d.cause]
+      return [donorName(d), d.donor_email, d.donor_phone, d.cause, d.payment_reference]
         .filter(Boolean)
         .some((v) => v!.toLowerCase().includes(term));
     });
@@ -51,6 +118,7 @@ export default function DonationsTab({ donations }: { donations: Donation[] }) {
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
+        <PendingDeposits donations={donations} onChange={onChange} />
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />

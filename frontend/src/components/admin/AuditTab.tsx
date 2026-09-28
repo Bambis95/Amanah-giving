@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, FolderOpen, Loader2, Mail, Settings, ShieldAlert, Users } from "lucide-react";
+import { ChevronDown, FolderOpen, HandCoins, Loader2, Mail, Settings, ShieldAlert, Users } from "lucide-react";
 import { adminApi, AuditCategory, AuditLogEntry } from "@/api";
 import { formatDate } from "./format";
 
 const categories: { value: AuditCategory | "all"; label: string }[] = [
   { value: "all", label: "Tout" },
-  { value: "project", label: "Projets" },
+  { value: "project", label: "Campagnes" },
+  { value: "donation", label: "Dons" },
   { value: "message", label: "Messages" },
   { value: "user", label: "Utilisateurs" },
   { value: "setting", label: "Paramètres" },
@@ -16,6 +17,7 @@ const categories: { value: AuditCategory | "all"; label: string }[] = [
 
 const categoryIcons: Record<string, React.ElementType> = {
   project: FolderOpen,
+  donation: HandCoins,
   message: Mail,
   user: Users,
   setting: Settings,
