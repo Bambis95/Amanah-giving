@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import LegalLayout, { LegalSection } from "@/components/LegalLayout";
-import { CONTACT_ADDRESS, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
-import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
+import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import { BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT } from "@/lib/brand";
 
 // Describes what the site actually collects and stores (see backend models, services/login_throttle.py,
 // core/session.py). Update this page whenever that changes.
@@ -15,9 +15,9 @@ const sections: LegalSection[] = [
     title: "Responsable du traitement",
     content: (
       <p>
-        Les données personnelles collectées sur ce site sont traitées par la <strong>{BRAND_NAME}</strong> ({BRAND_SHORT}),{" "}
-        {CONTACT_ADDRESS}.
-        Pour toute question sur vos données : {email} ou {CONTACT_PHONE}.
+        Les données personnelles collectées sur {BRAND_NAME} sont traitées par le{" "}
+        <strong>{CARRIER_NAME} ({CARRIER_SHORT})</strong>, récépissé {CARRIER_RECEIPT}, porteur de la plateforme.
+        Pour toute question sur vos données : {email} ou {CONTACT_PHONES.join(" / ")}.
       </p>
     ),
   },
@@ -41,8 +41,8 @@ const sections: LegalSection[] = [
             sujet et message.
           </li>
           <li>
-            <strong>Si vous demandez à rejoindre le club</strong> : nom, email, téléphone, région, et les informations
-            sur votre projet (nom, secteur, stade, besoin de financement, description).
+            <strong>Si vous proposez une campagne</strong> : nom, structure, email, téléphone, région, et les
+            informations sur votre projet (nom, cause, stade, besoin de financement, description).
           </li>
           <li>
             <strong>Pour la sécurité</strong> : l'adresse IP et l'email utilisés lors des tentatives de connexion
@@ -63,7 +63,7 @@ const sections: LegalSection[] = [
       <ul>
         <li>Enregistrer votre don, l'affecter au projet choisi et vous envoyer un email de confirmation (exécution de votre demande).</li>
         <li>Gérer votre compte et votre connexion (exécution du service).</li>
-        <li>Répondre à vos messages et étudier vos demandes d'adhésion au club (votre demande).</li>
+        <li>Répondre à vos messages et étudier les campagnes proposées (votre demande).</li>
         <li>Protéger les comptes contre les tentatives d'intrusion et garder une trace des actions d'administration (intérêt légitime de sécurité).</li>
         <li>Conserver les justificatifs des dons reçus (obligations comptables).</li>
         <li>Publier des statistiques globales (montant total collecté, nombre de donateurs), qui ne permettent pas de vous identifier.</li>
@@ -76,13 +76,11 @@ const sections: LegalSection[] = [
     content: (
       <>
         <p>
-          Vos données sont accessibles uniquement aux administrateurs du club et aux prestataires strictement
+          Vos données sont accessibles uniquement aux administrateurs de {BRAND_NAME} et aux prestataires strictement
           nécessaires au fonctionnement du service :
         </p>
         <ul>
-          <li><strong>Stripe</strong> pour les paiements par carte bancaire ;</li>
-          <li><strong>PayDunya</strong> pour les paiements Wave et Orange Money ;</li>
-          <li><strong>Google (Gmail)</strong> pour l'envoi des emails de confirmation et de réinitialisation de mot de passe ;</li>
+          <li>nos <strong>prestataires de paiement</strong> agréés, pour les paiements Wave, Orange Money et par carte bancaire ;</li>          <li><strong>Google (Gmail)</strong> pour l'envoi des emails de confirmation et de réinitialisation de mot de passe ;</li>
           <li>notre hébergeur, qui stocke la base de données du site.</li>
         </ul>
         <p>
@@ -114,7 +112,7 @@ const sections: LegalSection[] = [
         <p>Le site n'utilise <strong>aucun cookie publicitaire ni outil de mesure d'audience</strong>. Il utilise uniquement :</p>
         <ul>
           <li>
-            un cookie de session (<code>cndsa_session</code>), déposé seulement si vous vous connectez. Il est
+            un cookie de session (<code>senjapo_session</code>), déposé seulement si vous vous connectez. Il est
             inaccessible aux scripts de la page et expire après une période d'inactivité (15 minutes pour les
             administrateurs, 60 minutes pour les autres comptes) et au plus tard 12 heures après la connexion ;
           </li>
@@ -124,9 +122,8 @@ const sections: LegalSection[] = [
           </li>
         </ul>
         <p>
-          Ces éléments sont indispensables au fonctionnement du site et ne nécessitent pas votre consentement. La carte
-          affichée sur la page <Link to="/contact">Contact</Link> est fournie par Google Maps, qui peut déposer ses propres
-          cookies selon sa politique de confidentialité.
+          Ces éléments sont indispensables au fonctionnement du site et ne nécessitent pas votre consentement. Pour toute
+          question, écrivez-nous depuis la page <Link to="/contact">Contact</Link>.
         </p>
       </>
     ),
@@ -190,7 +187,7 @@ export default function PrivacyPage() {
       updated={UPDATED}
       intro={
         <p>
-          À la {BRAND_SHORT}, la confiance est au cœur de notre démarche, y compris pour vos données personnelles. Cette
+          Chez {BRAND_NAME}, la confiance est au cœur de notre démarche, y compris pour vos données personnelles. Cette
           page explique simplement ce que nous collectons, pourquoi, avec qui nous le partageons et comment exercer vos
           droits.
         </p>

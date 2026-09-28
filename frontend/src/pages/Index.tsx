@@ -10,8 +10,8 @@ import { api, Project, PublicStats } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
 import { cn } from "@/lib/utils";
 import { softTone, solidTone, Tone } from "@/lib/tones";
-import { Heart, Users, FolderOpen, TrendingUp, ArrowRight, Sprout, Lightbulb } from "lucide-react";
-import { BRAND_NAME } from "@/lib/brand";
+import { Heart, Users, FolderOpen, TrendingUp, ArrowRight, HandHeart, Lightbulb } from "lucide-react";
+import { BRAND_DESCRIPTOR, BRAND_NAME } from "@/lib/brand";
 
 const HERO_IMG = "https://mgx-backend-cdn.metadl.com/generate/images/983496/2026-02-22/20fb421b-e0e3-4aa9-a282-e7aa1dd63cc3.png";
 
@@ -20,28 +20,28 @@ function buildStats(s: PublicStats | null) {
   return [
     { icon: Users, value: show(formatNumber(s?.donors ?? 0)), label: plural(s?.donors ?? 0, "Donateur", "Donateurs"), tone: "primary" as Tone },
     { icon: Heart, value: show(formatAmount(s?.total_raised ?? 0)), label: "FCFA collectés", tone: "highlight" as Tone },
-    { icon: FolderOpen, value: show(formatNumber(s?.active_projects ?? 0)), label: plural(s?.active_projects ?? 0, "Projet actif", "Projets actifs"), tone: "info" as Tone },
-    { icon: TrendingUp, value: show(formatNumber(s?.funded_projects ?? 0)), label: plural(s?.funded_projects ?? 0, "Projet financé", "Projets financés"), tone: "destructive" as Tone },
+    { icon: FolderOpen, value: show(formatNumber(s?.active_projects ?? 0)), label: plural(s?.active_projects ?? 0, "Campagne active", "Campagnes actives"), tone: "info" as Tone },
+    { icon: TrendingUp, value: show(formatNumber(s?.funded_projects ?? 0)), label: plural(s?.funded_projects ?? 0, "Campagne financée", "Campagnes financées"), tone: "destructive" as Tone },
   ];
 }
 
 const steps: { step: string; title: string; description: string; tone: Tone }[] = [
   {
     step: "01",
-    title: "Choisissez un Projet",
-    description: "Soutenez un projet précis, ou faites un don général que le club affecte là où il est le plus utile.",
+    title: "Choisissez une Campagne",
+    description: "Chaque campagne est vérifiée et validée avant d'être publiée. Vous pouvez aussi faire un don général.",
     tone: "primary",
   },
   {
     step: "02",
-    title: "Faites votre Don",
+    title: "Contribuez",
     description: "Sélectionnez le montant et payez en toute sécurité par Wave, Orange Money ou carte bancaire.",
     tone: "highlight",
   },
   {
     step: "03",
-    title: "Le Club Redistribue",
-    description: "Les fonds sont versés aux projets nationaux et régionaux, dont vous suivez l'avancement sur le site.",
+    title: "Suivez l'Impact",
+    description: "Suivez l'avancement de chaque collecte, l'utilisation des fonds et les réalisations.",
     tone: "info",
   },
 ];
@@ -83,16 +83,20 @@ export default function IndexPage() {
         <div className="hero-overlay absolute inset-0" aria-hidden="true" />
         <div className="relative z-10 mx-auto max-w-4xl px-4 pb-24 pt-28 text-center text-white sm:pb-28">
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
-            <Sprout className="h-4 w-4 text-highlight" aria-hidden="true" />
-            <span className="text-sm font-medium">{BRAND_NAME}</span>
+            <HandHeart className="h-4 w-4 text-highlight" aria-hidden="true" />
+            <span className="text-sm font-medium">
+              {BRAND_NAME} · {BRAND_DESCRIPTOR}
+            </span>
           </div>
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Ensemble, faisons grandir{" "}
-            <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">nos régions</span>
+            Une plateforme, plusieurs causes,{" "}
+            <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">
+              une solidarité nationale
+            </span>
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-white/80 sm:text-xl">
-            Un club de créateurs qui rassemble vos dons et les redistribue à des projets nationaux et régionaux :
-            agriculture, éducation, assainissement, création d'activités et bien d'autres.
+            Soutenez des projets concrets : jeunes et formation, Daaras, artisans, agriculteurs, femmes et groupements,
+            personnes vulnérables et projets communautaires.
           </p>
           <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button asChild size="lg" className="h-14 rounded-xl px-8 text-base font-semibold shadow-lg sm:text-lg">
@@ -108,7 +112,7 @@ export default function IndexPage() {
               className="h-14 rounded-xl border-2 border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 hover:text-white sm:text-lg"
             >
               <Link to="/projects">
-                Découvrir nos Projets
+                Voir les Campagnes
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -149,9 +153,9 @@ export default function IndexPage() {
             <span className="mb-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
               Nos Causes
             </span>
-            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Projets en Vedette</h2>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Campagnes en Cours</h2>
             <p className="mx-auto max-w-xl text-muted-foreground">
-              Découvrez les projets qui ont le plus besoin de votre soutien en ce moment.
+              Découvrez les campagnes qui ont le plus besoin de votre soutien en ce moment.
             </p>
           </div>
 
@@ -163,13 +167,13 @@ export default function IndexPage() {
               : featured.map((project) => <ProjectCard key={project.id} project={project} />)}
           </div>
           {featured?.length === 0 && (
-            <p className="text-center text-muted-foreground">Aucun projet en cours pour le moment.</p>
+            <p className="text-center text-muted-foreground">Aucune campagne en cours pour le moment.</p>
           )}
 
           <div className="mt-10 text-center">
             <Button asChild variant="outline" size="lg" className="rounded-xl border-primary/40 text-primary hover:bg-accent hover:text-accent-foreground">
               <Link to="/projects">
-                Voir Tous les Projets
+                Voir Toutes les Campagnes
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -207,23 +211,23 @@ export default function IndexPage() {
         </div>
       </section>
 
-      {/* Creators' club: anyone with a project can join */}
+      {/* Campaigns are open to other project holders, after verification */}
       <section className="px-4 py-16 sm:py-20">
         <div className="mx-auto grid max-w-6xl items-center gap-8 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-10 md:grid-cols-[1fr_auto]">
           <div>
             <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
               <Lightbulb className="h-4 w-4" aria-hidden="true" />
-              Club de créateurs
+              Porteurs de projets
             </span>
-            <h2 className="mb-3 text-2xl font-bold tracking-tight text-foreground md:text-3xl">Vous avez un projet ?</h2>
+            <h2 className="mb-3 text-2xl font-bold tracking-tight text-foreground md:text-3xl">Vous portez un projet à impact ?</h2>
             <p className="max-w-2xl text-muted-foreground">
-              Le club rassemble des créateurs de tous les secteurs. Agriculture, commerce, artisanat, services,
-              éducation… Présentez votre projet : les projets retenus peuvent être accompagnés et financés grâce aux dons.
+              Associations, groupements, organisations, créateurs et entrepreneurs : proposez votre campagne. Après
+              vérification et validation, elle sera publiée sur {BRAND_NAME} pour recevoir des contributions.
             </p>
           </div>
           <Button asChild size="lg" className="h-12 rounded-xl px-8 font-semibold">
-            <Link to="/rejoindre">
-              Rejoindre le club
+            <Link to="/proposer">
+              Proposer une campagne
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
@@ -235,7 +239,7 @@ export default function IndexPage() {
         <div className="mx-auto max-w-6xl rounded-2xl bg-muted/60 p-6 sm:p-10">
           <h2 className="mb-2 text-2xl font-bold tracking-tight text-foreground">Restez informé</h2>
           <p className="mb-5 max-w-2xl text-muted-foreground">
-            Recevez les nouvelles du club : nouveaux projets, événements et ouverture des dons en ligne.
+            Recevez les nouvelles de {BRAND_NAME} : nouvelles campagnes, événements et ouverture des dons en ligne.
           </p>
           <NotifyForm />
         </div>
@@ -247,8 +251,8 @@ export default function IndexPage() {
           <Heart className="mx-auto mb-6 h-12 w-12 fill-highlight text-highlight" aria-hidden="true" />
           <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Prêt à Faire la Différence ?</h2>
           <p className="mx-auto mb-8 max-w-xl text-lg text-white/85">
-            Chaque contribution, aussi petite soit-elle, fait avancer un projet près de chez vous. Rejoignez les
-            donateurs du club dès aujourd'hui.
+            Citoyens, diaspora, entreprises, associations, fondations : chaque contribution, aussi petite soit-elle,
+            fait avancer un projet concret.
           </p>
           <Button
             asChild

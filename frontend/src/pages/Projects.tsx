@@ -61,11 +61,11 @@ export default function ProjectsPage() {
       <section className="surface-hero px-4 pb-12 pt-24 sm:pt-28">
         <div className="mx-auto max-w-6xl text-center">
           <span className="mb-4 inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold">
-            {total} Projets Actifs
+            {total} {total > 1 ? "Campagnes actives" : "Campagne active"}
           </span>
-          <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Nos Projets & Causes</h1>
+          <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Nos Campagnes</h1>
           <p className="mx-auto max-w-xl text-white/75">
-            Projets nationaux et régionaux soutenus par le club : choisissez celui qui vous inspire le plus.
+            Des campagnes vérifiées et validées, partout au Sénégal : choisissez celle qui vous inspire le plus.
           </p>
         </div>
       </section>
@@ -105,7 +105,7 @@ export default function ProjectsPage() {
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <MapPin className="h-5 w-5 text-primary" aria-hidden="true" />
-                Projets par région
+                Campagnes par région
               </h2>
               {activeRegion && (
                 <button type="button" onClick={() => setRegion(null)} className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
@@ -161,8 +161,8 @@ export default function ProjectsPage() {
             <div className="text-center py-20">
               <p className="text-muted-foreground text-lg">
                 {activeRegion
-                  ? `Aucun projet pour le moment dans la région de ${activeRegion}.`
-                  : "Aucun projet trouvé dans cette catégorie."}
+                  ? `Aucune campagne pour le moment dans la région de ${activeRegion}.`
+                  : "Aucune campagne pour cette cause pour le moment."}
               </p>
             </div>
           )}

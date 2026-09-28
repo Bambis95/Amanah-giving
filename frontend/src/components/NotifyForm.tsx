@@ -37,7 +37,7 @@ export default function NotifyForm({ className, stacked = false }: { className?:
         phone: phone.trim(),
         subject: NOTIFY_SUBJECT,
         message: [
-          "Souhaite être tenu informé de l'ouverture des dons et des activités du club.",
+          "Souhaite être tenu informé des nouvelles campagnes et de l'ouverture des dons.",
           sourceLine(source),
         ]
           .filter(Boolean)
@@ -55,7 +55,7 @@ export default function NotifyForm({ className, stacked = false }: { className?:
     return (
       <div className={cn("flex items-center gap-3 rounded-xl bg-accent p-4 text-accent-foreground", className)} role="status">
         <CheckCircle className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
-        <p className="text-sm">Merci {name.trim()} ! Nous vous préviendrons des prochaines étapes du club.</p>
+        <p className="text-sm">Merci {name.trim()} ! Nous vous préviendrons des prochaines campagnes.</p>
       </div>
     );
   }

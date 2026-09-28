@@ -20,9 +20,9 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 const navLinks = [
   { href: "/", label: "Accueil" },
-  { href: "/projects", label: "Nos Projets" },
+  { href: "/projects", label: "Campagnes" },
   { href: "/about", label: "À Propos" },
-  { href: "/rejoindre", label: "Rejoindre le Club" },
+  { href: "/proposer", label: "Proposer une Campagne" },
   { href: "/contact", label: "Contact" },
 ];
 

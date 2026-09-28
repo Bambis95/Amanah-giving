@@ -55,6 +55,8 @@ const App = () => (
           <Route path="/projects" element={<Projects />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/proposer" element={<Join />} />
+          {/* Former address of the form, kept so older links still work */}
           <Route path="/rejoindre" element={<Join />} />
           <Route path="/partenaires" element={<Partners />} />
           <Route path="/transparence" element={<Transparency />} />

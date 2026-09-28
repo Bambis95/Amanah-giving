@@ -19,7 +19,7 @@ import { adminApi, ContactMessage } from "@/api";
 import { formatDate } from "./format";
 
 const subjectLabels: Record<string, string> = {
-  join: "Demande d'adhésion",
+  join: "Proposition de campagne",
   notify: "Être tenu informé",
   general: "Question générale",
   donation: "Question sur un don",

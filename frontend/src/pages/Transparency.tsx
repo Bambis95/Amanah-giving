@@ -7,7 +7,7 @@ import { Eye, FolderOpen, Heart, TrendingUp, Users } from "lucide-react";
 import { api, Project } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
 import { categoryLabel } from "@/lib/categories";
-import { BRAND_SHORT } from "@/lib/brand";
+import { BRAND_NAME } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
 
@@ -28,8 +28,8 @@ export default function TransparencyPage() {
   const figures: { icon: React.ElementType; value: string; label: string; tone: Tone }[] = [
     { icon: Heart, value: `${formatAmount(stats?.total_raised ?? 0)} FCFA`, label: "Collectés en ligne", tone: "highlight" },
     { icon: Users, value: formatNumber(stats?.donors ?? 0), label: plural(stats?.donors ?? 0, "Donateur", "Donateurs"), tone: "primary" },
-    { icon: FolderOpen, value: formatNumber(stats?.active_projects ?? 0), label: plural(stats?.active_projects ?? 0, "Projet en cours", "Projets en cours"), tone: "info" },
-    { icon: TrendingUp, value: formatNumber(stats?.funded_projects ?? 0), label: plural(stats?.funded_projects ?? 0, "Projet financé", "Projets financés"), tone: "destructive" },
+    { icon: FolderOpen, value: formatNumber(stats?.active_projects ?? 0), label: plural(stats?.active_projects ?? 0, "Campagne en cours", "Campagnes en cours"), tone: "info" },
+    { icon: TrendingUp, value: formatNumber(stats?.funded_projects ?? 0), label: plural(stats?.funded_projects ?? 0, "Campagne financée", "Campagnes financées"), tone: "destructive" },
   ];
 
   return (
@@ -45,7 +45,7 @@ export default function TransparencyPage() {
           <h1 className="mb-4 text-3xl font-bold md:text-4xl">Où Vont les Dons ?</h1>
           <p className="mx-auto max-w-2xl text-white/80">
             La confiance se mérite. Voici, en temps réel, les montants collectés sur la plateforme et l'avancement de
-            chaque projet soutenu par la {BRAND_SHORT}.
+            chaque campagne publiée sur {BRAND_NAME}.
           </p>
         </div>
       </section>
@@ -70,15 +70,15 @@ export default function TransparencyPage() {
 
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-2 text-2xl font-bold text-foreground">Avancement des projets</h2>
+          <h2 className="mb-2 text-2xl font-bold text-foreground">Avancement des campagnes</h2>
           <p className="mb-6 text-muted-foreground">
-            Montant collecté par rapport à l'objectif de chaque projet, mis à jour à chaque don confirmé.
+            Montant collecté par rapport à l'objectif de chaque campagne, mis à jour à chaque don confirmé.
           </p>
 
           {projects === null ? (
             <div className="h-40 animate-pulse rounded-xl bg-muted/60" aria-busy="true" />
           ) : projects.length === 0 ? (
-            <p className="rounded-xl bg-muted/60 p-6 text-center text-muted-foreground">Aucun projet publié pour le moment.</p>
+            <p className="rounded-xl bg-muted/60 p-6 text-center text-muted-foreground">Aucune campagne publiée pour le moment.</p>
           ) : (
             <div className="space-y-3">
               {projects.map((p) => {
@@ -121,7 +121,8 @@ export default function TransparencyPage() {
             <h2 className="mb-2 text-base font-semibold text-foreground">Nos règles</h2>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>Seuls les paiements confirmés par nos prestataires (Wave, Orange Money, carte) sont comptés.</li>
-              <li>Chaque don est affecté au projet ou à la cause choisis par le donateur ; les dons généraux sont répartis par le club selon les besoins.</li>
+              <li>Chaque campagne est vérifiée et validée avant sa publication.</li>
+              <li>Chaque don est affecté à la campagne ou à la cause choisie par le contributeur ; les dons généraux sont répartis selon les besoins.</li>
               <li>
                 Les règles complètes figurent dans nos <Link to="/conditions" className="text-primary hover:underline">conditions d'utilisation</Link>.
               </li>

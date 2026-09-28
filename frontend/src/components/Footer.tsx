@@ -1,16 +1,16 @@
 import { Link } from "react-router-dom";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { BadgeCheck, Phone, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
-import { CONTACT_EMAIL } from "@/lib/contact";
-import { BRAND_NAME } from "@/lib/brand";
+import { CONTACT_EMAIL, CONTACT_PHONES, telHref } from "@/lib/contact";
+import { BRAND_NAME, BRAND_SLOGAN, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
 
 const navigation = [
   { href: "/", label: "Accueil" },
-  { href: "/projects", label: "Nos Projets" },
+  { href: "/projects", label: "Campagnes" },
   { href: "/donate", label: "Faire un Don" },
   { href: "/about", label: "À Propos" },
-  { href: "/rejoindre", label: "Rejoindre le Club" },
+  { href: "/proposer", label: "Proposer une Campagne" },
   { href: "/partenaires", label: "Devenir Partenaire" },
   { href: "/transparence", label: "Transparence" },
   { href: "/contact", label: "Contact" },
@@ -28,14 +28,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <Logo variant="onDark" />
+            <p className="max-w-sm text-sm italic leading-relaxed text-white/80">« {BRAND_SLOGAN} »</p>
             <p className="max-w-sm text-sm leading-relaxed text-white/65">
-              La {BRAND_NAME} rassemble les dons et les redistribue à des projets nationaux et régionaux :
-              agriculture, éducation, assainissement, création d'activités…
+              {BRAND_NAME} est une initiative du {CARRIER_NAME} ({CARRIER_SHORT}), en partenariat avec {PARTNER_NAME}.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
-              <span className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium">Stripe</span>
-              <span className="rounded-md bg-[#FF6600]/20 px-3 py-1.5 text-xs font-medium text-[#FF8A3D]">Orange Money</span>
               <span className="rounded-md bg-[#1DC3E2]/20 px-3 py-1.5 text-xs font-medium text-[#5AD6EE]">Wave</span>
+              <span className="rounded-md bg-[#FF6600]/20 px-3 py-1.5 text-xs font-medium text-[#FF8A3D]">Orange Money</span>
+              <span className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium">Carte bancaire</span>
             </div>
           </div>
 
@@ -70,11 +70,12 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-white/65">
               <li className="flex items-start gap-3">
                 <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
-                <div>
-                  <a href="tel:+221779394344" className="transition-colors hover:text-white">
-                    +221 77 939 43 44
-                  </a>
-                  <p className="text-xs text-white/50">OM & Wave</p>
+                <div className="flex flex-col gap-1">
+                  {CONTACT_PHONES.map((phone) => (
+                    <a key={phone} href={telHref(phone)} className="transition-colors hover:text-white">
+                      {phone}
+                    </a>
+                  ))}
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -84,10 +85,9 @@ export default function Footer() {
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+                <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
                 <span>
-                  Dakar, Sacré Cœur 3<br />
-                  Mermoz, Sénégal
+                  {CARRIER_SHORT} · Récépissé {CARRIER_RECEIPT}
                 </span>
               </li>
             </ul>
@@ -95,7 +95,9 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-center md:flex-row md:text-left">
-          <p className="text-sm text-white/50">© {new Date().getFullYear()} {BRAND_NAME}. Tous droits réservés.</p>
+          <p className="text-sm text-white/50">
+            © {new Date().getFullYear()} {BRAND_NAME} · {CARRIER_SHORT}. Tous droits réservés.
+          </p>
           <div className="flex items-center gap-6 text-xs">
             <Link to="/confidentialite" className="text-white/50 transition-colors hover:text-white">
               Politique de Confidentialité

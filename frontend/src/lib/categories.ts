@@ -1,14 +1,18 @@
 import {
+  BookOpen,
   Droplets,
   GraduationCap,
+  Hammer,
+  Handshake,
+  HandHeart,
   Heart,
   Home,
-  Lightbulb,
   LucideIcon,
   Recycle,
   Sparkles,
   Sprout,
   Stethoscope,
+  Users,
   UtensilsCrossed,
 } from "lucide-react";
 
@@ -24,24 +28,33 @@ export interface Category {
   icon: LucideIcon;
 }
 
+// The causes SENJAPO supports
 export const CATEGORIES: Category[] = [
-  { value: "agriculture", label: "Agriculture", causeLabel: "Agriculture & élevage", iconName: "Sprout", icon: Sprout },
-  { value: "education", label: "Éducation", causeLabel: "Éducation", iconName: "GraduationCap", icon: GraduationCap },
-  { value: "sanitation", label: "Assainissement", causeLabel: "Assainissement & cadre de vie", iconName: "Recycle", icon: Recycle },
-  { value: "entrepreneurship", label: "Création d'activités", causeLabel: "Création d'activités & emploi", iconName: "Lightbulb", icon: Lightbulb },
-  { value: "health", label: "Santé", causeLabel: "Santé", iconName: "Stethoscope", icon: Stethoscope },
-  { value: "water", label: "Eau potable", causeLabel: "Eau potable", iconName: "Droplets", icon: Droplets },
-  { value: "other", label: "Autres projets", causeLabel: "Autres projets nationaux et régionaux", iconName: "Sparkles", icon: Sparkles },
+  { value: "youth", label: "Jeunes & formation", causeLabel: "Jeunes & formation", iconName: "GraduationCap", icon: GraduationCap },
+  { value: "education", label: "Daaras & éducation", causeLabel: "Daaras & éducation", iconName: "BookOpen", icon: BookOpen },
+  { value: "entrepreneurship", label: "Artisans & entrepreneurs", causeLabel: "Artisans & entrepreneurs", iconName: "Hammer", icon: Hammer },
+  { value: "agriculture", label: "Agriculteurs", causeLabel: "Agriculteurs & élevage", iconName: "Sprout", icon: Sprout },
+  { value: "women", label: "Femmes & groupements", causeLabel: "Femmes & groupements", iconName: "Users", icon: Users },
+  { value: "vulnerable", label: "Personnes vulnérables", causeLabel: "Personnes vulnérables", iconName: "HandHeart", icon: HandHeart },
+  { value: "community", label: "Projets communautaires", causeLabel: "Projets communautaires à impact", iconName: "Handshake", icon: Handshake },
 ];
 
-// No longer offered for new projects, still displayed for existing ones
+// No longer offered for new campaigns, still displayed for existing ones
 const LEGACY: Category[] = [
+  { value: "sanitation", label: "Assainissement", causeLabel: "Assainissement & cadre de vie", iconName: "Recycle", icon: Recycle },
+  { value: "health", label: "Santé", causeLabel: "Santé", iconName: "Stethoscope", icon: Stethoscope },
+  { value: "water", label: "Eau potable", causeLabel: "Eau potable", iconName: "Droplets", icon: Droplets },
+  { value: "other", label: "Autres projets", causeLabel: "Autres projets", iconName: "Sparkles", icon: Sparkles },
   { value: "food", label: "Alimentation", causeLabel: "Alimentation", iconName: "UtensilsCrossed", icon: UtensilsCrossed },
   { value: "housing", label: "Logement", causeLabel: "Logement", iconName: "Home", icon: Home },
 ];
 
-/** Donation without a specific project: the club allocates it where it is most needed */
-export const GENERAL_CAUSE = { value: "general", label: "Don général", causeLabel: "Don général (le club l'affecte là où c'est le plus utile)" };
+/** Donation without a specific campaign: allocated where it is most needed */
+export const GENERAL_CAUSE = {
+  value: "general",
+  label: "Don général",
+  causeLabel: "Don général (affecté aux campagnes qui en ont le plus besoin)",
+};
 
 const ALL = [...CATEGORIES, ...LEGACY];
 

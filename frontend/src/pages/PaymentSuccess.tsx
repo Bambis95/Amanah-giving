@@ -149,7 +149,7 @@ export default function PaymentSuccessPage() {
                   </Link></Button>
                 <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"><Link to={state === "failed" ? "/donate" : "/projects"}>
                     <Heart className="w-4 h-4 mr-2" />
-                    {state === "failed" ? "Réessayer le don" : "Découvrir nos projets"}
+                    {state === "failed" ? "Réessayer le don" : "Découvrir les campagnes"}
                   </Link></Button>
               </div>
             )}

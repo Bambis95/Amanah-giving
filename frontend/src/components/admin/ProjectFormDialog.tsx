@@ -132,7 +132,7 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
         <DialogHeader>
           <DialogTitle>{project ? "Modifier le projet" : "Nouveau projet"}</DialogTitle>
           <DialogDescription>
-            Les modifications sont visibles immédiatement sur la page « Nos Projets ».
+            Les modifications sont visibles immédiatement sur la page « Campagnes ».
           </DialogDescription>
         </DialogHeader>
 

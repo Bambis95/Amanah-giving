@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 import { Building2, Briefcase, CheckCircle, Globe2, HeartHandshake, Landmark, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/api";
-import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
+import { BRAND_NAME, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 import { sourceLine, useVisitSource } from "@/hooks/use-visit-source";
 
 // Stored as a contact message with this subject (admin: "Partenariat")
@@ -25,8 +25,8 @@ const partnerTypes = [
   },
   {
     icon: Briefcase,
-    title: "Entreprises & sponsors",
-    text: "Financer un projet, parrainer une région ou un secteur, mettre à disposition du matériel ou des compétences.",
+    title: "Entreprises & fondations",
+    text: "Financer une campagne, parrainer une cause ou une région, mettre à disposition du matériel ou des compétences.",
   },
   {
     icon: HeartHandshake,
@@ -109,8 +109,8 @@ export default function PartnersPage() {
           </span>
           <h1 className="mb-4 text-3xl font-bold md:text-4xl">Construisons Ensemble</h1>
           <p className="mx-auto max-w-2xl text-white/75">
-            La {BRAND_NAME} s'associe aux collectivités, aux entreprises, aux associations et à la diaspora pour
-            financer et accompagner les projets de développement de nos régions.
+            {BRAND_NAME}, porté par le {CARRIER_SHORT} en partenariat avec {PARTNER_NAME}, s'associe aux collectivités,
+            entreprises, fondations, associations et à la diaspora pour soutenir des projets à impact partout au Sénégal.
           </p>
         </div>
       </section>
@@ -137,9 +137,9 @@ export default function PartnersPage() {
             <h2 className="mb-4 text-2xl font-bold text-foreground">Pourquoi devenir partenaire ?</h2>
             <ul className="space-y-3 text-muted-foreground">
               {[
-                "Des projets concrets, choisis au plus près des besoins des régions.",
-                "Une plateforme transparente : l'avancement de chaque projet est publié en ligne.",
-                "Un réseau de créateurs de tous les secteurs, prêts à entreprendre.",
+                "Des campagnes vérifiées et validées avant leur publication.",
+                "Une plateforme transparente : suivi des collectes et traçabilité des contributions.",
+                "Un réseau de créateurs et d'entrepreneurs de tous les secteurs, porté par le CCES.",
                 "Une visibilité pour votre organisation auprès des donateurs et du public.",
               ].map((item) => (
                 <li key={item} className="flex gap-3">
@@ -150,7 +150,7 @@ export default function PartnersPage() {
             </ul>
             <p className="mt-6 text-sm text-muted-foreground">
               Vous portez vous-même un projet ?{" "}
-              <Link to="/rejoindre" className="font-medium text-primary hover:underline">Rejoignez le club</Link>.
+              <Link to="/proposer" className="font-medium text-primary hover:underline">Proposez une campagne</Link>.
             </p>
           </div>
 
@@ -163,7 +163,7 @@ export default function PartnersPage() {
                   </div>
                   <h2 className="mb-2 text-xl font-bold text-foreground">Merci pour votre proposition !</h2>
                   <p className="text-muted-foreground">
-                    La {BRAND_SHORT} a bien reçu votre message et reviendra vers vous très prochainement.
+                    L'équipe {BRAND_NAME} a bien reçu votre message et reviendra vers vous très prochainement.
                   </p>
                 </div>
               ) : (

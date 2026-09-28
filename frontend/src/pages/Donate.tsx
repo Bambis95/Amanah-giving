@@ -35,7 +35,7 @@ import { CATEGORIES, GENERAL_CAUSE, causeLabel } from "@/lib/categories";
 
 const presetAmounts = [5000, 10000, 25000, 50000, 100000, 250000];
 
-// A general donation comes first: the club allocates it where it is most needed
+// A general donation comes first: it is allocated where it is most needed
 const causes = [
   { value: GENERAL_CAUSE.value, label: GENERAL_CAUSE.causeLabel },
   ...CATEGORIES.map((c) => ({ value: c.value, label: c.causeLabel })),
@@ -47,7 +47,7 @@ const NO_PROJECT = "none";
 const paymentMethods = [
   {
     id: "stripe",
-    name: "Carte Bancaire (Stripe)",
+    name: "Carte Bancaire",
     icon: CreditCard,
     description: "Visa, Mastercard, etc.",
     color: "#635BFF",
@@ -56,14 +56,14 @@ const paymentMethods = [
     id: "orange_money",
     name: "Orange Money",
     icon: Smartphone,
-    description: "+221 77 939 43 44",
+    description: "Paiement mobile sécurisé",
     color: "#FF6600",
   },
   {
     id: "wave",
     name: "Wave",
     icon: Smartphone,
-    description: "+221 77 939 43 44",
+    description: "Paiement mobile sécurisé",
     color: "#1DC3E2",
   },
 ];
@@ -238,7 +238,7 @@ export default function DonatePage() {
         <section className="surface-brand px-4 pb-16 pt-24 sm:pt-28">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="mb-4 text-3xl font-bold md:text-4xl">Faire un Don</h1>
-            <p className="mx-auto max-w-xl text-white/80">Chaque don compte pour le développement de nos régions.</p>
+            <p className="mx-auto max-w-xl text-white/80">Une plateforme, plusieurs causes, une solidarité nationale.</p>
           </div>
         </section>
         <section className="-mt-6 px-4 py-12">
@@ -254,7 +254,7 @@ export default function DonatePage() {
               </p>
               <NotifyForm stacked className="mb-6 text-left" />
               <Button asChild variant="outline" className="rounded-lg border-primary text-primary">
-                <Link to="/projects">Découvrir les projets</Link>
+                <Link to="/projects">Découvrir les campagnes</Link>
               </Button>
             </CardContent>
           </Card>
@@ -277,8 +277,8 @@ export default function DonatePage() {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Faire un Don</h1>
           <p className="text-white/80 max-w-xl mx-auto">
-            Choisissez le montant, le projet ou la cause, et le mode de paiement qui vous conviennent. Le club
-            affecte votre don au projet choisi.
+            Choisissez le montant, la campagne ou la cause, et le mode de paiement qui vous conviennent. Votre don est
+            affecté à la campagne choisie.
           </p>
         </div>
       </section>
@@ -349,17 +349,17 @@ export default function DonatePage() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   2
                 </span>
-                Choisissez un Projet ou une Cause
+                Choisissez une Campagne ou une Cause
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Label className="text-sm text-foreground/80">Projet à soutenir</Label>
+              <Label className="text-sm text-foreground/80">Campagne à soutenir</Label>
               <Select value={projectId} onValueChange={setProjectId}>
                 <SelectTrigger className="h-12 rounded-xl border-border mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_PROJECT}>Aucun projet précis (choisir une cause)</SelectItem>
+                  <SelectItem value={NO_PROJECT}>Aucune campagne précise (choisir une cause)</SelectItem>
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
                       {p.title}

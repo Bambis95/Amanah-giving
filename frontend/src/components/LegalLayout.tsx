@@ -2,7 +2,7 @@ import { ReactNode, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { BRAND_SHORT } from "@/lib/brand";
+import { BRAND_NAME } from "@/lib/brand";
 
 export interface LegalSection {
   id: string;
@@ -21,7 +21,7 @@ interface LegalLayoutProps {
 export default function LegalLayout({ title, updated, intro, sections }: LegalLayoutProps) {
   useEffect(() => {
     const previous = document.title;
-    document.title = `${title} · ${BRAND_SHORT}`;
+    document.title = `${title} · ${BRAND_NAME}`;
     return () => {
       document.title = previous;
     };

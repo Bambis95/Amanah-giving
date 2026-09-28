@@ -8,15 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CheckCircle, Handshake, Lightbulb, Loader2, Send, Sprout, Users } from "lucide-react";
+import { CheckCircle, FileSearch, Lightbulb, Loader2, Megaphone, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/api";
-import { BRAND_SHORT } from "@/lib/brand";
+import { BRAND_NAME, CARRIER_NAME, CARRIER_SHORT } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
 import { REGIONS } from "@/lib/regions";
 import { sourceLine, useVisitSource } from "@/hooks/use-visit-source";
 
-// A membership request is stored as a contact message with this subject (admin: "Demande d'adhésion")
+// A campaign proposal is stored as a contact message with this subject (admin: "Proposition de campagne")
 const JOIN_SUBJECT = "join";
 
 const REGION_CHOICES = [...REGIONS, "Hors du Sénégal"];
@@ -24,13 +24,13 @@ const REGION_CHOICES = [...REGIONS, "Hors du Sénégal"];
 const STAGES = ["Idée", "En préparation", "Démarré", "En activité, à développer"];
 
 const benefits = [
-  { icon: Users, title: "Un réseau de créateurs", text: "Rejoignez des porteurs de projets de tous les secteurs, partout dans le pays." },
-  { icon: Sprout, title: "Un accompagnement", text: "Le club étudie votre projet et vous aide à le présenter aux donateurs." },
-  { icon: Handshake, title: "Un financement possible", text: "Les projets retenus peuvent être publiés sur la plateforme pour recevoir des dons." },
+  { icon: FileSearch, title: "Vérification et validation", text: "Votre proposition est étudiée avant toute publication, pour la confiance des contributeurs." },
+  { icon: Megaphone, title: "Une visibilité nationale", text: "Les campagnes validées sont publiées sur la plateforme et ouvertes aux contributions." },
+  { icon: Users, title: "Un réseau de créateurs", text: `Rejoignez le ${CARRIER_NAME} (${CARRIER_SHORT}) et ses porteurs de projets.` },
 ];
 
 const emptyForm = {
-  name: "", email: "", phone: "", region: "", sector: "", stage: "", title: "", need: "", description: "",
+  name: "", organization: "", email: "", phone: "", region: "", sector: "", stage: "", title: "", need: "", description: "",
 };
 
 export default function JoinPage() {
@@ -48,7 +48,7 @@ export default function JoinPage() {
     e.preventDefault();
     const required: [keyof typeof emptyForm, string][] = [
       ["name", "votre nom"], ["email", "votre email"], ["phone", "votre téléphone"], ["region", "votre région"],
-      ["sector", "le secteur"], ["title", "le nom du projet"], ["description", "la description du projet"],
+      ["sector", "la cause"], ["title", "le nom de la campagne"], ["description", "la description du projet"],
     ];
     const missing = required.find(([key]) => !form[key].trim());
     if (missing) {
@@ -59,10 +59,11 @@ export default function JoinPage() {
 
     // Stored as a readable message: the admin sees every answer in the Messages tab
     const message = [
-      `Demande d'adhésion au club`,
+      `Proposition de campagne`,
       ``,
-      `Projet : ${form.title.trim()}`,
-      `Secteur : ${CATEGORIES.find((c) => c.value === form.sector)?.label ?? form.sector}`,
+      `Campagne : ${form.title.trim()}`,
+      form.organization.trim() ? `Structure : ${form.organization.trim()}` : null,
+      `Cause : ${CATEGORIES.find((c) => c.value === form.sector)?.label ?? form.sector}`,
       `Région : ${form.region}`,
       form.stage ? `Stade : ${form.stage}` : null,
       need ? `Besoin estimé : ${new Intl.NumberFormat("fr-FR").format(Number(need))} FCFA` : null,
@@ -99,12 +100,13 @@ export default function JoinPage() {
         <div className="mx-auto max-w-4xl text-center">
           <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold">
             <Lightbulb className="h-4 w-4" aria-hidden="true" />
-            Club de créateurs
+            Porteurs de projets
           </span>
-          <h1 className="mb-4 text-3xl font-bold md:text-4xl">Rejoindre le Club</h1>
+          <h1 className="mb-4 text-3xl font-bold md:text-4xl">Proposer une Campagne</h1>
           <p className="mx-auto max-w-2xl text-white/80">
-            La {BRAND_SHORT} est aussi un club de créateurs, ouvert à toute personne qui porte un projet, quel que soit
-            son secteur. Présentez-nous votre projet : le club vous recontacte.
+            Associations, groupements, organisations, créateurs et entrepreneurs : proposez un projet à impact social,
+            économique, éducatif ou communautaire. Après vérification et validation, votre campagne sera publiée sur{" "}
+            {BRAND_NAME}.
           </p>
         </div>
       </section>
@@ -134,23 +136,27 @@ export default function JoinPage() {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent">
                     <CheckCircle className="h-8 w-8 text-primary" aria-hidden="true" />
                   </div>
-                  <h2 className="mb-2 text-xl font-bold text-foreground">Demande envoyée !</h2>
+                  <h2 className="mb-2 text-xl font-bold text-foreground">Proposition envoyée !</h2>
                   <p className="mb-6 text-muted-foreground">
-                    Merci, {form.name.trim()}. Le club étudie votre projet « {form.title.trim()} » et vous recontactera
-                    par email ou par téléphone.
+                    Merci, {form.name.trim()}. L'équipe {BRAND_NAME} étudie votre campagne « {form.title.trim()} » et vous
+                    recontactera par email ou par téléphone.
                   </p>
                   <Button asChild className="rounded-lg">
-                    <Link to="/projects">Découvrir les projets du club</Link>
+                    <Link to="/projects">Voir les campagnes en cours</Link>
                   </Button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-                  <h2 className="text-2xl font-bold text-foreground">Présentez votre projet</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Présentez votre campagne</h2>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <Label htmlFor="join-name">Nom complet *</Label>
                       <Input id="join-name" autoComplete="name" value={form.name} onChange={(e) => set("name", e.target.value)} className="mt-1 h-11 rounded-xl" />
+                    </div>
+                    <div>
+                      <Label htmlFor="join-org">Structure (si applicable)</Label>
+                      <Input id="join-org" autoComplete="organization" placeholder="Association, groupement, GIE…" value={form.organization} onChange={(e) => set("organization", e.target.value)} className="mt-1 h-11 rounded-xl" />
                     </div>
                     <div>
                       <Label htmlFor="join-email">Email *</Label>
@@ -176,20 +182,20 @@ export default function JoinPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="join-title">Nom du projet *</Label>
-                    <Input id="join-title" placeholder="Ex. : Ferme avicole à Kaolack" value={form.title} onChange={(e) => set("title", e.target.value)} className="mt-1 h-11 rounded-xl" />
+                    <Label htmlFor="join-title">Nom de la campagne *</Label>
+                    <Input id="join-title" placeholder="Ex. : Équipement d'un atelier de couture à Thiès" value={form.title} onChange={(e) => set("title", e.target.value)} className="mt-1 h-11 rounded-xl" />
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <Label>Secteur *</Label>
+                      <Label>Cause *</Label>
                       <Select value={form.sector} onValueChange={(v) => set("sector", v)}>
-                        <SelectTrigger className="mt-1 h-11 rounded-xl" aria-label="Secteur">
+                        <SelectTrigger className="mt-1 h-11 rounded-xl" aria-label="Cause">
                           <SelectValue placeholder="Choisir" />
                         </SelectTrigger>
                         <SelectContent>
                           {CATEGORIES.map((c) => (
-                            <SelectItem key={c.value} value={c.value}>{c.value === "other" ? "Autre secteur" : c.label}</SelectItem>
+                            <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -228,7 +234,7 @@ export default function JoinPage() {
 
                   <Button type="submit" size="lg" disabled={loading} className="w-full rounded-xl font-semibold">
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Envoyer ma demande
+                    Envoyer ma proposition
                   </Button>
                   <p className="text-center text-xs text-muted-foreground">
                     Vos informations servent uniquement à étudier votre demande (voir notre{" "}

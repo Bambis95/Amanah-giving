@@ -16,46 +16,48 @@ import Footer from "@/components/Footer";
 import {
   Phone,
   Mail,
-  MapPin,
-  Clock,
+  BadgeCheck,
+  Handshake,
   Send,
   MessageCircle,
   CheckCircle,
   Loader2,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "@/api";
 import { cn } from "@/lib/utils";
-import { CONTACT_EMAIL } from "@/lib/contact";
+import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import { CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 import { softTone, textTone, Tone } from "@/lib/tones";
 
 const contactInfo = [
   {
     icon: Phone,
     title: "Téléphone",
-    details: ["+221 77 939 43 44"],
-    subtitle: "Orange Money & Wave",
+    details: CONTACT_PHONES,
+    subtitle: "",
     tone: "primary" as Tone,
   },
   {
     icon: Mail,
     title: "Email",
     details: [CONTACT_EMAIL],
-    subtitle: "Réponse sous 24h",
+    subtitle: "",
     tone: "info" as Tone,
   },
   {
-    icon: MapPin,
-    title: "Adresse",
-    details: ["Sacré Cœur 3, Mermoz", "Dakar, Sénégal"],
-    subtitle: "",
+    icon: BadgeCheck,
+    title: "Porteur",
+    details: [CARRIER_SHORT],
+    subtitle: `Récépissé ${CARRIER_RECEIPT}`,
     tone: "highlight" as Tone,
   },
   {
-    icon: Clock,
-    title: "Horaires",
-    details: ["Lun - Ven: 9h - 18h", "Sam: 9h - 13h"],
-    subtitle: "Fuseau GMT",
+    icon: Handshake,
+    title: "Partenaire",
+    details: [PARTNER_NAME],
+    subtitle: "",
     tone: "destructive" as Tone,
   },
 ];
@@ -63,7 +65,7 @@ const contactInfo = [
 const subjects = [
   { value: "general", label: "Question Générale" },
   { value: "donation", label: "Question sur un Don" },
-  { value: "project", label: "Proposer un Projet" },
+  { value: "project", label: "Proposer une Campagne" },
   { value: "partnership", label: "Partenariat" },
   { value: "volunteer", label: "Bénévolat" },
   { value: "other", label: "Autre" },
@@ -274,25 +276,21 @@ export default function ContactPage() {
 
           {/* Map & Info */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-sm overflow-hidden">
-              <div className="h-64 bg-muted">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3859.0!2d-17.4677!3d14.7167!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTTCsDQzJzAwLjEiTiAxN8KwMjgnMDMuNyJX!5e0!3m2!1sfr!2ssn!4v1!5m2!1sfr!2ssn"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Localisation du club"
-                />
-              </div>
-              <CardContent className="p-5">
-                <h3 className="font-bold text-foreground mb-2">Notre Bureau</h3>
+            <Card className="shadow-sm">
+              <CardContent className="space-y-4 p-6">
+                <h3 className="font-bold text-foreground">Vous avez un projet ou souhaitez nous soutenir ?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Sacré Cœur 3, Mermoz<br />
-                  Dakar, Sénégal
+                  Le {CARRIER_NAME} ({CARRIER_SHORT}) accueille les campagnes des associations, groupements et porteurs de
+                  projets, ainsi que les partenariats.
                 </p>
+                <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+                  <Button asChild className="rounded-lg">
+                    <Link to="/proposer">Proposer une campagne</Link>
+                  </Button>
+                  <Button asChild variant="outline" className="rounded-lg">
+                    <Link to="/partenaires">Devenir partenaire</Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -305,11 +303,11 @@ export default function ContactPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
                     <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                      <span className="text-xs font-bold">S</span>
+                      <span className="text-xs font-bold">CB</span>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Stripe</p>
-                      <p className="text-xs text-white/60">Carte bancaire internationale</p>
+                      <p className="text-sm font-semibold">Carte bancaire</p>
+                      <p className="text-xs text-white/60">Visa, Mastercard</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
@@ -318,7 +316,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Orange Money</p>
-                      <p className="text-xs text-white/60">+221 77 939 43 44</p>
+                      <p className="text-xs text-white/60">Paiement mobile sécurisé</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
@@ -327,7 +325,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Wave</p>
-                      <p className="text-xs text-white/60">+221 77 939 43 44</p>
+                      <p className="text-xs text-white/60">Paiement mobile sécurisé</p>
                     </div>
                   </div>
                 </div>

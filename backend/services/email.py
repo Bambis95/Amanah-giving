@@ -18,13 +18,18 @@ logger = logging.getLogger(__name__)
 
 # Same categories as the website (frontend/src/lib/categories.ts)
 CAUSE_LABELS = {
-    "agriculture": "Agriculture & élevage",
-    "education": "Éducation",
+    "youth": "Jeunes & formation",
+    "education": "Daaras & éducation",
+    "entrepreneurship": "Artisans & entrepreneurs",
+    "agriculture": "Agriculteurs & élevage",
+    "women": "Femmes & groupements",
+    "vulnerable": "Personnes vulnérables",
+    "community": "Projets communautaires à impact",
+    # no longer offered, kept for older donations
     "sanitation": "Assainissement & cadre de vie",
-    "entrepreneurship": "Création d'activités & emploi",
     "health": "Santé",
     "water": "Eau potable",
-    "other": "Autres projets nationaux et régionaux",
+    "other": "Autres projets",
     "food": "Alimentation",
     "housing": "Logement",
     "general": "Don général",
@@ -70,7 +75,7 @@ def build_donation_confirmation(
         [
             greeting,
             "",
-            f"Merci pour votre don de {amount} à la {settings.site_name}. Votre paiement a bien été reçu.",
+            f"Merci pour votre don de {amount} sur {settings.site_short_name}. Votre paiement a bien été reçu.",
             "",
             *[f"{label} : {value}" for label, value in details],
             "",
@@ -78,7 +83,7 @@ def build_donation_confirmation(
             "Pour toute question, répondez simplement à ce message.",
             "",
             "Avec toute notre gratitude,",
-            f"L'équipe de la {settings.site_short_name}",
+            f"L'équipe {settings.site_short_name}",
         ]
     )
 
@@ -104,7 +109,7 @@ def build_donation_confirmation(
       <table role="presentation" width="100%" style="border-top:1px solid #E5E7EB;border-bottom:1px solid #E5E7EB;margin-bottom:20px">{rows}</table>
       <p style="margin:0 0 8px;font-size:13px;color:#6B7280">Conservez cet email comme justificatif de votre don.
         Pour toute question, répondez simplement à ce message.</p>
-      <p style="margin:20px 0 0">Avec toute notre gratitude,<br>L'équipe de la {html.escape(settings.site_short_name)}</p>
+      <p style="margin:20px 0 0">Avec toute notre gratitude,<br>L'équipe {html.escape(settings.site_short_name)}</p>
     </td></tr>
   </table>
 </body>
@@ -186,7 +191,7 @@ def build_password_reset_email(recipient: str, name: Optional[str], reset_url: s
             "",
             "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe reste inchangé.",
             "",
-            f"L'équipe de la {settings.site_short_name}",
+            f"L'équipe {settings.site_short_name}",
         ]
     )
     body_html = f"""\

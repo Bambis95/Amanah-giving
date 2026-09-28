@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import LegalLayout, { LegalSection } from "@/components/LegalLayout";
-import { CONTACT_ADDRESS, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
-import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
+import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import { BRAND_DESCRIPTOR, BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 
 // The donation rules below mirror the backend (routers/payment_checkout.py): keep them in sync.
 const UPDATED = "27 septembre 2026";
@@ -14,8 +14,9 @@ const sections: LegalSection[] = [
     title: "Éditeur du site",
     content: (
       <p>
-        Ce site est édité par la <strong>{BRAND_NAME}</strong> ({BRAND_SHORT}), {CONTACT_ADDRESS}. Contact : {email} ·{" "}
-        {CONTACT_PHONE}.
+        La plateforme <strong>{BRAND_NAME}</strong> – {BRAND_DESCRIPTOR} est éditée par le{" "}
+        <strong>{CARRIER_NAME} ({CARRIER_SHORT})</strong>, récépissé {CARRIER_RECEIPT}, en partenariat avec{" "}
+        {PARTNER_NAME}. Contact : {email} · {CONTACT_PHONES.join(" / ")}.
       </p>
     ),
   },
@@ -24,10 +25,11 @@ const sections: LegalSection[] = [
     title: "Objet",
     content: (
       <p>
-        La {BRAND_SHORT} est un club qui collecte des dons via cette plateforme et les redistribue à des projets de
-        développement nationaux et régionaux (agriculture, éducation, assainissement, création d'activités…). Les
-        présentes conditions encadrent l'utilisation du site et les dons qui y sont faits. En utilisant le site ou en
-        faisant un don, vous les acceptez.
+        {BRAND_NAME} est une plateforme de collecte qui rassemble des contributions autour de projets à impact social,
+        économique, éducatif et communautaire. Elle accueille plusieurs campagnes, initiées par le {CARRIER_SHORT} ou
+        proposées par des associations, groupements, organisations et autres porteurs de projets, après vérification et
+        validation. Les présentes conditions encadrent l'utilisation du site et les contributions qui y sont faites. En
+        utilisant le site ou en faisant un don, vous les acceptez.
       </p>
     ),
   },
@@ -56,15 +58,14 @@ const sections: LegalSection[] = [
         <ul>
           <li>Le montant minimum d'un don est de <strong>500 FCFA</strong>.</li>
           <li>
-            Vous pouvez payer par <strong>Wave</strong> ou <strong>Orange Money</strong> (via notre prestataire PayDunya),
-            ou par <strong>carte bancaire</strong> (via Stripe). Pour la carte, le montant est converti en euros au taux
-            fixe FCFA/euro ; votre banque peut appliquer ses propres frais.
+            Vous pouvez payer par <strong>Wave</strong>, <strong>Orange Money</strong> ou <strong>carte bancaire</strong>,
+            via nos prestataires de paiement agréés. Votre banque ou votre opérateur peut appliquer ses propres frais.
           </li>
           <li>
             Le paiement se fait sur la page sécurisée du prestataire. Le don n'est enregistré comme reçu qu'une fois le
             paiement confirmé par celui-ci ; vous recevez alors un email de confirmation avec la référence du don.
           </li>
-          <li>Un projet terminé ou clôturé n'accepte plus de nouveaux dons.</li>
+          <li>Une campagne terminée ou clôturée n'accepte plus de nouveaux dons.</li>
           <li>
             L'email de confirmation vaut justificatif de votre don. Il ne constitue pas un reçu fiscal ouvrant droit à une
             réduction d'impôt.
@@ -78,10 +79,11 @@ const sections: LegalSection[] = [
     title: "Utilisation des fonds",
     content: (
       <p>
-        Les dons, hors frais prélevés par les prestataires de paiement, sont affectés au projet ou à la cause que vous avez
-        choisi. Un don général est réparti par le club entre les projets en cours, selon leurs besoins. Si un projet ne
-        pouvait pas être mené à son terme, les fonds collectés seraient réaffectés à un projet de même nature, et les
-        donateurs concernés en seraient informés.
+        Les dons, hors frais prélevés par les prestataires de paiement, sont affectés à la campagne ou à la cause que vous
+        avez choisie. Un don général est réparti entre les campagnes en cours, selon leurs besoins. Si une campagne ne
+        pouvait pas être menée à son terme, les fonds collectés seraient réaffectés à un projet de même nature, et les
+        contributeurs concernés en seraient informés. {BRAND_NAME} communique sur l'utilisation des fonds et les
+        réalisations.
       </p>
     ),
   },
@@ -93,7 +95,7 @@ const sections: LegalSection[] = [
         <p>
           Un don est en principe définitif. Nous remboursons toutefois un don fait par erreur (mauvais montant, paiement
           en double) ou un paiement non autorisé, sur demande envoyée à {email} dans les <strong>30 jours</strong>, en
-          indiquant la référence du don (par exemple {BRAND_SHORT}-000123) figurant dans l'email de confirmation.
+          indiquant la référence du don (par exemple {BRAND_NAME}-000123) figurant dans l'email de confirmation.
         </p>
         <p>
           Le remboursement est effectué par le même moyen de paiement. Les frais déjà prélevés par le prestataire de
@@ -118,7 +120,7 @@ const sections: LegalSection[] = [
     title: "Propriété intellectuelle",
     content: (
       <p>
-        Les textes, logos et éléments graphiques du site appartiennent à la {BRAND_SHORT} ou sont utilisés avec autorisation.
+        Les textes, logos et éléments graphiques du site appartiennent au {CARRIER_SHORT} ou sont utilisés avec autorisation.
         Ils ne peuvent pas être reproduits sans accord préalable.
       </p>
     ),
@@ -128,7 +130,7 @@ const sections: LegalSection[] = [
     title: "Responsabilité",
     content: (
       <p>
-        Nous faisons notre possible pour que le site soit disponible et que les informations sur les projets soient
+        Nous faisons notre possible pour que le site soit disponible et que les informations sur les campagnes soient
         exactes et à jour. Le site peut cependant être interrompu pour maintenance ou en cas de panne, y compris chez nos
         prestataires de paiement. Aucun don n'est débité sans confirmation du prestataire.
       </p>
@@ -174,7 +176,7 @@ export default function TermsPage() {
       updated={UPDATED}
       intro={
         <p>
-          Ces conditions expliquent comment fonctionne la plateforme de la {BRAND_SHORT}, ce que vous pouvez attendre de nous et ce que nous
+          Ces conditions expliquent comment fonctionne la plateforme {BRAND_NAME}, ce que vous pouvez attendre de nous et ce que nous
           attendons de vous lorsque vous utilisez le site ou faites un don.
         </p>
       }

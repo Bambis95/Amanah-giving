@@ -1,8 +1,8 @@
 import { useSearchParams } from "react-router-dom";
 
 /**
- * Where the visitor met the club, from ?source=... (e.g. the QR codes of the Thiès fair stand).
- * Added to membership, partnership and "keep me informed" requests so the club knows what worked.
+ * Where the visitor came from, from ?source=... (e.g. the QR codes of the Thiès fair stand).
+ * Added to campaign proposals, partnership and "keep me informed" requests so the team knows what worked.
  */
 export function useVisitSource(): string | null {
   const [params] = useSearchParams();

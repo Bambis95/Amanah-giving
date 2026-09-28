@@ -4,70 +4,63 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { softTone, textTone, Tone } from "@/lib/tones";
+import { textTone, Tone } from "@/lib/tones";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
-import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
 import {
-  Heart,
-  Shield,
-  Eye,
-  Users,
-  Target,
-  Globe,
-  HandHeart,
+  BRAND_DESCRIPTOR,
+  BRAND_NAME,
+  BRAND_SLOGAN,
+  CARRIER_NAME,
+  CARRIER_RECEIPT,
+  CARRIER_SHORT,
+  PARTNER_NAME,
+} from "@/lib/brand";
+import { CATEGORIES } from "@/lib/categories";
+import { CONTACT_EMAIL, CONTACT_PHONES, telHref } from "@/lib/contact";
+import {
   ArrowRight,
-  CheckCircle,
+  BadgeCheck,
+  Eye,
+  FileSearch,
+  Heart,
+  Megaphone,
+  Route,
+  Target,
+  Users,
 } from "lucide-react";
 
-const values = [
-  {
-    icon: Shield,
-    title: "Confiance",
-    description: "Chaque don nous est confié. Nous veillons à ce que vos contributions soient utilisées exactement comme prévu.",
-    tone: "primary" as Tone,
-  },
-  {
-    icon: Eye,
-    title: "Transparence",
-    description: "Rapports détaillés, suivi en temps réel et audits réguliers. Vous savez toujours où va votre argent.",
-    tone: "info" as Tone,
-  },
-  {
-    icon: HandHeart,
-    title: "Solidarité",
-    description: "Nous croyons que le développement se construit ensemble, au service des communautés et des producteurs.",
-    tone: "highlight" as Tone,
-  },
-  {
-    icon: Globe,
-    title: "Impact National et Régional",
-    description: "Des projets menés dans tout le pays et dans chaque région, là où les besoins sont réels.",
-    tone: "destructive" as Tone,
-  },
+// Wording from SENJAPO's own presentation text
+const fundedItems = [
+  "Formations",
+  "Équipements",
+  "Matières premières",
+  "Démarrage d'activités économiques",
+  "Développement d'activités",
+  "Initiatives d'autonomisation et d'insertion",
 ];
 
-// How the club works (what donors can rely on), rather than a history
-const milestones = [
-  { year: "01", event: "Collecte : les dons sont rassemblés sur la plateforme, en toute sécurité." },
-  { year: "02", event: "Sélection : le club choisit les projets nationaux et régionaux à soutenir." },
-  { year: "03", event: "Redistribution : les fonds sont affectés au projet ou à la cause choisis par chaque donateur." },
-  { year: "04", event: "Suivi : l'avancement de chaque projet est publié sur le site." },
-];
+const contributors = ["Citoyens", "Diaspora", "Entreprises", "Associations", "Fondations", "Partenaires"];
 
 const commitments = [
-  "100% des dons, hors frais de paiement, vont directement aux projets",
-  "Rapports d'impact trimestriels pour chaque projet",
-  "Audit financier annuel par un cabinet indépendant",
-  "Équipe de terrain vérifiant chaque projet",
-  "Communication directe avec les bénéficiaires",
-  "Politique de remboursement transparente",
+  { icon: FileSearch, title: "Vérification des campagnes", text: "Chaque campagne est vérifiée et validée avant d'être publiée." },
+  { icon: Route, title: "Suivi des collectes", text: "L'avancement de chaque collecte est suivi et affiché sur la plateforme." },
+  { icon: Eye, title: "Traçabilité des contributions", text: "Chaque contribution est enregistrée et rattachée à sa campagne." },
+  { icon: Megaphone, title: "Communication sur les résultats", text: "Utilisation des fonds et réalisations sont communiquées aux contributeurs." },
+];
+
+// How a campaign goes from a proposal to its results
+const milestones = [
+  { year: "01", event: "Proposition : une campagne est initiée par le CCES ou proposée par une association, un groupement ou un porteur de projet." },
+  { year: "02", event: "Vérification : la campagne est examinée et validée avant sa publication." },
+  { year: "03", event: "Collecte : citoyens, diaspora, entreprises et partenaires contribuent en ligne, en toute sécurité." },
+  { year: "04", event: "Suivi : l'utilisation des fonds et les réalisations sont communiquées." },
 ];
 
 export default function AboutPage() {
   const { stats, failed: statsFailed } = usePublicStats();
   const figures = [
-    { value: formatNumber(stats?.donors ?? 0), label: plural(stats?.donors ?? 0, "Donateur", "Donateurs"), tone: "primary" as Tone },
-    { value: formatNumber(stats?.active_projects ?? 0), label: plural(stats?.active_projects ?? 0, "Projet actif", "Projets actifs"), tone: "highlight" as Tone },
+    { value: formatNumber(stats?.donors ?? 0), label: plural(stats?.donors ?? 0, "Contributeur", "Contributeurs"), tone: "primary" as Tone },
+    { value: formatNumber(stats?.active_projects ?? 0), label: plural(stats?.active_projects ?? 0, "Campagne active", "Campagnes actives"), tone: "highlight" as Tone },
     { value: formatAmount(stats?.total_raised ?? 0), label: "FCFA collectés", tone: "info" as Tone },
   ];
 
@@ -76,107 +69,176 @@ export default function AboutPage() {
       <Navbar />
 
       {/* Header */}
-      <section className="pt-24 pb-16 px-4 surface-brand">
-        <div className="max-w-4xl mx-auto text-center">
-          <span className="inline-block bg-white/10 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-white/20">
-            Qui Sommes-Nous
+      <section className="surface-brand px-4 pb-16 pt-24">
+        <div className="mx-auto max-w-4xl text-center">
+          <span className="mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold text-white">
+            À propos de {BRAND_NAME}
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold mb-6">
-            {BRAND_NAME}
-          </h1>
-          <p className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Un club qui rassemble les dons de tous ceux qui veulent agir, et les redistribue à des projets de
-            développement nationaux et régionaux.
-          </p>
+          <h1 className="mb-4 text-4xl font-bold tracking-wide md:text-6xl">{BRAND_NAME}</h1>
+          <p className="mx-auto mb-6 max-w-2xl text-lg font-medium text-white/90 md:text-xl">{BRAND_DESCRIPTOR}</p>
+          <p className="mx-auto max-w-2xl text-lg italic text-white/75">« {BRAND_SLOGAN} »</p>
         </div>
       </section>
 
-      {/* Mission */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <span className="inline-block bg-accent text-primary text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-                Notre Mission
-              </span>
-              <h2 className="text-3xl font-bold text-foreground mb-6">
-                Faciliter la Générosité, Maximiser l'Impact
-              </h2>
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                La {BRAND_NAME} ({BRAND_SHORT}) collecte les dons via cette plateforme et les redistribue à des
-                projets de développement. Le secteur agricole est au cœur de notre action, mais nous soutenons aussi
-                l'éducation, l'assainissement, la création d'activités et d'autres projets d'intérêt national ou régional.
+      {/* Who we are */}
+      <section className="px-4 py-20">
+        <div className="mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <span className="mb-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-primary">
+              Qui sommes-nous
+            </span>
+            <h2 className="mb-6 text-3xl font-bold text-foreground">Une initiative du {CARRIER_SHORT}</h2>
+            <div className="space-y-4 leading-relaxed text-muted-foreground">
+              <p>
+                <strong className="text-foreground">{BRAND_NAME} – {BRAND_DESCRIPTOR}</strong> est une initiative portée
+                par le {CARRIER_NAME} ({CARRIER_SHORT}), en partenariat avec {PARTNER_NAME}.
               </p>
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                Chaque donateur choisit le projet ou la cause qu'il veut soutenir, ou confie au club le soin d'affecter
-                son don là où il est le plus utile, avec une transparence totale sur l'utilisation des fonds.
+              <p>
+                {BRAND_NAME} est née de la volonté de créer un outil numérique de mobilisation permettant de rassembler
+                des contributions autour de projets à impact social, économique, éducatif et communautaire.
               </p>
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                La {BRAND_SHORT} est aussi un <strong className="text-foreground">club de créateurs</strong> : toute
-                personne qui porte un projet, quel que soit son secteur, peut{" "}
-                <Link to="/rejoindre" className="font-medium text-primary hover:underline">rejoindre le club</Link>.
+              <p>
+                La plateforme ne se limite pas à une seule collecte. Elle a vocation à accueillir plusieurs campagnes,
+                initiées par le {CARRIER_SHORT} ou proposées par des associations, groupements, organisations et autres
+                porteurs de projets, après vérification et validation.{" "}
+                <Link to="/proposer" className="font-medium text-primary hover:underline">
+                  Proposer une campagne
+                </Link>
               </p>
-              {/* Real figures; hidden if they cannot be loaded rather than showing wrong ones */}
-              {!statsFailed && (
-                <div className="flex items-center gap-6">
-                  {figures.map((f, i) => (
-                    <div key={f.label} className="flex items-center gap-6">
-                      {i > 0 && <div className="w-px h-12 bg-muted" />}
-                      <div className="text-center">
-                        <p className={cn("text-3xl font-bold tabular-nums", textTone[f.tone])}>
-                          {stats ? f.value : "…"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{f.label}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              {values.map((v) => (
-                <Card key={v.title} className="shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-5">
-                    <div
-                      className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-3", softTone[v.tone])}
-                    >
-                      <v.icon className="w-5 h-5" aria-hidden="true" />
+            {/* Real figures; hidden if they cannot be loaded rather than showing wrong ones */}
+            {!statsFailed && (
+              <div className="mt-8 flex flex-wrap items-center gap-6">
+                {figures.map((f, i) => (
+                  <div key={f.label} className="flex items-center gap-6">
+                    {i > 0 && <div className="h-12 w-px bg-muted" />}
+                    <div className="text-center">
+                      <p className={cn("text-3xl font-bold tabular-nums", textTone[f.tone])}>{stats ? f.value : "…"}</p>
+                      <p className="text-sm text-muted-foreground">{f.label}</p>
                     </div>
-                    <h3 className="font-bold text-foreground text-sm mb-2">{v.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{v.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Identity card: who is legally behind the platform */}
+          <Card className="shadow-sm lg:col-span-2">
+            <CardContent className="space-y-4 p-6">
+              <h3 className="flex items-center gap-2 font-bold text-foreground">
+                <BadgeCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+                Fiche d'identité
+              </h3>
+              <dl className="space-y-3 text-sm">
+                <div>
+                  <dt className="text-muted-foreground">Porteur</dt>
+                  <dd className="font-medium text-foreground">{CARRIER_NAME} ({CARRIER_SHORT})</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Partenaire</dt>
+                  <dd className="font-medium text-foreground">{PARTNER_NAME}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Récépissé {CARRIER_SHORT}</dt>
+                  <dd className="font-medium text-foreground">{CARRIER_RECEIPT}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Contacts</dt>
+                  <dd className="font-medium text-foreground">
+                    {CONTACT_PHONES.map((p, i) => (
+                      <span key={p}>
+                        {i > 0 && " / "}
+                        <a href={telHref(p)} className="hover:text-primary">{p}</a>
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">E-mail</dt>
+                  <dd className="break-all font-medium text-foreground">
+                    <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-primary">{CONTACT_EMAIL}</a>
+                  </dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Objective */}
+      <section className="bg-muted/60 px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto mb-12 max-w-3xl text-center">
+            <span className="mb-4 inline-block rounded-full bg-highlight/15 px-4 py-1.5 text-sm font-semibold text-warning">
+              <Target className="mr-1 inline h-4 w-4" aria-hidden="true" />
+              Notre objectif
+            </span>
+            <h2 className="mb-4 text-3xl font-bold text-foreground">Relier la solidarité à des besoins concrets</h2>
+            <p className="leading-relaxed text-muted-foreground">
+              L'objectif principal de {BRAND_NAME} est de mettre en relation la solidarité avec des besoins et projets
+              concrets, en facilitant la mobilisation de ressources pour soutenir notamment :
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {CATEGORIES.map((c) => (
+              <div key={c.value} className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+                  <c.icon className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <span className="text-sm font-semibold text-foreground">{c.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 grid gap-8 md:grid-cols-2">
+            <div>
+              <h3 className="mb-3 font-bold text-foreground">Ce que les collectes peuvent financer</h3>
+              <ul className="flex flex-wrap gap-2">
+                {fundedItems.map((item) => (
+                  <li key={item} className="rounded-full border border-border bg-card px-3 py-1.5 text-sm text-foreground/80">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="mb-3 font-bold text-foreground">Qui peut contribuer</h3>
+              <ul className="flex flex-wrap gap-2">
+                {contributors.map((item) => (
+                  <li key={item} className="rounded-full border border-border bg-card px-3 py-1.5 text-sm text-foreground/80">
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Timeline */}
-      <section className="py-20 px-4 bg-muted/60">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="inline-block bg-highlight/15 text-warning text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-              Notre Démarche
+      {/* Process */}
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-14 text-center">
+            <span className="mb-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-primary">
+              Notre démarche
             </span>
-            <h2 className="text-3xl font-bold text-foreground">De Votre Don au Projet</h2>
+            <h2 className="text-3xl font-bold text-foreground">De la Proposition aux Réalisations</h2>
           </div>
 
           <div className="space-y-6">
             {milestones.map((m, i) => (
-              <div key={m.year} className="flex items-center gap-6 group">
-                <div className="w-20 text-right">
+              <div key={m.year} className="group flex items-center gap-6">
+                <div className="w-12 text-right sm:w-20">
                   <span className="text-lg font-bold text-primary">{m.year}</span>
                 </div>
                 <div className="relative flex flex-col items-center">
-                  <div className="w-4 h-4 bg-primary rounded-full border-4 border-accent motion-safe:group-hover:scale-125 transition-transform" />
-                  {i < milestones.length - 1 && (
-                    <div className="w-0.5 h-8 bg-primary/20" />
-                  )}
+                  <div className="h-4 w-4 rounded-full border-4 border-accent bg-primary transition-transform motion-safe:group-hover:scale-125" />
+                  {i < milestones.length - 1 && <div className="h-8 w-0.5 bg-primary/20" />}
                 </div>
-                <Card className="flex-1 border-0 shadow-sm group-hover:shadow-md transition-shadow">
+                <Card className="flex-1 border-0 shadow-sm transition-shadow group-hover:shadow-md">
                   <CardContent className="p-4">
-                    <p className="text-foreground/80 font-medium">{m.event}</p>
+                    <p className="font-medium text-foreground/80">{m.event}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -185,63 +247,68 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Commitments */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="inline-block bg-accent text-primary text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-              <Target className="w-4 h-4 inline mr-1" />
-              Nos Engagements
+      {/* Commitment */}
+      <section className="bg-muted/60 px-4 py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="mx-auto mb-12 max-w-3xl text-center">
+            <span className="mb-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-primary">
+              Notre engagement
             </span>
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              Notre Promesse envers Vous
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              La confiance est au cœur de notre mission. Voici nos engagements envers chaque donateur.
+            <h2 className="mb-4 text-3xl font-bold text-foreground">La confiance au cœur de la plateforme</h2>
+            <p className="leading-relaxed text-muted-foreground">
+              {BRAND_NAME} entend mettre en place des mécanismes de vérification des campagnes, de suivi des collectes,
+              de traçabilité des contributions et de communication sur l'utilisation des fonds et les réalisations.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             {commitments.map((c) => (
-              <div
-                key={c}
-                className="flex items-start gap-3 p-4 bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow"
-              >
-                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                <span className="text-foreground/80 text-sm font-medium">{c}</span>
+              <div key={c.title} className="flex gap-4 rounded-xl bg-card p-5 shadow-sm">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+                  <c.icon className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">{c.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{c.text}</p>
+                </div>
               </div>
             ))}
           </div>
+          <p className="mt-8 text-center text-sm">
+            <Link to="/transparence" className="font-medium text-primary hover:underline">
+              Voir la page Transparence
+            </Link>
+          </p>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 surface-hero">
-        <div className="max-w-3xl mx-auto text-center">
-          <Users className="w-12 h-12 mx-auto mb-6 text-primary" />
-          <h2 className="text-3xl font-bold mb-4">Rejoignez Notre Communauté</h2>
-          <p className="text-white/70 mb-8 max-w-xl mx-auto">
-            Ensemble, nous pouvons créer un impact durable.{" "}
+      <section className="surface-hero px-4 py-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <Users className="mx-auto mb-6 h-12 w-12 text-primary" aria-hidden="true" />
+          <h2 className="mb-4 text-3xl font-bold">« {BRAND_SLOGAN} »</h2>
+          <p className="mx-auto mb-8 max-w-xl text-white/70">
             {stats && stats.donors > 0
-              ? `Rejoignez ${plural(stats.donors, "le donateur qui fait", `les ${formatNumber(stats.donors)} donateurs qui font`)} déjà la différence.`
+              ? `Rejoignez ${plural(stats.donors, "le contributeur qui fait", `les ${formatNumber(stats.donors)} contributeurs qui font`)} déjà la différence.`
               : "Soyez parmi les premiers à faire la différence."}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8 font-semibold"
-              ><Link to="/donate">
-                <Heart className="w-5 h-5 mr-2" />
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Button asChild size="lg" className="rounded-xl bg-primary px-8 font-semibold text-primary-foreground hover:bg-primary/90">
+              <Link to="/donate">
+                <Heart className="mr-2 h-5 w-5" />
                 Faire un Don
-              </Link></Button>
-            <Button asChild
-                size="lg"
-                variant="outline"
-                className="!bg-transparent border-2 border-white/30 text-white !hover:bg-white/10 rounded-xl px-8 font-semibold"
-              ><Link to="/contact">
-                Nous Contacter
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link></Button>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-xl border-2 border-white/30 !bg-transparent px-8 font-semibold text-white hover:!bg-white/10"
+            >
+              <Link to="/proposer">
+                Proposer une Campagne
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
