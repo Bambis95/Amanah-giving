@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
-import { Filter } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { Filter, MapPin, X } from "lucide-react";
 import { api, Project } from "@/api";
 import { CATEGORIES } from "@/lib/categories";
+import { REGIONS, regionOf } from "@/lib/regions";
+import { cn } from "@/lib/utils";
 
 const categories: { value: string; label: string; icon: React.ElementType }[] = [
   { value: "all", label: "Tous", icon: Filter },
@@ -14,6 +17,21 @@ const categories: { value: string; label: string; icon: React.ElementType }[] = 
 export default function ProjectsPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [projects, setProjects] = useState<Project[]>([]);
+  // Region filter lives in the URL, so a link such as /projects?region=Thiès can be shared
+  const [params, setParams] = useSearchParams();
+  const activeRegion = REGIONS.find((r) => r === params.get("region")) ?? null;
+  const setRegion = (region: string | null) => {
+    const next = new URLSearchParams(params);
+    if (region) next.set("region", region);
+    else next.delete("region");
+    setParams(next, { replace: true });
+  };
+  const countByRegion = new Map<string, number>();
+  for (const p of projects) {
+    const r = regionOf(p.location);
+    if (r) countByRegion.set(r, (countByRegion.get(r) ?? 0) + 1);
+  }
+  const visible = activeRegion ? projects.filter((p) => regionOf(p.location) === activeRegion) : projects;
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
@@ -82,6 +100,49 @@ export default function ProjectsPage() {
       {/* Projects grid */}
       <section className="px-4 py-10 sm:py-12">
         <div className="mx-auto max-w-6xl">
+          {/* Projects by region: the count per region, a click filters the list */}
+          <div className="mb-10">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <MapPin className="h-5 w-5 text-primary" aria-hidden="true" />
+                Projets par région
+              </h2>
+              {activeRegion && (
+                <button type="button" onClick={() => setRegion(null)} className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                  <X className="h-4 w-4" aria-hidden="true" />
+                  Toutes les régions
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7" role="group" aria-label="Filtrer par région">
+              {REGIONS.map((region) => {
+                const count = countByRegion.get(region) ?? 0;
+                const active = activeRegion === region;
+                return (
+                  <button
+                    key={region}
+                    type="button"
+                    onClick={() => setRegion(active ? null : region)}
+                    aria-pressed={active}
+                    className={cn(
+                      "flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
+                      active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : count > 0
+                          ? "border-border bg-card text-foreground hover:border-primary/50"
+                          : "border-border/60 bg-muted/40 text-muted-foreground hover:border-border"
+                    )}
+                  >
+                    <span className="truncate font-medium">{region}</span>
+                    <span className={cn("shrink-0 tabular-nums", active ? "text-primary-foreground" : count > 0 ? "font-semibold text-primary" : "")}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {loading ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8" aria-busy="true" aria-label="Chargement des projets">
               {[0, 1, 2].map((i) => (
@@ -90,15 +151,19 @@ export default function ProjectsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-              {projects.map((project) => (
+              {visible.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
             </div>
           )}
 
-          {!loading && projects.length === 0 && (
+          {!loading && visible.length === 0 && (
             <div className="text-center py-20">
-              <p className="text-muted-foreground text-lg">Aucun projet trouvé dans cette catégorie.</p>
+              <p className="text-muted-foreground text-lg">
+                {activeRegion
+                  ? `Aucun projet pour le moment dans la région de ${activeRegion}.`
+                  : "Aucun projet trouvé dans cette catégorie."}
+              </p>
             </div>
           )}
         </div>

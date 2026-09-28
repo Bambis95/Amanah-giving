@@ -13,15 +13,13 @@ import { toast } from "sonner";
 import { api } from "@/api";
 import { BRAND_SHORT } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
+import { REGIONS } from "@/lib/regions";
 import { sourceLine, useVisitSource } from "@/hooks/use-visit-source";
 
 // A membership request is stored as a contact message with this subject (admin: "Demande d'adhésion")
 const JOIN_SUBJECT = "join";
 
-const REGIONS = [
-  "Dakar", "Diourbel", "Fatick", "Kaffrine", "Kaolack", "Kédougou", "Kolda", "Louga", "Matam",
-  "Saint-Louis", "Sédhiou", "Tambacounda", "Thiès", "Ziguinchor", "Hors du Sénégal",
-];
+const REGION_CHOICES = [...REGIONS, "Hors du Sénégal"];
 
 const STAGES = ["Idée", "En préparation", "Démarré", "En activité, à développer"];
 
@@ -169,7 +167,7 @@ export default function JoinPage() {
                           <SelectValue placeholder="Choisir" />
                         </SelectTrigger>
                         <SelectContent>
-                          {REGIONS.map((r) => (
+                          {REGION_CHOICES.map((r) => (
                             <SelectItem key={r} value={r}>{r}</SelectItem>
                           ))}
                         </SelectContent>

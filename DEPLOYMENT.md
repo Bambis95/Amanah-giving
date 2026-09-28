@@ -47,6 +47,7 @@ sur GitHub. Les secrets de production se saisissent uniquement dans Render.
 | `FRONTEND_URL` | `https://www.amanahgiving.org` |
 | `CORS_ORIGINS` | `https://amanahgiving.org` |
 | `VITE_API_BASE_URL` (site) | `https://api.amanahgiving.org` |
+| `VITE_SITE_URL` (site) | `https://www.amanahgiving.org` (image d'aperçu sur WhatsApp) |
 | `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`, `PAYDUNYA_PUBLIC_KEY`, `PAYDUNYA_TOKEN` | vos clés PayDunya **de test** |
 | `PAYDUNYA_CALLBACK_URL` | `https://api.amanahgiving.org/api/v1/payment/paydunya/ipn` |
 | `STRIPE_SECRET_KEY` | laisser vide (cartes indisponibles) |

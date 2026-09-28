@@ -117,3 +117,6 @@ services:
       # https://api.<votre-domaine> (read at build time: redeploy the site after changing it)
       - key: VITE_API_BASE_URL
         sync: false
+      # https://www.<votre-domaine>: absolute links for the WhatsApp / social preview image
+      - key: VITE_SITE_URL
+        sync: false

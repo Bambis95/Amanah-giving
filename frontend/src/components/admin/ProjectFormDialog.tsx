@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { adminApi, Project, ProjectInput } from "@/api";
 import { projectStatuses } from "./format";
 import { CATEGORIES, categoryLabel, iconNameFor } from "@/lib/categories";
+import { regionOf } from "@/lib/regions";
 
 const emptyForm = {
   title: "",
@@ -200,10 +201,17 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
               <Label htmlFor="project-location">Lieu</Label>
               <Input
                 id="project-location"
-                placeholder="Dakar, Sénégal"
+                placeholder="Ex. : Thiès, Sénégal"
                 value={form.location}
                 onChange={(e) => set("location", e.target.value)}
+                aria-describedby="project-location-hint"
               />
+              {/* The public "projects by region" grid reads the region from this text */}
+              <p id="project-location-hint" className="text-xs text-muted-foreground">
+                {regionOf(form.location)
+                  ? `Classé dans la région : ${regionOf(form.location)}`
+                  : "Indiquez la région (ex. : Thiès) pour classer le projet par région."}
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="project-image">URL de l'image</Label>

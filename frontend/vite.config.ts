@@ -1,12 +1,27 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 import { viteSourceLocator } from '@metagptx/vite-plugin-source-locator';
 import { atoms } from '@metagptx/web-sdk/plugins';
 
+// Link previews (WhatsApp, Facebook…) need absolute addresses: set VITE_SITE_URL
+// (e.g. https://www.cndsa.org) when building the site; without it the tags are left out.
+function socialPreview(): Plugin {
+  const site = (process.env.VITE_SITE_URL || '').trim().replace(/\/+$/, '');
+  return {
+    name: 'social-preview',
+    transformIndexHtml() {
+      if (!/^https?:\/\//.test(site)) return [];
+      const meta = (property: string, content: string) => ({ tag: 'meta', attrs: { property, content }, injectTo: 'head' as const });
+      return [meta('og:url', `${site}/`), meta('og:image', `${site}/og-image.png`)];
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [
+    socialPreview(),
     viteSourceLocator({
       prefix: 'mgx', // 前缀用于标识源代码位置，不能修改
     }),
