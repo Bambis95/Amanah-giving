@@ -58,6 +58,7 @@ TABLES = [
     "audit_logs",
     "login_attempts",
     "password_reset_tokens",
+    "invitations",
     "contact_messages",
     "donations",
     "projects",
@@ -99,10 +100,12 @@ def sent_emails(monkeypatch):
         sent.append(message)
 
     import routers.auth
+    import routers.invitations
     import routers.mobile_deposits
     import routers.payment_checkout
 
     monkeypatch.setattr(routers.auth, "send_email", fake_send)
+    monkeypatch.setattr(routers.invitations, "send_email", fake_send)
     monkeypatch.setattr(routers.payment_checkout, "send_email", fake_send)
     monkeypatch.setattr(routers.mobile_deposits, "send_email", fake_send)
     return sent

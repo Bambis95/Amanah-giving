@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Heart, Loader2, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
+import AuthLayout from "@/components/AuthLayout";
+import PasswordField from "@/components/PasswordField";
+import { MIN_PASSWORD_LENGTH } from "@/lib/password";
+import { ArrowRight, Heart, Loader2, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { BRAND_NAME } from "@/lib/brand";
 import { isStaff } from "@/lib/roles";
 
-const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const { user, login, register } = useAuth();
@@ -25,20 +25,26 @@ export default function LoginPage() {
 
   const [tab, setTab] = useState("login");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   // Already signed in: nothing to do here
   useEffect(() => {
     if (user) navigate(redirectTo, { replace: true });
   }, [user, navigate, redirectTo]);
+
+  const emailError = emailTouched && email && !EMAIL_PATTERN.test(email.trim()) ? "Adresse email invalide" : null;
+  const confirmError =
+    confirmPassword && password !== confirmPassword ? "Les mots de passe ne correspondent pas" : null;
+
+  const switchTab = (value: string) => {
+    setTab(value);
+    setPassword("");
+    setConfirmPassword("");
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +54,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const me = await login(email, password);
+      const me = await login(email.trim(), password);
       toast.success(`Bienvenue${me.name ? `, ${me.name}` : ""} !`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Échec de la connexion");
@@ -59,8 +65,9 @@ export default function LoginPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
+    setEmailTouched(true);
+    if (!email || !password || !EMAIL_PATTERN.test(email.trim())) {
+      toast.error("Veuillez remplir correctement les champs obligatoires");
       return;
     }
     if (password.length < MIN_PASSWORD_LENGTH) {
@@ -73,7 +80,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await register(email, password, name || undefined);
+      await register(email.trim(), password, name.trim() || undefined);
       toast.success("Compte créé avec succès !");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Échec de la création du compte");
@@ -82,179 +89,123 @@ export default function LoginPage() {
     }
   };
 
-  const passwordToggle = (
-    <button
-      type="button"
-      onClick={() => setShowPassword((v) => !v)}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
-      aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-    >
-      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-    </button>
+  const emailField = (id: string) => (
+    <div className="space-y-2">
+      <Label htmlFor={id}>Email</Label>
+      <Input
+        id={id}
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+        placeholder="vous@exemple.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        onBlur={() => setEmailTouched(true)}
+        className="h-11"
+        aria-invalid={emailError ? true : undefined}
+        aria-describedby={emailError ? `${id}-error` : undefined}
+        required
+      />
+      {emailError && <p id={`${id}-error`} className="text-xs text-destructive">{emailError}</p>}
+    </div>
+  );
+
+  const submit = (label: string, Icon: typeof LogIn) => (
+    <Button type="submit" disabled={loading} className="h-12 w-full text-base font-semibold">
+      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Icon className="mr-2 h-4 w-4" />}
+      {label}
+    </Button>
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
+    <AuthLayout
+      title={tab === "login" ? "Bon retour parmi nous" : `Rejoignez ${BRAND_NAME}`}
+      subtitle={
+        tab === "login"
+          ? "Connectez-vous pour suivre vos dons, ou accéder au tableau de bord si vous êtes membre de l'équipe."
+          : "Créez votre compte en quelques secondes pour retrouver l'historique de vos dons."
+      }
+      footer={
+        <Link
+          to="/donate"
+          className="group inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 font-medium text-accent-foreground transition-colors hover:bg-accent/70"
+        >
+          <Heart className="h-4 w-4" aria-hidden="true" />
+          Pas besoin de compte pour faire un don
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </Link>
+      }
+    >
+      <Tabs value={tab} onValueChange={switchTab}>
+        <TabsList className="mb-8 grid h-12 w-full grid-cols-2 rounded-xl p-1">
+          <TabsTrigger value="login" className="h-10 rounded-lg text-sm font-semibold">
+            Connexion
+          </TabsTrigger>
+          <TabsTrigger value="register" className="h-10 rounded-lg text-sm font-semibold">
+            Créer un compte
+          </TabsTrigger>
+        </TabsList>
 
-      <main className="flex-1 pt-28 pb-16 px-4 flex items-start justify-center">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Heart className="w-7 h-7 text-primary-foreground fill-primary-foreground" aria-hidden="true" />
+        <TabsContent value="login" className="mt-0 animate-in fade-in-0 duration-300">
+          <form onSubmit={handleLogin} className="space-y-5" noValidate>
+            {emailField("login-email")}
+            <PasswordField
+              id="login-password"
+              label="Mot de passe"
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+              labelAside={
+                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+                  Mot de passe oublié ?
+                </Link>
+              }
+            />
+            {submit("Se connecter", LogIn)}
+          </form>
+        </TabsContent>
+
+        <TabsContent value="register" className="mt-0 animate-in fade-in-0 duration-300">
+          <form onSubmit={handleRegister} className="space-y-5" noValidate>
+            <div className="space-y-2">
+              <Label htmlFor="register-name">
+                Nom complet <span className="font-normal text-muted-foreground">(facultatif)</span>
+              </Label>
+              <Input
+                id="register-name"
+                autoComplete="name"
+                placeholder="Prénom Nom"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-11"
+              />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              {tab === "login" ? "Bon retour parmi nous" : `Rejoignez ${BRAND_NAME}`}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {tab === "login"
-                ? "Connectez-vous pour retrouver vos dons et suivre vos contributions."
-                : "Créez votre compte en quelques secondes."}
+            {emailField("register-email")}
+            <PasswordField
+              id="register-password"
+              label="Mot de passe"
+              value={password}
+              onChange={setPassword}
+              autoComplete="new-password"
+              showStrength
+            />
+            <PasswordField
+              id="register-confirm"
+              label="Confirmer le mot de passe"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              autoComplete="new-password"
+              error={confirmError}
+            />
+            {submit("Créer mon compte", UserPlus)}
+            <p className="text-center text-xs leading-relaxed text-muted-foreground">
+              En créant un compte, vous acceptez nos{" "}
+              <Link to="/conditions" className="text-primary hover:underline">conditions d'utilisation</Link> et notre{" "}
+              <Link to="/confidentialite" className="text-primary hover:underline">politique de confidentialité</Link>.
             </p>
-          </div>
-
-          <Card className="shadow-sm">
-            <CardContent className="p-6 md:p-8">
-              <Tabs value={tab} onValueChange={setTab}>
-                <TabsList className="grid grid-cols-2 w-full mb-6">
-                  <TabsTrigger value="login">Connexion</TabsTrigger>
-                  <TabsTrigger value="register">Créer un compte</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="login">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
-                      <Input
-                        id="login-email"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="vous@exemple.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="login-password">Mot de passe</Label>
-                        <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-                          Mot de passe oublié ?
-                        </Link>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          id="login-password"
-                          type={showPassword ? "text" : "password"}
-                          autoComplete="current-password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="pr-10"
-                          required
-                        />
-                        {passwordToggle}
-                      </div>
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <LogIn className="w-4 h-4 mr-2" />
-                      )}
-                      Se connecter
-                    </Button>
-                  </form>
-                </TabsContent>
-
-                <TabsContent value="register">
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="register-name">Nom complet</Label>
-                      <Input
-                        id="register-name"
-                        autoComplete="name"
-                        placeholder="Prénom Nom"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-email">Email *</Label>
-                      <Input
-                        id="register-email"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="vous@exemple.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-password">Mot de passe *</Label>
-                      <div className="relative">
-                        <Input
-                          id="register-password"
-                          type={showPassword ? "text" : "password"}
-                          autoComplete="new-password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="pr-10"
-                          required
-                        />
-                        {passwordToggle}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Au moins {MIN_PASSWORD_LENGTH} caractères.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-confirm">Confirmer le mot de passe *</Label>
-                      <Input
-                        id="register-confirm"
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="new-password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <UserPlus className="w-4 h-4 mr-2" />
-                      )}
-                      Créer mon compte
-                    </Button>
-                    <p className="text-center text-xs text-muted-foreground">
-                      En créant un compte, vous acceptez nos{" "}
-                      <Link to="/conditions" className="text-primary hover:underline">conditions d'utilisation</Link> et notre{" "}
-                      <Link to="/confidentialite" className="text-primary hover:underline">politique de confidentialité</Link>.
-                    </p>
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            <Link to="/" className="text-primary font-medium hover:underline">
-              Retour à l'accueil
-            </Link>
-          </p>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+          </form>
+        </TabsContent>
+      </Tabs>
+    </AuthLayout>
   );
 }

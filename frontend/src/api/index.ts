@@ -130,6 +130,31 @@ export interface AdminUser {
   last_login: string | null;
 }
 
+export type StaffRole = "member" | "president" | "admin";
+
+export interface Invitation {
+  id: number;
+  email: string;
+  name: string | null;
+  role: StaffRole;
+  expires_at: string;
+  created_at: string | null;
+}
+
+export interface InvitationCreated {
+  invitation: Invitation;
+  /** Shown once, so the link can also be sent by WhatsApp */
+  invite_url: string;
+  email_sent: boolean;
+}
+
+export interface InvitationPreview {
+  email: string;
+  name: string | null;
+  role: StaffRole;
+  expires_at: string;
+}
+
 interface ListResponse<T> {
   items: T[];
   total: number;
@@ -235,6 +260,18 @@ export const adminApi = {
     });
   },
 
+  getInvitations(): Promise<Invitation[]> {
+    return adminRequest("/invitations");
+  },
+
+  createInvitation(data: { email: string; name?: string; role: StaffRole }): Promise<InvitationCreated> {
+    return adminRequest("/invitations", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  revokeInvitation(id: number): Promise<unknown> {
+    return adminRequest(`/invitations/${id}`, { method: "DELETE" });
+  },
+
   // Wave / Orange Money QR deposits: checked in the operator app, then confirmed or rejected here
   confirmDeposit(donationId: number): Promise<{ donation_id: number; payment_status: string }> {
     return adminRequest(`/payment/mobile-deposit/${donationId}/confirm`, { method: "POST" });
@@ -319,6 +356,23 @@ export const api = {
     });
     if (!response.ok) throw new Error(await errorDetail(response, "La réinitialisation a échoué"));
     return (await response.json()).message;
+  },
+
+  // Staff invitation link (public: the token is the proof)
+  async getInvitation(token: string): Promise<InvitationPreview> {
+    const response = await apiFetch(`${getAPIBase()}/invitations/preview?token=${encodeURIComponent(token)}`);
+    if (!response.ok) throw new Error(await errorDetail(response, "Invitation introuvable"));
+    return response.json();
+  },
+
+  async acceptInvitation(token: string, password: string, name?: string): Promise<LoginResponse> {
+    const response = await apiFetch(`${getAPIBase()}/invitations/accept`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password, name }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response, "L'activation a échoué"));
+    return response.json();
   },
 
   async getMe(): Promise<AuthUser | null> {

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -14,9 +15,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ShieldCheck } from "lucide-react";
+import { Clock, Search, ShieldCheck, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
-import { adminApi, AdminUser } from "@/api";
+import { adminApi, AdminUser, Invitation } from "@/api";
+import InviteDialog from "./InviteDialog";
 import { assignableRoles, isStaff, Role, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { formatDate } from "./format";
@@ -86,6 +88,29 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pending, setPending] = useState<{ user: AdminUser; role: Role } | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [revoking, setRevoking] = useState<Invitation | null>(null);
+
+  useEffect(() => {
+    adminApi
+      .getInvitations()
+      .then(setInvitations)
+      .catch(() => setInvitations([]));
+  }, []);
+
+  const revokeInvitation = async () => {
+    if (!revoking) return;
+    const invitation = revoking;
+    setRevoking(null);
+    try {
+      await adminApi.revokeInvitation(invitation.id);
+      setInvitations((list) => list.filter((i) => i.id !== invitation.id));
+      toast.success(`Invitation de ${invitation.email} annulée`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Annulation impossible");
+    }
+  };
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -136,6 +161,53 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
             </p>
           ))}
         </div>
+
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-dashed border-primary/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm">
+            <p className="font-semibold text-foreground">Donner un accès à l'équipe</p>
+            <p className="text-muted-foreground">
+              Invitez la personne par email : elle choisit son mot de passe et arrive avec le bon rôle.
+            </p>
+          </div>
+          <Button onClick={() => setInviteOpen(true)} className="shrink-0">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Inviter
+          </Button>
+        </div>
+
+        {invitations.length > 0 && (
+          <div className="mb-6">
+            <h3 className="mb-2 text-sm font-semibold text-foreground">
+              Invitations en attente ({invitations.length})
+            </h3>
+            <ul className="divide-y divide-border rounded-lg border border-border">
+              {invitations.map((inv) => (
+                <li key={inv.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 p-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-foreground">{inv.name || inv.email}</p>
+                    {inv.name && <p className="truncate text-xs text-muted-foreground">{inv.email}</p>}
+                  </div>
+                  <Badge variant="outline">{ROLE_LABELS[inv.role]}</Badge>
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" aria-hidden="true" />
+                    Expire le {formatDate(inv.expires_at)}
+                  </span>
+                  {assignableRoles(currentRole).includes(inv.role) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setRevoking(inv)}
+                    >
+                      <X className="mr-1 h-4 w-4" />
+                      Annuler
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -230,6 +302,26 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={revoking !== null} onOpenChange={(open) => !open && setRevoking(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Annuler l'invitation de {revoking?.email} ?</AlertDialogTitle>
+              <AlertDialogDescription>Le lien envoyé ne fonctionnera plus. Vous pourrez l'inviter à nouveau.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Garder</AlertDialogCancel>
+              <AlertDialogAction onClick={revokeInvitation}>Annuler l'invitation</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <InviteDialog
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          currentRole={currentRole}
+          onInvited={(inv) => setInvitations((list) => [inv, ...list.filter((i) => i.email !== inv.email)])}
+        />
       </CardContent>
     </Card>
   );

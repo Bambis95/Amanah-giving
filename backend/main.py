@@ -122,6 +122,7 @@ from routers.site import router as site_router
 from routers.mobile_deposits import router as mobile_deposits_router
 from routers.storage import router as storage_router
 from routers.user import router as user_router
+from routers.invitations import router as invitations_router
 
 
 # ============================================================
@@ -142,6 +143,7 @@ app.include_router(stats_router)
 app.include_router(audit_router)
 app.include_router(site_router)
 app.include_router(mobile_deposits_router)
+app.include_router(invitations_router)
 
 
 # ============================================================

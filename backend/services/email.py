@@ -96,9 +96,9 @@ def build_donation_confirmation(
 <!doctype html>
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:24px;background:#FAFAF8;font-family:Arial,Helvetica,sans-serif;color:#374151">
+<body style="margin:0;padding:24px;background:#F5F7FA;font-family:Arial,Helvetica,sans-serif;color:#374151">
   <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
-    <tr><td style="background:#0D7C66;padding:24px;color:#ffffff">
+    <tr><td style="background:#044990;padding:24px;color:#ffffff">
       <div style="font-size:20px;font-weight:bold">{html.escape(settings.site_short_name)}</div>
       <div style="font-size:14px;opacity:.85">Merci pour votre générosité</div>
     </td></tr>
@@ -178,6 +178,67 @@ def send_email(message: EmailMessage, context: str) -> None:
         logger.exception("Failed to send email (%s)", context)
 
 
+def build_invitation_email(
+    recipient: str,
+    name: Optional[str],
+    role_label: str,
+    inviter: Optional[str],
+    invite_url: str,
+    valid_hours: int,
+) -> EmailMessage:
+    site = settings.site_short_name
+    greeting = f"Bonjour {name}," if name else "Bonjour,"
+    by = f"{inviter} vous invite" if inviter else "Vous êtes invité(e)"
+    text = "\n".join(
+        [
+            greeting,
+            "",
+            f"{by} à rejoindre l'équipe {site} en tant que {role_label}.",
+            f"Ouvrez ce lien pour choisir votre mot de passe et activer votre accès (valable {valid_hours} heures) :",
+            "",
+            invite_url,
+            "",
+            "Si vous ne vous attendiez pas à cette invitation, ignorez simplement cet email.",
+            "",
+            f"L'équipe {site}",
+        ]
+    )
+    body_html = f"""\
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:24px;background:#F5F7FA;font-family:Arial,Helvetica,sans-serif;color:#374151">
+  <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
+    <tr><td style="background:#044990;padding:24px;color:#ffffff">
+      <div style="font-size:20px;font-weight:bold">{html.escape(site)}</div>
+      <div style="font-size:14px;opacity:.85">Invitation à rejoindre l'équipe</div>
+    </td></tr>
+    <tr><td style="padding:24px">
+      <p style="margin:0 0 12px">{html.escape(greeting)}</p>
+      <p style="margin:0 0 20px">{html.escape(by)} à rejoindre l'équipe {html.escape(site)}
+        en tant que <strong>{html.escape(role_label)}</strong>.
+        Choisissez votre mot de passe pour activer votre accès au tableau de bord.</p>
+      <p style="margin:0 0 20px;text-align:center">
+        <a href="{html.escape(invite_url)}" style="display:inline-block;background:#F57206;color:#1A1A2E;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:8px">Activer mon accès</a>
+      </p>
+      <p style="margin:0 0 8px;font-size:12px;color:#6B7280">Ce lien est valable {valid_hours} heures et ne sert qu'une fois.
+        Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+        <span style="word-break:break-all">{html.escape(invite_url)}</span></p>
+      <p style="margin:16px 0 0;font-size:13px;color:#6B7280">Si vous ne vous attendiez pas à cette invitation,
+        ignorez simplement cet email.</p>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+    message = EmailMessage()
+    message["Subject"] = f"Invitation à rejoindre l'équipe {site}"
+    message["From"] = formataddr((settings.email_from_name, settings.email_from))
+    message["To"] = recipient
+    message.set_content(text)
+    message.add_alternative(body_html, subtype="html")
+    return message
+
+
 def build_password_reset_email(recipient: str, name: Optional[str], reset_url: str, valid_minutes: int) -> EmailMessage:
     greeting = f"Bonjour {name}," if name else "Bonjour,"
     text = "\n".join(
@@ -198,9 +259,9 @@ def build_password_reset_email(recipient: str, name: Optional[str], reset_url: s
 <!doctype html>
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:24px;background:#FAFAF8;font-family:Arial,Helvetica,sans-serif;color:#374151">
+<body style="margin:0;padding:24px;background:#F5F7FA;font-family:Arial,Helvetica,sans-serif;color:#374151">
   <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
-    <tr><td style="background:#0D7C66;padding:24px;color:#ffffff">
+    <tr><td style="background:#044990;padding:24px;color:#ffffff">
       <div style="font-size:20px;font-weight:bold">{html.escape(settings.site_short_name)}</div>
       <div style="font-size:14px;opacity:.85">Réinitialisation du mot de passe</div>
     </td></tr>
@@ -209,7 +270,7 @@ def build_password_reset_email(recipient: str, name: Optional[str], reset_url: s
       <p style="margin:0 0 20px">Vous avez demandé à réinitialiser le mot de passe de votre compte.
         Ce lien est valable {valid_minutes} minutes et ne peut servir qu'une fois.</p>
       <p style="margin:0 0 20px;text-align:center">
-        <a href="{html.escape(reset_url)}" style="display:inline-block;background:#0D7C66;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:8px">Choisir un nouveau mot de passe</a>
+        <a href="{html.escape(reset_url)}" style="display:inline-block;background:#044990;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:8px">Choisir un nouveau mot de passe</a>
       </p>
       <p style="margin:0 0 8px;font-size:12px;color:#6B7280">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
         <span style="word-break:break-all">{html.escape(reset_url)}</span></p>

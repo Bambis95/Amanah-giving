@@ -187,6 +187,16 @@
     );
   }
 
+  /* SENJAPO blue veil over the photo of the sign-in screens, identical in both themes */
+  .auth-overlay {
+    background-image: linear-gradient(
+      160deg,
+      hsl(214 70% 11% / 0.94),
+      hsl(210 95% 26% / 0.8) 55%,
+      hsl(214 70% 9% / 0.95)
+    );
+  }
+
   /* Solid dark surface for the footer, readable with light text in both themes */
   .surface-footer {
     background-color: hsl(var(--surface-hero-from));

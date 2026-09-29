@@ -6,6 +6,8 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (email: string, password: string, name?: string) => Promise<AuthUser>;
+  /** Create the invited account (role set by the invitation) and open its session */
+  acceptInvitation: (token: string, password: string, name?: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   /** Extend the server session (sliding idle timeout). False if it had already expired. */
   keepAlive: () => Promise<boolean>;
@@ -56,6 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [login]
   );
 
+  const acceptInvitation = useCallback(async (token: string, password: string, name?: string) => {
+    const result = await api.acceptInvitation(token, password, name);
+    setUser(result.user);
+    return result.user;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await api.logout(); // the server deletes the cookie
@@ -75,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, keepAlive }}>
+    <AuthContext.Provider value={{ user, loading, login, register, acceptInvitation, logout, keepAlive }}>
       {children}
     </AuthContext.Provider>
   );
