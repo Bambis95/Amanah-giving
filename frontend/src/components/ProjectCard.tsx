@@ -1,5 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ChevronRight, Heart, Users } from "lucide-react";
@@ -14,6 +22,8 @@ export default function ProjectCard({ project }: { project: Project }) {
   const progress = project.goal > 0 ? Math.round((project.raised / project.goal) * 100) : 0;
   const IconComponent = iconByName(project.icon);
   const completed = project.status === "completed";
+  // Rough threshold for text that overflows three lines of the card
+  const longDescription = project.description.length > 160 || project.description.includes("\n");
 
   return (
     <Card className="group flex flex-col overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md motion-safe:hover:-translate-y-1">
@@ -59,50 +69,85 @@ export default function ProjectCard({ project }: { project: Project }) {
         <h3 className="mb-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
           {project.title}
         </h3>
-        <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
-
-        {/* Progress (mt-auto keeps buttons aligned across cards of different text length) */}
-        <div className="mb-4 mt-auto">
-          <div className="mb-1.5 flex justify-between text-sm">
-            <span className="font-semibold tabular-nums text-primary">{formatCFA(project.raised)} FCFA</span>
-            <span className="tabular-nums text-muted-foreground">{progress}%</span>
-          </div>
-          <div
-            className="h-2 w-full overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.min(progress, 100)}
-            aria-label={`Collecte : ${progress} % de l'objectif`}
-          >
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            />
-          </div>
-          <div className="flex justify-between mt-1.5">
-            <span className="text-xs text-muted-foreground">Objectif: {formatCFA(project.goal)} FCFA</span>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {project.donors || 0}
-            </span>
-          </div>
-        </div>
-
-        {completed ? (
-          <Button disabled variant="outline" className="h-11 w-full font-semibold">
-            <CheckCircle className="mr-2 h-4 w-4" />
-            Projet terminé
-          </Button>
-        ) : (
-          <Button asChild className="h-11 w-full font-semibold">
-            <Link to={`/donate?project=${project.id}`} aria-label={`Contribuer au projet ${project.title}`}>
-              <Heart className="mr-2 h-4 w-4" />
-              Contribuer
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
+        <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
+        {/* The full text opens in a dialog, so expanding one card never stretches the others in its row */}
+        {longDescription && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <button type="button" className="mt-1 self-start text-sm font-semibold text-primary hover:underline">
+                Lire la suite
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+              {project.image && (
+                <img src={project.image} alt="" className="w-full rounded-lg object-contain" />
+              )}
+              <DialogHeader>
+                <DialogTitle className="text-xl">{project.title}</DialogTitle>
+                {project.location && <p className="text-sm text-muted-foreground">{project.location}</p>}
+              </DialogHeader>
+              <DialogDescription asChild>
+                <div className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{project.description}</div>
+              </DialogDescription>
+              {!completed && (
+                <Button asChild className="h-11 w-full font-semibold">
+                  <Link to={`/donate?project=${project.id}`}>
+                    <Heart className="mr-2 h-4 w-4" />
+                    Contribuer
+                  </Link>
+                </Button>
+              )}
+            </DialogContent>
+          </Dialog>
         )}
+
+        {/* mt-auto keeps buttons aligned across cards of different text length */}
+        <div className="mt-auto pt-4">
+          {/* A past action recorded without a fundraising goal has no progress to show */}
+          {project.goal > 0 && (
+            <div className="mb-4">
+              <div className="mb-1.5 flex justify-between text-sm">
+                <span className="font-semibold tabular-nums text-primary">{formatCFA(project.raised)} FCFA</span>
+                <span className="tabular-nums text-muted-foreground">{progress}%</span>
+              </div>
+              <div
+                className="h-2 w-full overflow-hidden rounded-full bg-muted"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.min(progress, 100)}
+                aria-label={`Collecte : ${progress} % de l'objectif`}
+              >
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700"
+                  style={{ width: `${Math.min(progress, 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-xs text-muted-foreground">Objectif: {formatCFA(project.goal)} FCFA</span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {project.donors || 0}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {completed ? (
+            <Button disabled variant="outline" className="h-11 w-full font-semibold">
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Projet terminé
+            </Button>
+          ) : (
+            <Button asChild className="h-11 w-full font-semibold">
+              <Link to={`/donate?project=${project.id}`} aria-label={`Contribuer au projet ${project.title}`}>
+                <Heart className="mr-2 h-4 w-4" />
+                Contribuer
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
