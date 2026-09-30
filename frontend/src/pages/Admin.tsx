@@ -300,7 +300,14 @@ export default function AdminPage() {
               {!initialLoading && (
                 <div key={`${current.id}-${messageKind}`} className="animate-in fade-in-0 duration-200">
                   {current.id === "overview" && (
-                    <OverviewTab donations={donations} messages={messages} projects={projects} canManage={manager} onGo={go} />
+                    <OverviewTab
+                      donations={donations}
+                      messages={messages}
+                      projects={projects}
+                      canManage={manager}
+                      showFinance={canReadFinance(user.role)}
+                      onGo={go}
+                    />
                   )}
                   {current.id === "donations" && <DonationsTab donations={donations} onChange={setDonations} canManage={manager} />}
                   {current.id === "messages" && <MessagesTab messages={messages} onChange={setMessages} initialKind={messageKind} />}

@@ -5,8 +5,13 @@ import { ArrowRight, CheckCircle, Inbox, QrCode } from "lucide-react";
 import { ContactMessage, Donation, Project } from "@/api";
 import { categoryLabel, formatCFA, formatDate, MESSAGE_KINDS, paymentMethodLabels } from "./format";
 import { cn } from "@/lib/utils";
+import FinanceOverviewCard from "./finance/FinanceOverviewCard";
 
-export type OverviewTarget = { section: "donations" } | { section: "messages"; kind: string } | { section: "projects" };
+export type OverviewTarget =
+  | { section: "donations" }
+  | { section: "messages"; kind: string }
+  | { section: "projects" }
+  | { section: "finances" };
 
 interface OverviewTabProps {
   donations: Donation[];
@@ -14,6 +19,8 @@ interface OverviewTabProps {
   projects: Project[];
   /** President / admin: sees the to-do list (deposits, requests) */
   canManage: boolean;
+  /** Treasurer, president, admin: key figures of the accounts */
+  showFinance?: boolean;
   onGo: (target: OverviewTarget) => void;
 }
 
@@ -31,7 +38,7 @@ function Panel({ title, children, className }: { title: string; children: React.
   );
 }
 
-export default function OverviewTab({ donations, messages, projects, canManage, onGo }: OverviewTabProps) {
+export default function OverviewTab({ donations, messages, projects, canManage, showFinance = false, onGo }: OverviewTabProps) {
   const paid = useMemo(() => donations.filter((d) => d.payment_status === "paid"), [donations]);
 
   // Paid amount per month, last 6 months (months without donations shown as 0)
@@ -127,6 +134,8 @@ export default function OverviewTab({ donations, messages, projects, canManage, 
           )}
         </Panel>
       )}
+
+      {showFinance && <FinanceOverviewCard onOpen={() => onGo({ section: "finances" })} />}
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Panel title="Montants collectés par mois (6 derniers mois)" className="xl:col-span-2">
