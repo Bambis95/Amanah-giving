@@ -214,6 +214,46 @@ export interface FinanceSummary {
   }[];
 }
 
+/** Dated news of a campaign ("Les fondations sont posées") */
+export interface CampaignNews {
+  id: number;
+  project_id: number;
+  project_title: string | null;
+  title: string;
+  body: string;
+  image: string | null;
+  published_at: string;
+}
+
+export interface CampaignNewsInput {
+  title: string;
+  body: string;
+  image: string | null;
+}
+
+export async function getCampaignNews(limit = 6, projectId?: number): Promise<CampaignNews[]> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (projectId) params.set("project_id", String(projectId));
+  const response = await apiFetch(`${getAPIBase()}/updates?${params}`);
+  if (!response.ok) throw new Error("Failed to fetch news");
+  return response.json();
+}
+
+export const newsApi = {
+  list(projectId: number): Promise<CampaignNews[]> {
+    return adminRequest(`/updates/manage?project_id=${projectId}`);
+  },
+  create(projectId: number, data: CampaignNewsInput): Promise<CampaignNews> {
+    return adminRequest(`/updates/project/${projectId}`, { method: "POST", body: JSON.stringify(data) });
+  },
+  update(id: number, data: CampaignNewsInput): Promise<CampaignNews> {
+    return adminRequest(`/updates/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  remove(id: number): Promise<unknown> {
+    return adminRequest(`/updates/${id}`, { method: "DELETE" });
+  },
+};
+
 /** Public: how each campaign's money is spent, as totals per category only */
 export interface PublicSpending {
   projects: { project_id: number; spent: number; other_income: number; budget: number; by_category: Record<string, number> }[];

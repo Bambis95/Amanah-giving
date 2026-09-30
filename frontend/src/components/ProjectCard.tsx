@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,15 +12,20 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CheckCircle, ChevronRight, Heart, Images, Users } from "lucide-react";
+import { CheckCircle, ChevronRight, Heart, Images, MessageCircle, Users } from "lucide-react";
 import { Project } from "@/api";
+import CampaignNewsList from "./CampaignNewsList";
+import ShareCampaign from "./ShareCampaign";
+import { whatsappLink } from "@/lib/share";
 import { iconByName } from "@/lib/categories";
 
 function formatCFA(amount: number) {
   return new Intl.NumberFormat("fr-FR").format(amount);
 }
 
-export default function ProjectCard({ project }: { project: Project }) {
+/** `autoOpen`: open the campaign's dialog at once (shared link /projects?campagne=ID) */
+export default function ProjectCard({ project, autoOpen = false }: { project: Project; autoOpen?: boolean }) {
+  const [open, setOpen] = useState(autoOpen);
   const progress = project.goal > 0 ? Math.round((project.raised / project.goal) * 100) : 0;
   const IconComponent = iconByName(project.icon);
   const completed = project.status === "completed";
@@ -29,7 +35,7 @@ export default function ProjectCard({ project }: { project: Project }) {
   const photos = [project.image, ...gallery].filter((url): url is string => !!url);
 
   return (
-    <Card className="group flex flex-col overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md motion-safe:hover:-translate-y-1">
+    <Card id={`campagne-${project.id}`} className="group flex scroll-mt-24 flex-col overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md motion-safe:hover:-translate-y-1">
       <div className="relative h-48 overflow-hidden">
         {project.image ? (
           <img
@@ -67,6 +73,16 @@ export default function ProjectCard({ project }: { project: Project }) {
             </Badge>
           </div>
         )}
+        <a
+          href={whatsappLink(project)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-[#1DA851] shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
+          aria-label={`Partager « ${project.title} » sur WhatsApp`}
+          title="Partager sur WhatsApp"
+        >
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+        </a>
         {project.location && (
           <div className="absolute bottom-4 right-4">
             <Badge variant="secondary" className="bg-background/90 text-xs text-foreground/80 backdrop-blur-sm">
@@ -80,12 +96,11 @@ export default function ProjectCard({ project }: { project: Project }) {
           {project.title}
         </h3>
         <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
-        {/* The full text opens in a dialog, so expanding one card never stretches the others in its row */}
-        {(longDescription || gallery.length > 0) && (
-          <Dialog>
+        {/* The full text, photos and news open in a dialog, so expanding one card never stretches the others in its row */}
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <button type="button" className="mt-1 self-start text-sm font-semibold text-primary hover:underline">
-                {longDescription ? "Lire la suite" : "Voir les photos"}
+                {longDescription ? "Lire la suite" : gallery.length > 0 ? "Voir les photos" : "En savoir plus"}
               </button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
@@ -117,6 +132,8 @@ export default function ProjectCard({ project }: { project: Project }) {
               <DialogDescription asChild>
                 <div className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{project.description}</div>
               </DialogDescription>
+              <CampaignNewsList projectId={project.id} />
+              <ShareCampaign project={project} />
               {!completed && (
                 <Button asChild className="h-11 w-full font-semibold">
                   <Link to={`/donate?project=${project.id}`}>
@@ -127,7 +144,6 @@ export default function ProjectCard({ project }: { project: Project }) {
               )}
             </DialogContent>
           </Dialog>
-        )}
 
         {/* mt-auto keeps buttons aligned across cards of different text length */}
         <div className="mt-auto pt-4">

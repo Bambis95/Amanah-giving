@@ -32,7 +32,13 @@ export default function ProjectsPage() {
     if (r) countByRegion.set(r, (countByRegion.get(r) ?? 0) + 1);
   }
   const visible = activeRegion ? projects.filter((p) => regionOf(p.location) === activeRegion) : projects;
+  // A shared link (/projects?campagne=ID, from the WhatsApp preview) opens that campaign
+  const sharedId = Number(params.get("campagne")) || null;
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!loading && sharedId) document.getElementById(`campagne-${sharedId}`)?.scrollIntoView({ block: "center" });
+  }, [loading, sharedId]);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -152,7 +158,7 @@ export default function ProjectsPage() {
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
               {visible.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard key={project.id} project={project} autoOpen={project.id === sharedId} />
               ))}
             </div>
           )}

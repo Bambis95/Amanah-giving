@@ -125,6 +125,8 @@ from routers.user import router as user_router
 from routers.invitations import router as invitations_router
 from routers.images import router as images_router
 from routers.finance import public_router as transparency_router, router as finance_router
+from routers.project_updates import router as project_updates_router
+from routers.share import router as share_router
 
 
 # ============================================================
@@ -149,6 +151,8 @@ app.include_router(invitations_router)
 app.include_router(images_router)
 app.include_router(finance_router)
 app.include_router(transparency_router)
+app.include_router(project_updates_router)
+app.include_router(share_router)
 
 
 # ============================================================
