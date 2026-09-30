@@ -110,6 +110,27 @@ export default function SiteSettingsTab() {
       </Card>
 
       <Card className="shadow-sm">
+        <CardContent className="grid gap-5 p-4 sm:grid-cols-2 md:p-6">
+          <h3 className="font-semibold text-foreground sm:col-span-2">Cotisation des membres</h3>
+          <Field id="set-fee" label="Montant (FCFA)" hint="Payé en ligne sur la page Adhérer. Vide = paiement en ligne non proposé.">
+            <Input
+              id="set-fee"
+              inputMode="numeric"
+              placeholder="Ex. : 10000"
+              value={form.membership_fee ?? ""}
+              onChange={(e) => {
+                const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
+                set("membership_fee", Number.isFinite(n) ? n : null);
+              }}
+            />
+          </Field>
+          <Field id="set-fee-label" label="Intitulé" hint="Ex. : Cotisation annuelle 2026">
+            <Input id="set-fee-label" maxLength={60} value={form.membership_fee_label ?? ""} onChange={(e) => set("membership_fee_label", text(e.target.value))} />
+          </Field>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
         <CardContent className="space-y-5 p-4 md:p-6">
           <h3 className="font-semibold text-foreground">Page d'accueil</h3>
           <Field id="set-hero" label="Texte sous le titre" hint="Vide = le texte d'origine.">

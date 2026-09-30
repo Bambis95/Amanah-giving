@@ -57,7 +57,9 @@ def build_receipt_pdf(donation, destination: str) -> bytes:
     pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     number = receipt_number(donation)
-    pdf.setTitle(f"Reçu de don {number}")
+    membership = donation.cause == "membership"
+    kind = "cotisation" if membership else "don"
+    pdf.setTitle(f"Reçu de {kind} {number}")
     pdf.setAuthor(settings.site_short_name)
     margin = 20 * mm
 
@@ -73,10 +75,10 @@ def build_receipt_pdf(donation, destination: str) -> bytes:
                       preserveAspectRatio=True, mask="auto")
     pdf.setFillColor(white)
     pdf.setFont("Helvetica-Bold", 22)
-    pdf.drawRightString(width - margin, height - 18 * mm, "REÇU DE DON")
+    pdf.drawRightString(width - margin, height - 18 * mm, f"REÇU DE {kind.upper()}")
     pdf.setFont("Helvetica", 10)
     pdf.drawRightString(width - margin, height - 25 * mm, f"N° {number}")
-    pdf.drawRightString(width - margin, height - 30 * mm, f"Date du don : {_date(donation.created_at)}")
+    pdf.drawRightString(width - margin, height - 30 * mm, f"Date du paiement : {_date(donation.created_at)}")
 
     # Carrier
     y = height - band - 12 * mm
@@ -117,7 +119,7 @@ def build_receipt_pdf(donation, destination: str) -> bytes:
     pdf.rect(margin, y - box, 2 * mm, box, stroke=0, fill=1)
     pdf.setFillColor(MUTED)
     pdf.setFont("Helvetica", 9)
-    pdf.drawString(margin + 8 * mm, y - 7 * mm, "MONTANT DU DON")
+    pdf.drawString(margin + 8 * mm, y - 7 * mm, "MONTANT DE LA COTISATION" if membership else "MONTANT DU DON")
     pdf.setFillColor(BLUE)
     pdf.setFont("Helvetica-Bold", 20)
     pdf.drawString(margin + 8 * mm, y - 15 * mm, _fcfa(donation.amount))
@@ -160,11 +162,14 @@ def build_receipt_pdf(donation, destination: str) -> bytes:
     y -= 10 * mm
     pdf.setFillColor(BLUE)
     pdf.setFont("Helvetica-Bold", 13)
-    pdf.drawString(margin, y, "Merci pour votre générosité !")
+    pdf.drawString(margin, y, "Bienvenue au club, merci !" if membership else "Merci pour votre générosité !")
     pdf.setFillColor(INK)
     pdf.setFont("Helvetica", 9.5)
     thanks = (
-        f"Votre don soutient les campagnes de {settings.site_short_name} au service des populations du Sénégal. "
+        f"Votre cotisation fait vivre le {settings.carrier_name}, porteur de {settings.site_short_name}. "
+        "Conservez ce reçu comme justificatif de paiement."
+        if membership
+        else f"Votre don soutient les campagnes de {settings.site_short_name} au service des populations du Sénégal. "
         "Conservez ce reçu comme justificatif de votre contribution."
     )
     for part in simpleSplit(thanks, "Helvetica", 9.5, width - 2 * margin):
@@ -174,7 +179,7 @@ def build_receipt_pdf(donation, destination: str) -> bytes:
     # Footer
     pdf.setFillColor(MUTED)
     pdf.setFont("Helvetica", 7.5)
-    pdf.drawString(margin, 15 * mm, "Ce reçu atteste la réception de votre don. Il ne constitue pas un reçu fiscal.")
+    pdf.drawString(margin, 15 * mm, f"Ce reçu atteste la réception de votre {kind}. Il ne constitue pas un reçu fiscal.")
     pdf.drawString(margin, 11 * mm, f"Document généré automatiquement le {_date(None)} · {number}")
 
     pdf.showPage()

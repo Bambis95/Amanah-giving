@@ -33,6 +33,7 @@ CAUSE_LABELS = {
     "food": "Alimentation",
     "housing": "Logement",
     "general": "Don général",
+    "membership": "Cotisation au club (CCES)",
 }
 
 METHOD_LABELS = {
@@ -62,6 +63,12 @@ def build_donation_confirmation(
     method = METHOD_LABELS.get(donation.payment_method, donation.payment_method)
     date = (donation.created_at or datetime.now(timezone.utc)).strftime("%d/%m/%Y")
     reference = f"{settings.site_short_name}-{donation.id:06d}"
+    membership = donation.cause == "membership"
+    intro = (
+        f"Merci pour votre cotisation de {amount} au {settings.carrier_name}."
+        if membership
+        else f"Merci pour votre don de {amount} sur {settings.site_short_name}."
+    )
 
     details = [
         ("Montant", amount),
@@ -75,7 +82,7 @@ def build_donation_confirmation(
         [
             greeting,
             "",
-            f"Merci pour votre don de {amount} sur {settings.site_short_name}. Votre paiement a bien été reçu.",
+            f"{intro} Votre paiement a bien été reçu.",
             "",
             *[f"{label} : {value}" for label, value in details],
             "",
@@ -104,8 +111,7 @@ def build_donation_confirmation(
     </td></tr>
     <tr><td style="padding:24px">
       <p style="margin:0 0 12px">{html.escape(greeting)}</p>
-      <p style="margin:0 0 20px">Merci pour votre don de <strong>{html.escape(amount)}</strong>.
-        Votre paiement a bien été reçu.</p>
+      <p style="margin:0 0 20px">{html.escape(intro)} Votre paiement a bien été reçu.</p>
       <table role="presentation" width="100%" style="border-top:1px solid #E5E7EB;border-bottom:1px solid #E5E7EB;margin-bottom:20px">{rows}</table>
       <p style="margin:0 0 8px;font-size:13px;color:#6B7280">Votre reçu de don est joint à cet email (PDF) : conservez-le comme justificatif.
         Pour toute question, répondez simplement à ce message.</p>
@@ -116,7 +122,7 @@ def build_donation_confirmation(
 </html>"""
 
     message = EmailMessage()
-    message["Subject"] = f"Merci pour votre don de {amount}"
+    message["Subject"] = f"Votre cotisation de {amount} est confirmée" if membership else f"Merci pour votre don de {amount}"
     message["From"] = formataddr((settings.email_from_name, settings.email_from))
     message["To"] = recipient
     message.set_content(text)

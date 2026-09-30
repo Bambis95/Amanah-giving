@@ -12,6 +12,8 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   tiktok_url: null,
   youtube_url: null,
   hero_subtitle: null,
+  membership_fee: null,
+  membership_fee_label: "Cotisation annuelle",
   announcement: null,
   announcement_link: null,
 };

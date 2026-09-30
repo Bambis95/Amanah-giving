@@ -207,6 +207,7 @@ export default function SummaryPanel({ year, meta, onGo }: { year: number | null
             ].sort((a, b) => b[1] - a[1])}
             labels={{
               ...meta.income_categories,
+              membership_online: "Cotisations payées en ligne",
               ...Object.fromEntries(Object.keys(data.donations.by_method).map((m) => [`online:${m}`, `Dons en ligne · ${paymentMethodLabels[m] ?? m}`])),
             }}
             empty={`Aucune recette ${period}.`}

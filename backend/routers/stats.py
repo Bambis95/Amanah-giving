@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from models.donations import Donations
 from models.projects import Projects
 from pydantic import BaseModel
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import String, and_, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/stats", tags=["stats"])
@@ -20,7 +20,8 @@ class PublicStats(BaseModel):
 @router.get("", response_model=PublicStats)
 async def get_public_stats(db: AsyncSession = Depends(get_db)):
     """Public platform statistics: aggregates only, no donor data is exposed."""
-    paid = Donations.payment_status == "paid"
+    # Donations only: club membership fees are not gifts to the campaigns
+    paid = and_(Donations.payment_status == "paid", Donations.cause != "membership")
 
     # A donor is their account, else their email, else the donation itself (anonymous without email)
     donor_key = func.coalesce(

@@ -58,8 +58,12 @@ export const GENERAL_CAUSE = {
 
 const ALL = [...CATEGORIES, ...LEGACY];
 
+/** Club membership fee paid online (Adhérer page): stored as a payment with this cause */
+export const MEMBERSHIP_CAUSE = "membership";
+
 export function categoryLabel(value: string): string {
   if (value === GENERAL_CAUSE.value) return GENERAL_CAUSE.label;
+  if (value === MEMBERSHIP_CAUSE) return "Cotisation au club";
   return ALL.find((c) => c.value === value)?.label ?? value;
 }
 

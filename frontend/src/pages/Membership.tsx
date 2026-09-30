@@ -1,3 +1,4 @@
+import MembershipFeeCard from "@/components/MembershipFeeCard";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,8 @@ export default function MembershipPage() {
                 </CardContent>
               </Card>
             ))}
+            {/* Members renewing (or who applied on paper) pay here without the form */}
+            {!submitted && <MembershipFeeCard />}
             <Card className="shadow-sm">
               <CardContent className="space-y-3 p-5">
                 <p className="text-sm text-muted-foreground">
@@ -156,6 +159,10 @@ export default function MembershipPage() {
                     Merci, {form.firstName.trim()}. Le {CARRIER_SHORT} a bien reçu votre demande et vous recontactera par
                     téléphone{form.email.trim() ? " ou par email" : ""} pour finaliser votre adhésion.
                   </p>
+                  <MembershipFeeCard
+                    prefill={{ firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone }}
+                    className="mx-auto mb-6 max-w-sm text-left"
+                  />
                   <Button asChild className="rounded-lg">
                     <Link to="/projects">Voir les campagnes en cours</Link>
                   </Button>

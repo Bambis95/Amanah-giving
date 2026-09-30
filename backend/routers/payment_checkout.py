@@ -18,6 +18,10 @@ from services.payment import PaymentService, CheckoutSessionRequest, CheckoutErr
 from services.donations import DonationsService
 from services.paydunya import create_checkout, fetch_invoice_status, PayDunyaError
 from services import paytech
+from routers.site import load_site_settings
+
+# Donations whose cause is this are club membership fees (Adhérer page), counted apart in the accounts
+MEMBERSHIP_CAUSE = "membership"
 from services.email import prepare_donation_confirmation, send_email
 from dependencies.auth import get_optional_user
 from schemas.auth import UserResponse
@@ -222,6 +226,14 @@ async def create_donation_checkout(
             status_code=400,
             detail="L'email est obligatoire pour un don sans compte.",
         )
+
+    # Club membership fee: the amount set by the admins, never a campaign
+    if data.cause == MEMBERSHIP_CAUSE:
+        fee = (await load_site_settings(db)).membership_fee
+        if not fee:
+            raise HTTPException(status_code=400, detail="Le paiement des cotisations en ligne n'est pas encore ouvert.")
+        if data.amount != fee or data.project_id is not None:
+            raise HTTPException(status_code=400, detail=f"Le montant de la cotisation est de {fee:,} FCFA.".replace(",", " "))
 
     # A targeted project must exist and still accept donations;
     # its category becomes the donation's cause.

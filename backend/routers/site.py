@@ -58,6 +58,9 @@ class SiteSettings(BaseModel):
         ),
         max_length=300,
     )
+    # Membership fee paid online on the "Adhérer" page; empty = online payment not offered
+    membership_fee: Optional[int] = Field(default=None, ge=500, le=1_000_000)
+    membership_fee_label: Optional[str] = Field(default="Cotisation annuelle", max_length=60)
     # Optional banner at the top of the home page (an event, the opening of donations…)
     announcement: Optional[str] = Field(default=None, max_length=200)
     announcement_link: Optional[str] = None
@@ -95,13 +98,13 @@ class SiteSettings(BaseModel):
             raise ValueError("Le lien du bandeau doit être une page du site (/…) ou commencer par https://")
         return value
 
-    @field_validator("announcement", "hero_subtitle")
+    @field_validator("announcement", "hero_subtitle", "membership_fee_label")
     @classmethod
     def _trim(cls, value: Optional[str]) -> Optional[str]:
         return (value or "").strip() or None
 
 
-async def _load(db: AsyncSession) -> SiteSettings:
+async def load_site_settings(db: AsyncSession) -> SiteSettings:
     stored = {row.key: row.value for row in (await db.execute(select(SiteSetting))).scalars()}
     known = {k: v for k, v in stored.items() if k in SiteSettings.model_fields}
     return SiteSettings(**{**SiteSettings().model_dump(), **known})
@@ -110,13 +113,13 @@ async def _load(db: AsyncSession) -> SiteSettings:
 @router.get("/settings", response_model=SiteSettings)
 async def get_settings(db: AsyncSession = Depends(get_db)):
     """Public: contacts, social links and home texts shown on the site."""
-    return await _load(db)
+    return await load_site_settings(db)
 
 
 @router.put("/settings", response_model=SiteSettings)
 async def save_settings(data: SiteSettings, db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_admin_actor)):
     """Admins: replace the editable settings (the form always sends every field)."""
-    before = (await _load(db)).model_dump()
+    before = (await load_site_settings(db)).model_dump()
     after = data.model_dump()
     changed = {k: {"avant": before[k], "apres": after[k]} for k in after if before[k] != after[k]}
     for key, value in after.items():

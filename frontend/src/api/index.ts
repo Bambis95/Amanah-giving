@@ -224,6 +224,9 @@ export interface SiteSettings {
   tiktok_url: string | null;
   youtube_url: string | null;
   hero_subtitle: string | null;
+  /** Club membership fee paid online (FCFA); null = not offered */
+  membership_fee: number | null;
+  membership_fee_label: string | null;
   announcement: string | null;
   announcement_link: string | null;
 }

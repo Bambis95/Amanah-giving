@@ -59,6 +59,9 @@ PAYMENT_METHODS = {
     "check": "Chèque",
     "card": "Carte bancaire",
 }
+# Club membership fees paid online (cause of those donations), shown as income, not as donations
+MEMBERSHIP_CAUSE = "membership"
+MEMBERSHIP_INCOME_KEY = "membership_online"
 MAX_AMOUNT = 100_000_000_000  # 100 milliards FCFA: catches a typing slip, not a real limit
 MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
 MAX_BUDGET_LINES = 50
@@ -398,7 +401,7 @@ async def reconciliation(
             "payment_provider": d.payment_provider,
             "payment_reference": d.payment_reference,
             "donor_name": " ".join(filter(None, [d.donor_first_name, d.donor_last_name])) or None,
-            "project_title": title,
+            "project_title": title or ("Cotisation au club" if d.cause == MEMBERSHIP_CAUSE else None),
             "reconciled_at": d.reconciled_at,
             "reconciled_by_name": (checker.name or checker.email) if checker else None,
         }
@@ -500,11 +503,16 @@ async def report_pdf(
         if not project:
             raise HTTPException(status_code=404, detail="Campagne introuvable")
 
-    paid = [Donations.payment_status == "paid", *_year_filter(Donations.created_at, year)]
+    paid_all = [Donations.payment_status == "paid", *_year_filter(Donations.created_at, year)]
+    paid = [*paid_all, Donations.cause != MEMBERSHIP_CAUSE]
     entry_filter = [FinanceEntry.cancelled_at.is_(None), *_year_filter(FinanceEntry.entry_date, year)]
     if project:
         paid.append(Donations.project_id == project.id)
         entry_filter.append(FinanceEntry.project_id == project.id)
+    # Membership fees belong to the club, never to a campaign: only in the whole-platform report
+    memberships_total = 0 if project else int((await db.execute(
+        select(func.coalesce(func.sum(Donations.amount), 0)).where(*paid_all, Donations.cause == MEMBERSHIP_CAUSE)
+    )).scalar_one())
     donations_total, donations_count = (await db.execute(
         select(func.coalesce(func.sum(Donations.amount), 0), func.count(Donations.id)).where(*paid)
     )).one()
@@ -527,6 +535,7 @@ async def report_pdf(
         donations_total=int(donations_total),
         donations_count=donations_count,
         donations_by_method={k: int(v) for k, v in by_method.items()},
+        memberships_total=memberships_total,
         entries=[(e, title) for e, title in entries],
         budget=budget,
         income_labels=INCOME_CATEGORIES,
@@ -553,15 +562,22 @@ async def summary(
     db: AsyncSession = Depends(get_db),
     _reader: UserResponse = Depends(get_finance_reader),
 ):
-    """Totals for a year (or all years): online donations + other income - expenses."""
-    paid = [Donations.payment_status == "paid", *_year_filter(Donations.created_at, year)]
+    """Totals for a year (or all years): online donations + other income - expenses.
+
+    Membership fees paid online are income of the club, not donations: they are counted under other income.
+    """
+    paid_all = [Donations.payment_status == "paid", *_year_filter(Donations.created_at, year)]
+    paid = [*paid_all, Donations.cause != MEMBERSHIP_CAUSE]
     active = [FinanceEntry.cancelled_at.is_(None), *_year_filter(FinanceEntry.entry_date, year)]
     total = func.coalesce(func.sum(Donations.amount), 0)
     entry_total = func.coalesce(func.sum(FinanceEntry.amount), 0)
 
     donations_total, donations_count = (await db.execute(select(total, func.count(Donations.id)).where(*paid))).one()
+    memberships_total = (await db.execute(select(total).where(*paid_all, Donations.cause == MEMBERSHIP_CAUSE))).scalar_one()
+    # Everything received online is ticked against the operator statements, fees included
+    all_total, all_count = (await db.execute(select(total, func.count(Donations.id)).where(*paid_all))).one()
     reconciled_total, reconciled_count = (
-        await db.execute(select(total, func.count(Donations.id)).where(*paid, Donations.reconciled_at.is_not(None)))
+        await db.execute(select(total, func.count(Donations.id)).where(*paid_all, Donations.reconciled_at.is_not(None)))
     ).one()
     by_method = dict((await db.execute(select(Donations.payment_method, total).where(*paid).group_by(Donations.payment_method))).all())
 
@@ -570,6 +586,8 @@ async def summary(
         await db.execute(select(FinanceEntry.kind, FinanceEntry.category, entry_total).where(*active).group_by(FinanceEntry.kind, FinanceEntry.category))
     ).all():
         by_category[kind][category] = amount
+    if memberships_total:
+        by_category["income"][MEMBERSHIP_INCOME_KEY] = int(memberships_total)
     other_income = sum(by_category["income"].values())
     expenses = sum(by_category["expense"].values())
 
@@ -579,6 +597,11 @@ async def summary(
             select(extract("month", Donations.created_at), total).where(*paid).group_by(extract("month", Donations.created_at))
         )).all():
             months[int(month)]["donations"] = amount
+        for month, amount in (await db.execute(
+            select(extract("month", Donations.created_at), total)
+            .where(*paid_all, Donations.cause == MEMBERSHIP_CAUSE).group_by(extract("month", Donations.created_at))
+        )).all():
+            months[int(month)]["other_income"] += amount
         for kind, month, amount in (await db.execute(
             select(FinanceEntry.kind, extract("month", FinanceEntry.entry_date), entry_total)
             .where(*active).group_by(FinanceEntry.kind, extract("month", FinanceEntry.entry_date))
@@ -620,8 +643,8 @@ async def summary(
         "reconciliation": {
             "reconciled_total": int(reconciled_total),
             "reconciled_count": reconciled_count,
-            "pending_total": int(donations_total) - int(reconciled_total),
-            "pending_count": donations_count - reconciled_count,
+            "pending_total": int(all_total) - int(reconciled_total),
+            "pending_count": all_count - reconciled_count,
         },
         "other_income": other_income,
         "expenses": expenses,

@@ -71,6 +71,7 @@ def build_finance_report(
     donations_count: int,
     donations_by_method: dict,
     entries: list,
+    memberships_total: int = 0,
     budget: list,
     income_labels: dict,
     expense_labels: dict,
@@ -115,7 +116,7 @@ def build_finance_report(
 
     incomes = [(e, t) for e, t in entries if e.kind == "income"]
     expenses = [(e, t) for e, t in entries if e.kind == "expense"]
-    other_income = sum(e.amount for e, _ in incomes)
+    other_income = sum(e.amount for e, _ in incomes) + memberships_total
     spent = sum(e.amount for e, _ in expenses)
     balance = donations_total + other_income - spent
 
@@ -141,6 +142,8 @@ def build_finance_report(
     rows = [[Paragraph("Origine", HEAD), Paragraph("Détail", HEAD), Paragraph("Montant", HEAD_RIGHT)]]
     for method, amount in sorted(donations_by_method.items(), key=lambda kv: -kv[1]):
         rows.append([Paragraph("Dons en ligne", CELL), Paragraph(_esc(method_labels.get(method, method)), CELL), Paragraph(fcfa(amount), CELL_RIGHT)])
+    if memberships_total:
+        rows.append([Paragraph("Cotisations", CELL), Paragraph("Cotisations au club payées en ligne", CELL), Paragraph(fcfa(memberships_total), CELL_RIGHT)])
     for entry, _ in incomes:
         detail = f"{entry.entry_date.strftime('%d/%m/%Y')} · {_esc(entry.label)}"
         if entry.reference:
