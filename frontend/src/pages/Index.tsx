@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
 import NotifyForm from "@/components/NotifyForm";
+import LatestNews from "@/components/LatestNews";
 import { api, Project, PublicStats } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
 import { cn } from "@/lib/utils";
@@ -180,6 +181,9 @@ export default function IndexPage() {
           </div>
         </div>
       </section>
+
+      {/* Latest campaign news (hidden until the first one is published) */}
+      <LatestNews />
 
       {/* How it works */}
       <section className="border-y border-border bg-muted/60 px-4 py-16 sm:py-20">

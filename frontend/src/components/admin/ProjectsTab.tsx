@@ -21,11 +21,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Newspaper, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi, Project } from "@/api";
 import { categoryLabel, formatCFA, projectStatuses } from "./format";
 import ProjectFormDialog from "./ProjectFormDialog";
+import NewsDialog from "./NewsDialog";
 
 function ProjectBadges({ project }: { project: Project }) {
   return (
@@ -77,11 +78,15 @@ interface ProjectActionsProps {
   project: Project;
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
+  onNews: (project: Project) => void;
 }
 
-function ProjectActions({ project, onEdit, onDelete }: ProjectActionsProps) {
+function ProjectActions({ project, onEdit, onDelete, onNews }: ProjectActionsProps) {
   return (
     <div className="flex justify-end gap-2">
+      <Button variant="outline" size="sm" onClick={() => onNews(project)} aria-label={`Actualités de ${project.title}`} title="Actualités">
+        <Newspaper className="w-4 h-4" />
+      </Button>
       <Button variant="outline" size="sm" onClick={() => onEdit(project)} aria-label="Modifier">
         <Pencil className="w-4 h-4" />
       </Button>
@@ -126,6 +131,7 @@ interface ProjectsTabProps {
 export default function ProjectsTab({ projects, onChange, readOnly = false }: ProjectsTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
+  const [newsFor, setNewsFor] = useState<Project | null>(null);
 
   const openCreate = () => {
     setEditing(null);
@@ -180,7 +186,7 @@ export default function ProjectsTab({ projects, onChange, readOnly = false }: Pr
                         {[categoryLabel(p.category), p.location].filter(Boolean).join(" · ")}
                       </p>
                     </div>
-                    {!readOnly && <ProjectActions project={p} onEdit={openEdit} onDelete={remove} />}
+                    {!readOnly && <ProjectActions project={p} onEdit={openEdit} onDelete={remove} onNews={setNewsFor} />}
                   </div>
                   <ProjectBadges project={p} />
                   <div className="mt-3">
@@ -218,7 +224,7 @@ export default function ProjectsTab({ projects, onChange, readOnly = false }: Pr
                       </TableCell>
                       {!readOnly && (
                         <TableCell className="text-right">
-                          <ProjectActions project={p} onEdit={openEdit} onDelete={remove} />
+                          <ProjectActions project={p} onEdit={openEdit} onDelete={remove} onNews={setNewsFor} />
                         </TableCell>
                       )}
                     </TableRow>
@@ -236,6 +242,7 @@ export default function ProjectsTab({ projects, onChange, readOnly = false }: Pr
         onOpenChange={setDialogOpen}
         onSaved={handleSaved}
       />
+      <NewsDialog project={newsFor} onOpenChange={(open) => !open && setNewsFor(null)} />
     </Card>
   );
 }
