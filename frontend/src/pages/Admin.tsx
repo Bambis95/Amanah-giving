@@ -32,6 +32,7 @@ import OverviewTab, { OverviewTarget } from "@/components/admin/OverviewTab";
 import { formatCFA } from "@/components/admin/format";
 import { canEditFinance, canManage as roleCanManage, canReadFinance, isAdminRole, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
 import SiteSettingsTab from "@/components/admin/SiteSettingsTab";
+import DataExportCard from "@/components/admin/DataExportCard";
 import NewsletterTab from "@/components/admin/NewsletterTab";
 import FinanceTab from "@/components/admin/finance/FinanceTab";
 import { cn } from "@/lib/utils";
@@ -323,7 +324,12 @@ export default function AdminPage() {
                     <UsersTab users={users} currentUserId={user.id} currentRole={user.role} onChange={setUsers} />
                   )}
                   {current.id === "audit" && <AuditTab />}
-                  {current.id === "settings" && <SiteSettingsTab />}
+                  {current.id === "settings" && (
+                    <div className="space-y-4">
+                      <SiteSettingsTab />
+                      <DataExportCard />
+                    </div>
+                  )}
                   {current.id === "newsletter" && <NewsletterTab projects={projects} />}
                 </div>
               )}

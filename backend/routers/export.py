@@ -1,0 +1,103 @@
+"""Full data export for administrators: one ZIP with a CSV per table, the photos and the finance documents.
+
+Used as a backup and for the hand-over foreseen by the contract. Secrets are never exported:
+password hashes, session versions, sign-in codes, invitation and reset tokens, unsubscribe tokens.
+"""
+
+import csv
+import io
+import json
+import zipfile
+from datetime import date, datetime, timezone
+
+from core.database import get_db
+from dependencies.auth import get_admin_actor
+from fastapi import APIRouter, Depends, Response
+from models.audit_log import AuditLog
+from models.auth import User
+from models.contact_messages import Contact_messages
+from models.donations import Donations
+from models.finance import FinanceDocument, FinanceEntry, ProjectBudgetLine
+from models.image import StoredImage
+from models.newsletter import NewsletterIssue, Subscriber
+from models.project_update import ProjectUpdate
+from models.projects import Projects
+from models.site_setting import SiteSetting
+from services import audit
+from services.audit import Actor
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+router = APIRouter(prefix="/api/v1/admin/export", tags=["export"])
+
+# file name → (model, columns never exported)
+TABLES = {
+    "campagnes": (Projects, set()),
+    "actualites": (ProjectUpdate, set()),
+    "dons": (Donations, set()),
+    "comptes": (User, {"password_hash", "token_version"}),
+    "messages": (Contact_messages, set()),
+    "finances_ecritures": (FinanceEntry, set()),
+    "finances_budgets": (ProjectBudgetLine, set()),
+    "finances_justificatifs": (FinanceDocument, {"data"}),
+    "photos": (StoredImage, {"data"}),
+    "newsletter_abonnes": (Subscriber, {"token"}),
+    "newsletter_envois": (NewsletterIssue, set()),
+    "reglages_site": (SiteSetting, set()),
+    "journal": (AuditLog, set()),
+}
+
+EXTENSIONS = {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"}
+
+
+def _cell(value):
+    if value is None:
+        return ""
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    return value
+
+
+def _csv(rows, columns) -> bytes:
+    # ";" and a BOM: opens directly in Excel set to French
+    out = io.StringIO()
+    writer = csv.writer(out, delimiter=";")
+    writer.writerow(columns)
+    for row in rows:
+        writer.writerow([_cell(getattr(row, c)) for c in columns])
+    return ("﻿" + out.getvalue()).encode("utf-8")
+
+
+@router.get("")
+async def export_all(db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_admin_actor)):
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    buffer = io.BytesIO()
+    counts = {}
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, (model, hidden) in TABLES.items():
+            columns = [c.name for c in model.__table__.columns if c.name not in hidden]
+            rows = list((await db.execute(select(model))).scalars())
+            counts[name] = len(rows)
+            archive.writestr(f"{name}.csv", _csv(rows, columns))
+        for image in (await db.execute(select(StoredImage))).scalars():
+            archive.writestr(f"fichiers/photos/{image.id}.{EXTENSIONS.get(image.content_type, 'bin')}", image.data)
+        for doc in (await db.execute(select(FinanceDocument))).scalars():
+            archive.writestr(f"fichiers/justificatifs/{doc.id}.{EXTENSIONS.get(doc.content_type, 'bin')}", doc.data)
+        archive.writestr(
+            "LISEZMOI.txt",
+            "Export complet de la plateforme SENJAPO du " + stamp + ".\n\n"
+            "Chaque fichier .csv s'ouvre dans Excel (séparateur « ; »). Les photos et les justificatifs financiers\n"
+            "sont dans le dossier fichiers/, nommés par leur identifiant (colonnes image, gallery, document_id).\n"
+            "Les mots de passe, codes et jetons de sécurité ne sont jamais exportés.\n",
+        )
+    await audit.record(
+        db, actor, "security.data_export", "Export complet des données téléchargé",
+        target_type="export", details=counts,
+    )
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="senjapo-export-{stamp}.zip"', "Cache-Control": "private, no-store"},
+    )

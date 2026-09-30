@@ -282,6 +282,19 @@ export function saveSiteSettings(data: SiteSettings): Promise<SiteSettings> {
   return adminRequest("/site/settings", { method: "PUT", body: JSON.stringify(data) });
 }
 
+/** Full backup (ZIP of CSV files + photos + receipts), administrators only */
+export async function downloadDataExport(): Promise<void> {
+  const response = await apiFetch(`${getAPIBase()}/admin/export`);
+  if (!response.ok) throw new Error(await errorDetail(response, "Export impossible"));
+  const name = response.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1] ?? "senjapo-export.zip";
+  const url = URL.createObjectURL(await response.blob());
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /** Dated news of a campaign ("Les fondations sont posées") */
 export interface CampaignNews {
   id: number;
