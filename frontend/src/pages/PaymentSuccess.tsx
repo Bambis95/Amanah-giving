@@ -18,15 +18,16 @@ function formatCFA(amount: number) {
 
 type State = "loading" | "paid" | "pending" | "failed";
 
-// PayDunya can take a moment to confirm Wave / Orange Money: re-check a few times
-const PENDING_RETRIES = 6;
+// PayDunya / PayTech can take a moment to confirm Wave / Orange Money: re-check a few times
+const PENDING_RETRIES = 8;
 const RETRY_DELAY_MS = 5000;
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id"); // Stripe
-  const donationId = Number(searchParams.get("donation_id")) || null; // PayDunya
-  const isPaydunya = searchParams.get("provider") === "paydunya";
+  const donationId = Number(searchParams.get("donation_id")) || null; // PayDunya / PayTech
+  const providerParam = searchParams.get("provider");
+  const provider = providerParam === "paydunya" || providerParam === "paytech" ? providerParam : null;
 
   const [state, setState] = useState<State>("loading");
   const [message, setMessage] = useState<string | null>(null);
@@ -39,8 +40,8 @@ export default function PaymentSuccessPage() {
     try {
       if (sessionId) {
         result = await api.verifyPayment(sessionId);
-      } else if (isPaydunya && donationId) {
-        result = await api.verifyPaydunyaPayment(donationId);
+      } else if (provider && donationId) {
+        result = await api.verifyMobilePayment(provider, donationId);
       } else {
         setState("failed");
         setMessage("Lien de retour de paiement incomplet.");
@@ -55,7 +56,7 @@ export default function PaymentSuccessPage() {
     if (result.amount !== null) setAmount(result.amount);
     if (result.payment_status === "paid") {
       setState("paid");
-    } else if (result.payment_status === "pending" && isPaydunya) {
+    } else if (result.payment_status === "pending" && provider) {
       setState("pending");
       if (retries.current < PENDING_RETRIES) {
         retries.current += 1;
@@ -69,7 +70,7 @@ export default function PaymentSuccessPage() {
           : "Le paiement n'a pas été confirmé."
       );
     }
-  }, [sessionId, donationId, isPaydunya]);
+  }, [sessionId, donationId, provider]);
 
   useEffect(() => {
     check();

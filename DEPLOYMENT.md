@@ -76,12 +76,39 @@ sont pas chargées en production). Ajoutez les vraies campagnes depuis le tablea
 3. Mettez à jour `FRONTEND_URL` (API) et `VITE_SITE_URL` (site) avec la nouvelle adresse,
    puis redéployez le site. L'API n'a pas besoin de domaine propre.
 
-## 6. Le jour du lancement des dons
+## 6. Paiements avec PayTech
 
-Quand le compte marchand (PayTech ou autre) est validé :
+PayTech (paytech.sn) encaisse Wave, Orange Money, Free Money et la carte bancaire.
 
-1. Render → **senjapo-api** → **Environment** : clés de paiement de production,
-   `DONATIONS_ENABLED` = `true`.
+**Dans le tableau de bord PayTech** → *API & APN* :
+
+| Champ | Valeur |
+|---|---|
+| URL de notification (IPN) | `https://senjapo-api.onrender.com/api/v1/payment/paytech/ipn` |
+| URL de redirection en cas de succès | `https://senjapo.onrender.com/payment/success` |
+| URL de redirection en cas d'annulation | `https://senjapo.onrender.com/payment/cancel` |
+
+(Chaque paiement envoie aussi ses propres adresses ; celles-ci servent de secours.)
+
+**Dans Render** → **senjapo-api** → **Environment** :
+
+| Variable | Valeur |
+|---|---|
+| `PAYMENT_PROVIDER` | `paytech` |
+| `PAYTECH_API_KEY` / `PAYTECH_API_SECRET` | les deux clés de la page *API & APN* (jamais dans un message ni dans Git) |
+| `PAYTECH_ENV` | `test` d'abord (PayTech prélève 100 à 150 FCFA quel que soit le montant), `prod` une fois le compte activé par PayTech |
+| `PAYTECH_IPN_URL` | `https://senjapo-api.onrender.com/api/v1/payment/paytech/ipn` |
+
+Le passage en `prod` demande l'**activation du compte par PayTech** : email à
+contact@paytech.sn, objet « Activation Compte PayTech », avec NINEA, pièce d'identité,
+registre de commerce, statuts, justificatif de domicile, téléphone et description de l'activité.
+
+## 7. Le jour du lancement des dons
+
+Quand le compte marchand est validé :
+
+1. Render → **senjapo-api** → **Environment** : clés de paiement de production
+   (`PAYTECH_ENV` = `prod`), `DONATIONS_ENABLED` = `true`.
 2. **Save changes** : l'API redémarre avec les nouvelles valeurs.
 3. Faites un vrai petit don (500 FCFA) et vérifiez paiement, email, montant de la campagne,
    don visible dans le tableau de bord.

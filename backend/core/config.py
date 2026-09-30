@@ -34,6 +34,17 @@ class Settings(BaseSettings):
     paydunya_token: str = ""
     paydunya_callback_url: str = "http://127.0.0.1:8000/api/v1/payment/paydunya/ipn"
 
+    # Which aggregator takes Wave / Orange Money (and cards when it is PayTech): "paydunya" or "paytech"
+    payment_provider: str = "paydunya"
+
+    # PayTech (paytech.sn): keys from the PayTech dashboard, "API & APN" page.
+    # "test" charges a random 100-150 FCFA whatever the amount; "prod" needs the account activated by PayTech.
+    paytech_env: str = "test"
+    paytech_api_key: str = ""
+    paytech_api_secret: str = ""
+    # Public HTTPS address of POST /api/v1/payment/paytech/ipn (PayTech refuses plain HTTP)
+    paytech_ipn_url: str = ""
+
     # Pre-launch ("bientôt disponible"): false refuses new donations; the site stays visible and
     # payments already started can still be confirmed.
     donations_enabled: bool = True

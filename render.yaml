@@ -74,6 +74,18 @@ services:
       # https://senjapo-api.onrender.com/api/v1/payment/paydunya/ipn
       - key: PAYDUNYA_CALLBACK_URL
         sync: false
+      # PayTech (Wave / Orange Money / Free Money / card), used when PAYMENT_PROVIDER=paytech.
+      # Keys from paytech.sn "API & APN"; PAYTECH_ENV stays "test" until PayTech activates the account.
+      - key: PAYMENT_PROVIDER
+        value: paytech
+      - key: PAYTECH_ENV
+        value: test
+      - key: PAYTECH_API_KEY
+        sync: false
+      - key: PAYTECH_API_SECRET
+        sync: false
+      - key: PAYTECH_IPN_URL
+        value: https://senjapo-api.onrender.com/api/v1/payment/paytech/ipn
       # Optional: card payments (leave empty to keep them unavailable)
       - key: STRIPE_SECRET_KEY
         sync: false

@@ -147,7 +147,7 @@ export default function DonatePage() {
       });
 
       if (response.checkout_url) {
-        // Hosted payment page: Stripe (card) or PayDunya (Wave / Orange Money)
+        // Hosted payment page: PayTech or PayDunya (Wave / Orange Money / card), or Stripe (card)
         window.location.href = response.checkout_url;
         return; // keep the loading state while the browser leaves the page
       } else if (response.instructions) {

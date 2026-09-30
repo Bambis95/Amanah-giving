@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import logging
+import secrets
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -16,6 +17,7 @@ from core.database import get_db
 from services.payment import PaymentService, CheckoutSessionRequest, CheckoutError
 from services.donations import DonationsService
 from services.paydunya import create_checkout, fetch_invoice_status, PayDunyaError
+from services import paytech
 from services.email import prepare_donation_confirmation, send_email
 from dependencies.auth import get_optional_user
 from schemas.auth import UserResponse
@@ -144,19 +146,23 @@ async def apply_paydunya_status(
     if new_status is None:
         raise PayDunyaSettlementError(f"Unknown payment status: {paydunya_status}")
 
+    return await settle_donation(
+        db, donation, new_status,
+        {"payment_provider": "paydunya", "payment_reference": token, "paydunya_token": token},
+        background_tasks,
+    )
+
+
+async def settle_donation(db: AsyncSession, donation, new_status: str, fields: dict, background_tasks: BackgroundTasks) -> str:
+    """Record a provider's verdict on a donation (PayDunya, PayTech).
+
+    A paid donation never goes back to another state; the project credit and the
+    confirmation email happen only on the first transition to paid.
+    """
     if donation.payment_status == "paid":
         return "paid"  # already settled: repeated or late notifications change nothing
 
-    donations_service = DonationsService(db)
-    updated = await donations_service.update(
-        donation.id,
-        {
-            "payment_status": new_status,
-            "payment_provider": "paydunya",
-            "payment_reference": token,
-            "paydunya_token": token,
-        },
-    )
+    updated = await DonationsService(db).update(donation.id, {"payment_status": new_status, **fields})
     if not updated:
         raise RuntimeError(f"Failed to update donation {donation.id}")
 
@@ -250,6 +256,13 @@ async def create_donation_checkout(
         )
 
     donations_service = DonationsService(db)
+
+    # =========================================================
+    # PAYTECH - WAVE / ORANGE MONEY / CARTE
+    # =========================================================
+
+    if settings.payment_provider.lower() == "paytech":
+        return await _paytech_checkout(data, user_id, donations_service)
 
     # =========================================================
     # STRIPE
@@ -570,6 +583,134 @@ async def create_donation_checkout(
                 f"pour effectuer votre paiement via {method_name}."
             ),
         )
+
+
+PAYTECH_METHOD_NAMES = {"wave": "Wave", "orange_money": "Orange Money", "card": "carte bancaire", "stripe": "carte bancaire"}
+
+
+async def _paytech_checkout(
+    data: CreateDonationCheckoutRequest, user_id: Optional[str], donations_service: DonationsService
+) -> CreateDonationCheckoutResponse:
+    """Create the donation (pending), then send the donor to the PayTech checkout page."""
+    method = "card" if data.payment_method == "stripe" else data.payment_method
+    donation = await donations_service.create(
+        {
+            "amount": data.amount,
+            "cause": data.cause,
+            "payment_method": method,
+            "payment_status": "pending",
+            "payment_provider": "paytech",
+            "project_id": data.project_id,
+            "donor_first_name": data.donor_first_name,
+            "donor_last_name": data.donor_last_name,
+            "donor_email": data.donor_email,
+            "donor_phone": data.donor_phone,
+            "message": data.message,
+        },
+        user_id=user_id,
+    )
+    if not donation:
+        raise HTTPException(status_code=500, detail="Le don n'a pas pu être créé.")
+
+    # Unique per payment, even if the database is ever reset: PayTech refuses a reused reference
+    ref_command = f"{settings.site_short_name}-{donation.id}-{secrets.token_hex(4)}"
+    frontend_url = settings.frontend_url.rstrip("/")
+    method_name = PAYTECH_METHOD_NAMES.get(method, method)
+    try:
+        checkout = await paytech.create_payment(
+            amount=data.amount,
+            ref_command=ref_command,
+            item_name=f"Don {settings.site_short_name}",
+            command_name=f"Don {settings.site_short_name} #{donation.id} - {method_name}",
+            success_url=f"{frontend_url}/payment/success?donation_id={donation.id}&provider=paytech",
+            cancel_url=f"{frontend_url}/payment/cancel?donation_id={donation.id}",
+            payment_method=method,
+            custom_field={"donation_id": donation.id},
+        )
+    except paytech.PayTechError as exc:
+        logger.error("PayTech checkout error for donation %s: %s", donation.id, exc)
+        await donations_service.update(donation.id, {"payment_status": "failed"}, user_id=user_id)
+        raise HTTPException(
+            status_code=502,
+            detail="Le paiement est momentanément indisponible. Réessayez dans quelques instants.",
+        ) from exc
+
+    await donations_service.update(
+        donation.id,
+        {"payment_reference": ref_command, "payment_checkout_url": checkout.redirect_url},
+        user_id=user_id,
+    )
+    logger.info("PayTech checkout created: donation_id=%s method=%s", donation.id, method)
+    return CreateDonationCheckoutResponse(
+        checkout_url=checkout.redirect_url,
+        session_id=checkout.token,
+        donation_id=donation.id,
+        payment_method=method,
+        instructions=f"Vous allez être redirigé vers PayTech pour payer par {method_name}.",
+    )
+
+
+# =============================================================
+# PAYTECH IPN
+# =============================================================
+
+PAYTECH_EVENTS = {"sale_complete": "paid", "sale_canceled": "cancelled"}
+
+
+@router.post("/paytech/ipn")
+async def paytech_ipn(request: Request, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+    """PayTech payment notification (form-encoded). The only way a PayTech donation becomes paid."""
+    form = await request.form()
+    fields = {key: str(value) for key, value in form.items()}
+
+    if not paytech.ipn_is_authentic(fields):
+        logger.warning("PayTech IPN rejected: invalid signature")
+        raise HTTPException(status_code=401, detail="Invalid PayTech signature")
+
+    event = fields.get("type_event", "")
+    ref_command = fields.get("ref_command", "")
+    new_status = PAYTECH_EVENTS.get(event)
+    if new_status is None:
+        logger.info("PayTech IPN ignored: event=%s ref=%s", event, ref_command)
+        return {"success": True, "message": "Event ignored"}
+
+    donation = await DonationsService(db).get_by_field("payment_reference", ref_command)
+    if not donation or donation.payment_provider != "paytech":
+        logger.warning("PayTech IPN: donation not found for ref=%s", ref_command)
+        return {"success": False, "message": "Donation not found"}  # 200: nothing to retry
+
+    try:
+        paid_amount = int(float(fields.get("item_price", "")))
+    except ValueError:
+        paid_amount = None
+    if paid_amount != donation.amount:
+        logger.error(
+            "PayTech amount mismatch: donation=%s expected=%s received=%s",
+            donation.id, donation.amount, fields.get("item_price"),
+        )
+        raise HTTPException(status_code=400, detail="Payment amount mismatch")
+
+    status = await settle_donation(db, donation, new_status, {}, background_tasks)
+    logger.info("PayTech IPN processed: donation_id=%s event=%s status=%s", donation.id, event, status)
+    return {"success": True, "donation_id": donation.id, "payment_status": status}
+
+
+class VerifyPayTechRequest(BaseModel):
+    donation_id: int
+
+
+@router.post("/paytech/verify", response_model=VerifyPaymentResponse)
+async def verify_paytech_payment(data: VerifyPayTechRequest, db: AsyncSession = Depends(get_db)):
+    """Status of a PayTech donation for the return page (set by the IPN; only status and amount)."""
+    donation = await DonationsService(db).get_by_id(data.donation_id)
+    if not donation or donation.payment_provider != "paytech":
+        raise HTTPException(status_code=404, detail="Don introuvable")
+    return VerifyPaymentResponse(
+        status=donation.payment_status,
+        payment_status=donation.payment_status,
+        donation_id=donation.id,
+        amount=donation.amount,
+    )
 
 
 # =============================================================

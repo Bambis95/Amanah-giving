@@ -421,8 +421,9 @@ export const api = {
     return response.json();
   },
 
-  async verifyPaydunyaPayment(donationId: number): Promise<VerifyPaymentResponse> {
-    const response = await apiFetch(`${getAPIBase()}/payment/paydunya/verify`, {
+  /** Wave / Orange Money / card through an aggregator: PayDunya asks the provider, PayTech reads the IPN result */
+  async verifyMobilePayment(provider: "paydunya" | "paytech", donationId: number): Promise<VerifyPaymentResponse> {
+    const response = await apiFetch(`${getAPIBase()}/payment/${provider}/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ donation_id: donationId }),
