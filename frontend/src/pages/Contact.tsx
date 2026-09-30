@@ -27,22 +27,23 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "@/api";
 import { cn } from "@/lib/utils";
-import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import { useSiteSettings } from "@/hooks/use-site-settings";
+import type { SiteSettings } from "@/api";
 import { CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 import { softTone, textTone, Tone } from "@/lib/tones";
 
-const contactInfo = [
+const contactCards = (site: SiteSettings) => [
   {
     icon: Phone,
     title: "Téléphone",
-    details: CONTACT_PHONES,
+    details: site.contact_phones,
     subtitle: "",
     tone: "primary" as Tone,
   },
   {
     icon: Mail,
     title: "Email",
-    details: [CONTACT_EMAIL],
+    details: [site.contact_email],
     subtitle: "",
     tone: "info" as Tone,
   },
@@ -72,6 +73,7 @@ const subjects = [
 ];
 
 export default function ContactPage() {
+  const contactInfo = contactCards(useSiteSettings());
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");

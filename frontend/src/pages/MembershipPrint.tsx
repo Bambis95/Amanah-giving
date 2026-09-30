@@ -4,7 +4,7 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
-import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import ContactLine from "@/components/ContactLine";
 import { MEMBER_EXPECTATIONS, MEMBER_PROFILES } from "@/lib/membership";
 
 /*
@@ -125,7 +125,7 @@ export default function MembershipPrintPage() {
           <div className="flex-1 text-[11px] text-slate-700">
             <p className="font-semibold text-slate-900">Vous préférez adhérer en ligne ? Scannez le QR code.</p>
             <p>
-              Contacts : {CONTACT_PHONES.join(" / ")} · {CONTACT_EMAIL}
+              Contacts : <ContactLine link={false} />
             </p>
           </div>
           <div className="w-[48mm] rounded border border-slate-400 p-[2mm] text-[10px] text-slate-600">

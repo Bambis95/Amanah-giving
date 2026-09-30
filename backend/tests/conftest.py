@@ -67,6 +67,7 @@ TABLES = [
     "finance_documents",
     "project_budget_lines",
     "project_updates",
+    "site_settings",
     "contact_messages",
     "donations",
     "projects",

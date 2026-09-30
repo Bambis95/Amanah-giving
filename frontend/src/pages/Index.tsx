@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
 import NotifyForm from "@/components/NotifyForm";
 import LatestNews from "@/components/LatestNews";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 import { api, Project, PublicStats } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
 import { cn } from "@/lib/utils";
@@ -54,6 +56,7 @@ export default function IndexPage() {
   const [featured, setFeatured] = useState<Project[] | null>(null);
   const { stats: platformStats, failed: statsFailed } = usePublicStats();
   const stats = buildStats(platformStats);
+  const site = useSiteSettings();
 
   useEffect(() => {
     async function loadFeatured() {
@@ -83,6 +86,7 @@ export default function IndexPage() {
         />
         <div className="hero-overlay absolute inset-0" aria-hidden="true" />
         <div className="relative z-10 mx-auto max-w-4xl px-4 pb-24 pt-28 text-center text-white sm:pb-28">
+          <AnnouncementBanner text={site.announcement} link={site.announcement_link} />
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
             <HandHeart className="h-4 w-4 text-highlight" aria-hidden="true" />
             <span className="text-sm font-medium">
@@ -96,8 +100,8 @@ export default function IndexPage() {
             </span>
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-white/80 sm:text-xl">
-            Soutenez des projets concrets : jeunes et formation, Daaras, artisans, agriculteurs, femmes et groupements,
-            personnes vulnérables et projets communautaires.
+            {site.hero_subtitle ??
+              "Soutenez des projets concrets : jeunes et formation, Daaras, artisans, agriculteurs, femmes et groupements, personnes vulnérables et projets communautaires."}
           </p>
           <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button asChild size="lg" className="h-14 rounded-xl px-8 text-base font-semibold shadow-lg sm:text-lg">

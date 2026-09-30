@@ -16,6 +16,7 @@ import {
   PieChart,
   RefreshCw,
   ShieldAlert,
+  SlidersHorizontal,
   Users,
   Wallet,
 } from "lucide-react";
@@ -28,12 +29,13 @@ import UsersTab from "@/components/admin/UsersTab";
 import AuditTab from "@/components/admin/AuditTab";
 import OverviewTab, { OverviewTarget } from "@/components/admin/OverviewTab";
 import { formatCFA } from "@/components/admin/format";
-import { canEditFinance, canManage as roleCanManage, canReadFinance, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
+import { canEditFinance, canManage as roleCanManage, canReadFinance, isAdminRole, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
+import SiteSettingsTab from "@/components/admin/SiteSettingsTab";
 import FinanceTab from "@/components/admin/finance/FinanceTab";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
 
-type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit";
+type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit" | "settings";
 
 interface StatTileProps {
   icon: React.ElementType;
@@ -150,6 +152,7 @@ export default function AdminPage() {
       ? [
           { id: "users" as Section, label: "Membres & comptes", icon: Users, count: users.length },
           { id: "audit" as Section, label: "Journal", icon: History },
+          ...(isAdminRole(user.role) ? [{ id: "settings" as Section, label: "Réglages du site", icon: SlidersHorizontal }] : []),
         ]
       : []),
   ];
@@ -317,6 +320,7 @@ export default function AdminPage() {
                     <UsersTab users={users} currentUserId={user.id} currentRole={user.role} onChange={setUsers} />
                   )}
                   {current.id === "audit" && <AuditTab />}
+                  {current.id === "settings" && <SiteSettingsTab />}
                 </div>
               )}
             </>

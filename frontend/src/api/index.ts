@@ -214,6 +214,30 @@ export interface FinanceSummary {
   }[];
 }
 
+/** Contacts, social links and home texts, editable by admins (Réglages du site) */
+export interface SiteSettings {
+  contact_email: string;
+  contact_phones: string[];
+  whatsapp_number: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  tiktok_url: string | null;
+  youtube_url: string | null;
+  hero_subtitle: string | null;
+  announcement: string | null;
+  announcement_link: string | null;
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const response = await apiFetch(`${getAPIBase()}/site/settings`);
+  if (!response.ok) throw new Error("Failed to fetch site settings");
+  return response.json();
+}
+
+export function saveSiteSettings(data: SiteSettings): Promise<SiteSettings> {
+  return adminRequest("/site/settings", { method: "PUT", body: JSON.stringify(data) });
+}
+
 /** Dated news of a campaign ("Les fondations sont posées") */
 export interface CampaignNews {
   id: number;

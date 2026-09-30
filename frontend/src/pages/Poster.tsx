@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useVisitSource } from "@/hooks/use-visit-source";
 import { BRAND_DESCRIPTOR, BRAND_NAME, BRAND_SLOGAN, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
-import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import ContactLine from "@/components/ContactLine";
 
 /*
  * Printable A4 poster (/affiche?source=foire-thies) with a QR code to the home page.
@@ -94,7 +94,7 @@ export default function PosterPage() {
           <img src="/partners/diaayma-local.jpg" alt={PARTNER_NAME} className="h-[16mm] w-auto" />
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-base font-semibold text-slate-800">
-              {CONTACT_PHONES.join(" / ")} · {CONTACT_EMAIL}
+              <ContactLine link={false} />
             </p>
             <p>
               Une initiative du {CARRIER_SHORT} (récépissé {CARRIER_RECEIPT}), en partenariat avec {PARTNER_NAME}.

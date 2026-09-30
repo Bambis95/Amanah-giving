@@ -1,12 +1,10 @@
 import { Link } from "react-router-dom";
 import LegalLayout, { LegalSection } from "@/components/LegalLayout";
-import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import ContactLine, { ContactEmail } from "@/components/ContactLine";
 import { BRAND_DESCRIPTOR, BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_LEGAL } from "@/lib/brand";
 
 // The donation rules below mirror the backend (routers/payment_checkout.py): keep them in sync.
 const UPDATED = "27 septembre 2026";
-
-const email = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 
 const sections: LegalSection[] = [
   {
@@ -17,7 +15,7 @@ const sections: LegalSection[] = [
         La plateforme <strong>{BRAND_NAME}</strong> – {BRAND_DESCRIPTOR} est éditée par le{" "}
         <strong>{CARRIER_NAME} ({CARRIER_SHORT})</strong>, récépissé {CARRIER_RECEIPT}, en partenariat avec{" "}
         {PARTNER_LEGAL.fullName} ({PARTNER_LEGAL.form}, RCCM {PARTNER_LEGAL.rccm}, NINEA {PARTNER_LEGAL.ninea}, siège :{" "}
-        {PARTNER_LEGAL.seat}). Contact : {email} · {CONTACT_PHONES.join(" / ")}.
+        {PARTNER_LEGAL.seat}). Contact : <ContactLine />.
       </p>
     ),
   },
@@ -95,7 +93,7 @@ const sections: LegalSection[] = [
       <>
         <p>
           Un don est en principe définitif. Nous remboursons toutefois un don fait par erreur (mauvais montant, paiement
-          en double) ou un paiement non autorisé, sur demande envoyée à {email} dans les <strong>30 jours</strong>, en
+          en double) ou un paiement non autorisé, sur demande envoyée à <ContactEmail /> dans les <strong>30 jours</strong>, en
           indiquant la référence du don (par exemple {BRAND_NAME}-000123) figurant dans l'email de confirmation.
         </p>
         <p>

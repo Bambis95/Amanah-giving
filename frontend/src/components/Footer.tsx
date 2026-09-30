@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { BadgeCheck, Phone, Mail } from "lucide-react";
+import { BadgeCheck, Facebook, Instagram, Mail, MessageCircle, Music2, Phone, Youtube } from "lucide-react";
 import Logo from "@/components/Logo";
-import { CONTACT_EMAIL, CONTACT_PHONES, telHref } from "@/lib/contact";
+import { telHref } from "@/lib/contact";
+import { useSiteSettings, whatsappHref } from "@/hooks/use-site-settings";
 import { BRAND_NAME, BRAND_SLOGAN, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_LEGAL, PARTNER_NAME } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
 
@@ -23,6 +24,14 @@ const linkClass = "text-sm text-white/65 transition-colors hover:text-white";
 
 // Dark in both themes (surface-footer): texts use white with opacity for contrast
 export default function Footer() {
+  const site = useSiteSettings();
+  const socials = [
+    { url: site.facebook_url, label: "Facebook", icon: Facebook },
+    { url: site.instagram_url, label: "Instagram", icon: Instagram },
+    { url: site.tiktok_url, label: "TikTok", icon: Music2 },
+    { url: site.youtube_url, label: "YouTube", icon: Youtube },
+  ].filter((s): s is typeof s & { url: string } => !!s.url);
+
   return (
     <footer className="surface-footer">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
@@ -76,17 +85,25 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <Phone className="mt-0.5 h-4 w-4 shrink-0 text-highlight" aria-hidden="true" />
                 <div className="flex flex-col gap-1">
-                  {CONTACT_PHONES.map((phone) => (
+                  {site.contact_phones.map((phone) => (
                     <a key={phone} href={telHref(phone)} className="transition-colors hover:text-white">
                       {phone}
                     </a>
                   ))}
                 </div>
               </li>
+              {site.whatsapp_number && (
+                <li className="flex items-start gap-3">
+                  <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-highlight" aria-hidden="true" />
+                  <a href={whatsappHref(site.whatsapp_number)} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white">
+                    Nous écrire sur WhatsApp
+                  </a>
+                </li>
+              )}
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-highlight" aria-hidden="true" />
-                <a href={`mailto:${CONTACT_EMAIL}`} className="break-all transition-colors hover:text-white">
-                  {CONTACT_EMAIL}
+                <a href={`mailto:${site.contact_email}`} className="break-all transition-colors hover:text-white">
+                  {site.contact_email}
                 </a>
               </li>
               <li className="flex items-start gap-3">
@@ -98,6 +115,23 @@ export default function Footer() {
                 </span>
               </li>
             </ul>
+            {socials.length > 0 && (
+              <ul className="flex gap-2" aria-label="Réseaux sociaux">
+                {socials.map((s) => (
+                  <li key={s.label}>
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+                      aria-label={`${BRAND_NAME} sur ${s.label}`}
+                    >
+                      <s.icon className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

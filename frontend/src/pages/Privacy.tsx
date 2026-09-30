@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
 import LegalLayout, { LegalSection } from "@/components/LegalLayout";
-import { CONTACT_EMAIL, CONTACT_PHONES } from "@/lib/contact";
+import ContactLine, { ContactEmail } from "@/components/ContactLine";
 import { BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT } from "@/lib/brand";
 
 // Describes what the site actually collects and stores (see backend models, services/login_throttle.py,
 // core/session.py). Update this page whenever that changes.
 const UPDATED = "27 septembre 2026";
-
-const email = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 
 const sections: LegalSection[] = [
   {
@@ -17,7 +15,7 @@ const sections: LegalSection[] = [
       <p>
         Les données personnelles collectées sur {BRAND_NAME} sont traitées par le{" "}
         <strong>{CARRIER_NAME} ({CARRIER_SHORT})</strong>, récépissé {CARRIER_RECEIPT}, porteur de la plateforme.
-        Pour toute question sur vos données : {email} ou {CONTACT_PHONES.join(" / ")}.
+        Pour toute question sur vos données : <ContactLine separator=" ou " />.
       </p>
     ),
   },
@@ -155,7 +153,7 @@ const sections: LegalSection[] = [
       <>
         <p>
           Vous pouvez à tout moment demander l'accès à vos données, leur rectification, leur suppression, ou vous opposer
-          à leur traitement, en écrivant à {email}. Nous répondons dans un délai d'un mois. Les données de dons soumises à
+          à leur traitement, en écrivant à <ContactEmail />. Nous répondons dans un délai d'un mois. Les données de dons soumises à
           une obligation comptable ne peuvent pas être supprimées avant la fin de leur durée de conservation.
         </p>
         <p>

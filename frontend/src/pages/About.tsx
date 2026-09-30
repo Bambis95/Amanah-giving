@@ -17,7 +17,8 @@ import {
   PARTNER_NAME,
 } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
-import { CONTACT_EMAIL, CONTACT_PHONES, telHref } from "@/lib/contact";
+import { telHref } from "@/lib/contact";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 import {
   ArrowRight,
   BadgeCheck,
@@ -58,6 +59,7 @@ const milestones = [
 ];
 
 export default function AboutPage() {
+  const site = useSiteSettings();
   const { stats, failed: statsFailed } = usePublicStats();
   const figures = [
     { value: formatNumber(stats?.donors ?? 0), label: plural(stats?.donors ?? 0, "Contributeur", "Contributeurs"), tone: "primary" as Tone },
@@ -156,7 +158,7 @@ export default function AboutPage() {
                 <div>
                   <dt className="text-muted-foreground">Contacts</dt>
                   <dd className="font-medium text-foreground">
-                    {CONTACT_PHONES.map((p, i) => (
+                    {site.contact_phones.map((p, i) => (
                       <span key={p}>
                         {i > 0 && " / "}
                         <a href={telHref(p)} className="hover:text-primary">{p}</a>
@@ -167,7 +169,7 @@ export default function AboutPage() {
                 <div>
                   <dt className="text-muted-foreground">E-mail</dt>
                   <dd className="break-all font-medium text-foreground">
-                    <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-primary">{CONTACT_EMAIL}</a>
+                    <a href={`mailto:${site.contact_email}`} className="hover:text-primary">{site.contact_email}</a>
                   </dd>
                 </div>
               </dl>
