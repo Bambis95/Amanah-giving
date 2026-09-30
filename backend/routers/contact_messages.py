@@ -14,6 +14,10 @@ from services import audit
 from services.audit import Actor
 from schemas.auth import UserResponse
 from services.contact_messages import Contact_messagesService
+from services import newsletter
+
+# Subject of the "keep me informed" form (frontend/src/components/NotifyForm.tsx)
+NOTIFY_SUBJECT = "notify"
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -241,7 +245,14 @@ async def create_contact_messages(
         result = await service.create(data.model_dump(exclude_none=True))
         if not result:
             raise HTTPException(status_code=400, detail="Failed to create contact_messages")
-        
+
+        # "Keep me informed" with an email = consent to receive the newsletter
+        if data.subject == NOTIFY_SUBJECT and data.email:
+            try:
+                await newsletter.subscribe(db, data.email, data.name, "notify")
+            except Exception:
+                logger.exception("Newsletter subscription failed for a notify request")
+
         logger.info(f"Contact_messages created successfully with id: {result.id}")
         return result
     except ValueError as e:

@@ -74,6 +74,8 @@ export interface DonationCheckoutRequest {
   donor_email?: string;
   donor_phone?: string;
   message?: string;
+  /** Opt-in: receive the newsletter */
+  newsletter?: boolean;
 }
 
 export interface DonationCheckoutResponse {
@@ -212,6 +214,45 @@ export interface FinanceSummary {
     available: number;
     budget: number;
   }[];
+}
+
+// ---------- Newsletter ----------
+export interface NewsletterOverview {
+  active: number;
+  unsubscribed: number;
+  by_source: Record<string, number>;
+  max_recipients: number;
+  email_enabled: boolean;
+  issues: { id: number; subject: string; recipients: number; sent_at: string; sent_by: string | null }[];
+}
+
+export interface NewsletterDraft {
+  subject: string;
+  body: string;
+  project_id: number | null;
+}
+
+export const newsletterApi = {
+  overview(): Promise<NewsletterOverview> {
+    return adminRequest("/newsletter/overview");
+  },
+  test(draft: NewsletterDraft): Promise<{ message: string }> {
+    return adminRequest("/newsletter/test", { method: "POST", body: JSON.stringify(draft) });
+  },
+  send(draft: NewsletterDraft): Promise<{ message: string; recipients: number }> {
+    return adminRequest("/newsletter/send", { method: "POST", body: JSON.stringify(draft) });
+  },
+};
+
+/** Public: the one-click unsubscribe link of every newsletter */
+export async function unsubscribeNewsletter(token: string): Promise<string> {
+  const response = await apiFetch(`${getAPIBase()}/newsletter/unsubscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!response.ok) throw new Error(await errorDetail(response, "Lien invalide"));
+  return (await response.json()).message;
 }
 
 /** Contacts, social links and home texts, editable by admins (Réglages du site) */

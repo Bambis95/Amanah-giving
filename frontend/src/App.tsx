@@ -16,6 +16,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AcceptInvitation from './pages/AcceptInvitation';
 import Account from './pages/Account';
+import Unsubscribe from './pages/Unsubscribe';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Join from './pages/Join';
@@ -56,6 +57,7 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/invitation" element={<AcceptInvitation />} />
           <Route path="/mon-espace" element={<Account />} />
+          <Route path="/desabonnement" element={<Unsubscribe />} />
           <Route path="/" element={<Index />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/projects" element={<Projects />} />

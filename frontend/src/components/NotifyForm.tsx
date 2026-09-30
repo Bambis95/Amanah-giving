@@ -80,6 +80,9 @@ export default function NotifyForm({ className, stacked = false }: { className?:
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BellRing className="mr-2 h-4 w-4" />}
         Me tenir informé
       </Button>
+      <p className="text-xs text-muted-foreground">
+        Avec un email, vous recevrez aussi nos nouvelles par email ; chaque message permet de se désabonner en un clic.
+      </p>
     </form>
   );
 }

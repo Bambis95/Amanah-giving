@@ -17,7 +17,7 @@ from core.database import get_db
 from services.payment import PaymentService, CheckoutSessionRequest, CheckoutError
 from services.donations import DonationsService
 from services.paydunya import create_checkout, fetch_invoice_status, PayDunyaError
-from services import paytech
+from services import newsletter, paytech
 from routers.site import load_site_settings
 
 # Donations whose cause is this are club membership fees (Adhérer page), counted apart in the accounts
@@ -51,6 +51,8 @@ class CreateDonationCheckoutRequest(BaseModel):
     donor_email: Optional[EmailStr] = None
     donor_phone: Optional[str] = None
     message: Optional[str] = None
+    # Opt-in box of the donation form: receive the newsletter
+    newsletter: bool = False
 
 
 class CreateDonationCheckoutResponse(BaseModel):
@@ -268,6 +270,14 @@ async def create_donation_checkout(
         )
 
     donations_service = DonationsService(db)
+
+    # The donor ticked "receive the news": explicit consent, kept even if the payment is abandoned
+    newsletter_email = data.donor_email or (current_user.email if current_user else None)
+    if data.newsletter and newsletter_email:
+        try:
+            await newsletter.subscribe(db, newsletter_email, data.donor_first_name, "donation")
+        except Exception:
+            logger.exception("Newsletter subscription failed during checkout")
 
     # =========================================================
     # PAYTECH - WAVE / ORANGE MONEY / CARTE

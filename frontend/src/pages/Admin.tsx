@@ -15,6 +15,7 @@ import {
   Mail,
   PieChart,
   RefreshCw,
+  Send,
   ShieldAlert,
   SlidersHorizontal,
   Users,
@@ -31,11 +32,12 @@ import OverviewTab, { OverviewTarget } from "@/components/admin/OverviewTab";
 import { formatCFA } from "@/components/admin/format";
 import { canEditFinance, canManage as roleCanManage, canReadFinance, isAdminRole, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
 import SiteSettingsTab from "@/components/admin/SiteSettingsTab";
+import NewsletterTab from "@/components/admin/NewsletterTab";
 import FinanceTab from "@/components/admin/finance/FinanceTab";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
 
-type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit" | "settings";
+type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit" | "settings" | "newsletter";
 
 interface StatTileProps {
   icon: React.ElementType;
@@ -146,6 +148,7 @@ export default function AdminPage() {
     { id: "overview", label: "Vue d'ensemble", icon: PieChart },
     { id: "donations", label: "Dons", icon: Heart, count: manager && pendingDeposits ? pendingDeposits : donations.length, alert: manager && pendingDeposits > 0 },
     ...(manager ? [{ id: "messages" as Section, label: "Messages", icon: Mail, count: unread || undefined, alert: unread > 0 }] : []),
+    ...(manager ? [{ id: "newsletter" as Section, label: "Newsletter", icon: Send }] : []),
     { id: "projects", label: "Campagnes", icon: FolderOpen, count: projects.length },
     ...(canReadFinance(user.role) ? [{ id: "finances" as Section, label: "Finances", icon: Landmark }] : []),
     ...(manager
@@ -321,6 +324,7 @@ export default function AdminPage() {
                   )}
                   {current.id === "audit" && <AuditTab />}
                   {current.id === "settings" && <SiteSettingsTab />}
+                  {current.id === "newsletter" && <NewsletterTab projects={projects} />}
                 </div>
               )}
             </>

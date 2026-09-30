@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,6 +83,7 @@ export default function DonatePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [newsletter, setNewsletter] = useState(false);
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -142,6 +144,7 @@ export default function DonatePage() {
         donor_first_name: firstName || undefined,
         donor_last_name: lastName || undefined,
         donor_email: email.trim() || user?.email || undefined,
+        newsletter,
         donor_phone: phone || undefined,
         message: message || undefined,
       });
@@ -496,6 +499,14 @@ export default function DonatePage() {
                     ? "Laissez vide pour utiliser l'email de votre compte."
                     : "Obligatoire pour que nous puissions vous contacter au sujet de votre don."}
                 </p>
+                {/* Explicit consent, unticked by default: only then does the donor receive the newsletter */}
+                <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-foreground/80">
+                  <Checkbox checked={newsletter} onCheckedChange={(v) => setNewsletter(v === true)} className="mt-0.5" />
+                  <span>
+                    Je souhaite recevoir par email les nouvelles des campagnes (quelques emails par an, désabonnement en un
+                    clic).
+                  </span>
+                </label>
               </div>
               <div>
                 <Label htmlFor="phone">Téléphone</Label>

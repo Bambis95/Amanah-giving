@@ -68,6 +68,8 @@ TABLES = [
     "project_budget_lines",
     "project_updates",
     "site_settings",
+    "newsletter_subscribers",
+    "newsletter_issues",
     "contact_messages",
     "donations",
     "projects",
@@ -115,6 +117,15 @@ def sent_emails(monkeypatch):
 
     monkeypatch.setattr(routers.auth, "send_email", fake_send)
     monkeypatch.setattr(routers.invitations, "send_email", fake_send)
+    import services.newsletter
+
+    def fake_deliver(message, context):
+        sent.append(message)
+        return True
+
+    monkeypatch.setattr(services.newsletter.mail, "deliver", fake_deliver)
+    monkeypatch.setattr(services.newsletter.mail, "send_email", fake_send)
+    monkeypatch.setattr(services.newsletter, "PAUSE_SECONDS", 0)
     monkeypatch.setattr(routers.payment_checkout, "send_email", fake_send)
     monkeypatch.setattr(routers.mobile_deposits, "send_email", fake_send)
     return sent
