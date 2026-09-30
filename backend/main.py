@@ -124,7 +124,7 @@ from routers.storage import router as storage_router
 from routers.user import router as user_router
 from routers.invitations import router as invitations_router
 from routers.images import router as images_router
-from routers.finance import router as finance_router
+from routers.finance import public_router as transparency_router, router as finance_router
 
 
 # ============================================================
@@ -148,6 +148,7 @@ app.include_router(mobile_deposits_router)
 app.include_router(invitations_router)
 app.include_router(images_router)
 app.include_router(finance_router)
+app.include_router(transparency_router)
 
 
 # ============================================================

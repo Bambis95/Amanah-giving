@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Eye, FolderOpen, Heart, TrendingUp, Users } from "lucide-react";
-import { api, Project } from "@/api";
+import { api, getPublicSpending, Project, PublicSpending } from "@/api";
 import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
 import { categoryLabel } from "@/lib/categories";
 import { BRAND_NAME } from "@/lib/brand";
@@ -17,13 +17,21 @@ const statusLabels: Record<string, string> = { active: "En cours", completed: "T
 export default function TransparencyPage() {
   const { stats, failed } = usePublicStats();
   const [projects, setProjects] = useState<Project[] | null>(null);
+  const [spending, setSpending] = useState<PublicSpending | null>(null);
 
   useEffect(() => {
     api
       .getProjects()
       .then((res) => setProjects(res.items.filter((p) => p.status !== "paused")))
       .catch(() => setProjects([]));
+    getPublicSpending()
+      .then(setSpending)
+      .catch(() => setSpending(null));
   }, []);
+
+  const spendingOf = (id: number) => spending?.projects.find((s) => s.project_id === id);
+  const spentCategories = Object.entries(spending?.by_category ?? {});
+  const maxCategory = Math.max(1, ...spentCategories.map(([, v]) => v));
 
   const figures: { icon: React.ElementType; value: string; label: string; tone: Tone }[] = [
     { icon: Heart, value: `${formatAmount(stats?.total_raised ?? 0)} FCFA`, label: "Collectés en ligne", tone: "highlight" },
@@ -70,6 +78,35 @@ export default function TransparencyPage() {
 
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
+          {spending && spending.total_spent > 0 && (
+            <div className="mb-12">
+              <h2 className="mb-2 text-2xl font-bold text-foreground">Utilisation des fonds</h2>
+              <p className="mb-6 text-muted-foreground">
+                <strong className="text-foreground">{formatNumber(spending.total_spent)} FCFA</strong> déjà dépensés pour les
+                campagnes, justificatifs à l'appui, répartis ainsi :
+              </p>
+              <Card className="shadow-sm">
+                <CardContent className="p-4 sm:p-6">
+                  <ul className="space-y-3">
+                    {spentCategories.map(([label, amount]) => (
+                      <li key={label}>
+                        <div className="mb-1 flex justify-between gap-3 text-sm">
+                          <span className="text-foreground">{label}</span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">
+                            {formatNumber(amount)} FCFA · {Math.round((amount / spending.total_spent) * 100)} %
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(2, (amount / maxCategory) * 100)}%` }} />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <h2 className="mb-2 text-2xl font-bold text-foreground">Avancement des campagnes</h2>
           <p className="mb-6 text-muted-foreground">
             Montant collecté par rapport à l'objectif de chaque campagne, mis à jour à chaque don confirmé.
@@ -110,6 +147,29 @@ export default function TransparencyPage() {
                           {pct} % · {formatNumber(p.donors ?? 0)} {plural(p.donors ?? 0, "donateur", "donateurs")}
                         </span>
                       </div>
+                      {(() => {
+                        const s = spendingOf(p.id);
+                        if (!s || (!s.spent && !s.other_income && !s.budget)) return null;
+                        const categories = Object.entries(s.by_category);
+                        return (
+                          <div className="mt-3 border-t border-border pt-3 text-sm">
+                            <p className="text-foreground/80">
+                              <strong className="text-foreground">{formatNumber(s.spent)} FCFA dépensés</strong>
+                              {s.budget > 0 && <> sur un budget de {formatNumber(s.budget)} FCFA</>}
+                              {s.other_income > 0 && <> · {formatNumber(s.other_income)} FCFA d'autres financements</>}
+                            </p>
+                            {categories.length > 0 && (
+                              <ul className="mt-2 flex flex-wrap gap-2" aria-label="Dépenses par catégorie">
+                                {categories.map(([label, amount]) => (
+                                  <li key={label} className="rounded-full bg-muted px-2.5 py-1 text-xs text-foreground/80">
+                                    {label} : <span className="tabular-nums">{formatNumber(amount)} FCFA</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </CardContent>
                   </Card>
                 );
@@ -122,6 +182,7 @@ export default function TransparencyPage() {
             <ul className="list-disc space-y-1.5 pl-5">
               <li>Seuls les paiements confirmés par nos prestataires (Wave, Orange Money, carte) sont comptés.</li>
               <li>Chaque campagne est vérifiée et validée avant sa publication.</li>
+              <li>Chaque dépense est enregistrée par la trésorerie avec son justificatif, et publiée ici par grande catégorie.</li>
               <li>Chaque don est affecté à la campagne ou à la cause choisie par le contributeur ; les dons généraux sont répartis selon les besoins.</li>
               <li>
                 Les règles complètes figurent dans nos <Link to="/conditions" className="text-primary hover:underline">conditions d'utilisation</Link>.

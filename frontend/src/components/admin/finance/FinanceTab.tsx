@@ -8,6 +8,7 @@ import SummaryPanel from "./SummaryPanel";
 import EntriesPanel from "./EntriesPanel";
 import BudgetsPanel from "./BudgetsPanel";
 import ReconciliationPanel from "./ReconciliationPanel";
+import ReportCard from "./ReportCard";
 
 interface FinanceTabProps {
   projects: Project[];
@@ -80,7 +81,8 @@ export default function FinanceTab({ projects, canEdit }: FinanceTabProps) {
         </p>
       )}
 
-      <TabsContent value="summary" className="mt-0">
+      <TabsContent value="summary" className="mt-0 space-y-4">
+        <ReportCard year={year} projects={projects} />
         <SummaryPanel year={year} meta={meta} onGo={setView} />
       </TabsContent>
       <TabsContent value="entries" className="mt-0">

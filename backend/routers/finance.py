@@ -426,6 +426,125 @@ async def reconcile(
     return {"id": donation.id, "reconciled_at": donation.reconciled_at}
 
 
+# ---------- public transparency ----------
+
+public_router = APIRouter(prefix="/api/v1/transparency", tags=["transparency"])
+
+
+@public_router.get("/spending")
+async def public_spending(db: AsyncSession = Depends(get_db)):
+    """Public: how the money of each published campaign is used, as totals per spending category.
+
+    Only aggregates are published: never entry labels, payees, references or documents.
+    """
+    active = FinanceEntry.cancelled_at.is_(None)
+    visible = select(Projects.id).where((Projects.status.is_(None)) | (Projects.status != "paused"))
+    spent = (await db.execute(
+        select(FinanceEntry.project_id, FinanceEntry.category, func.sum(FinanceEntry.amount))
+        .where(active, FinanceEntry.kind == "expense", FinanceEntry.project_id.in_(visible))
+        .group_by(FinanceEntry.project_id, FinanceEntry.category)
+    )).all()
+    other_income = dict((await db.execute(
+        select(FinanceEntry.project_id, func.sum(FinanceEntry.amount))
+        .where(active, FinanceEntry.kind == "income", FinanceEntry.project_id.in_(visible))
+        .group_by(FinanceEntry.project_id)
+    )).all())
+    budgets = dict((await db.execute(
+        select(ProjectBudgetLine.project_id, func.sum(ProjectBudgetLine.planned_amount))
+        .where(ProjectBudgetLine.project_id.in_(visible)).group_by(ProjectBudgetLine.project_id)
+    )).all())
+
+    projects: dict = {}
+    for project_id, category, amount in spent:
+        entry = projects.setdefault(project_id, {"spent": 0, "by_category": {}})
+        entry["spent"] += int(amount)
+        entry["by_category"][EXPENSE_CATEGORIES.get(category, category)] = int(amount)
+    for project_id in set(other_income) | set(budgets):
+        projects.setdefault(project_id, {"spent": 0, "by_category": {}})
+
+    totals_by_category: dict = {}
+    for data in projects.values():
+        for label, amount in data["by_category"].items():
+            totals_by_category[label] = totals_by_category.get(label, 0) + amount
+    return {
+        "projects": [
+            {
+                "project_id": pid,
+                "spent": data["spent"],
+                "other_income": int(other_income.get(pid) or 0),
+                "budget": int(budgets.get(pid) or 0),
+                "by_category": dict(sorted(data["by_category"].items(), key=lambda kv: -kv[1])),
+            }
+            for pid, data in projects.items()
+        ],
+        "total_spent": sum(d["spent"] for d in projects.values()),
+        "by_category": dict(sorted(totals_by_category.items(), key=lambda kv: -kv[1])),
+    }
+
+
+# ---------- PDF report ----------
+
+@router.get("/reports/pdf")
+async def report_pdf(
+    project_id: Optional[int] = None,
+    year: Optional[int] = Query(None, ge=2000, le=2100),
+    db: AsyncSession = Depends(get_db),
+    reader: UserResponse = Depends(get_finance_reader),
+):
+    """Financial report of one campaign (or of the whole platform), for partners and authorities."""
+    from services.finance_report import build_finance_report
+
+    project = None
+    if project_id is not None:
+        project = await db.get(Projects, project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Campagne introuvable")
+
+    paid = [Donations.payment_status == "paid", *_year_filter(Donations.created_at, year)]
+    entry_filter = [FinanceEntry.cancelled_at.is_(None), *_year_filter(FinanceEntry.entry_date, year)]
+    if project:
+        paid.append(Donations.project_id == project.id)
+        entry_filter.append(FinanceEntry.project_id == project.id)
+    donations_total, donations_count = (await db.execute(
+        select(func.coalesce(func.sum(Donations.amount), 0), func.count(Donations.id)).where(*paid)
+    )).one()
+    by_method = dict((await db.execute(
+        select(Donations.payment_method, func.sum(Donations.amount)).where(*paid).group_by(Donations.payment_method)
+    )).all())
+    entries = (await db.execute(
+        select(FinanceEntry, Projects.title).outerjoin(Projects, Projects.id == FinanceEntry.project_id)
+        .where(*entry_filter).order_by(FinanceEntry.entry_date, FinanceEntry.id)
+    )).all()
+    budget = []
+    if project:
+        budget = list((await db.execute(
+            select(ProjectBudgetLine).where(ProjectBudgetLine.project_id == project.id).order_by(ProjectBudgetLine.position)
+        )).scalars())
+
+    pdf = build_finance_report(
+        project=project,
+        year=year,
+        donations_total=int(donations_total),
+        donations_count=donations_count,
+        donations_by_method={k: int(v) for k, v in by_method.items()},
+        entries=[(e, title) for e, title in entries],
+        budget=budget,
+        income_labels=INCOME_CATEGORIES,
+        expense_labels=EXPENSE_CATEGORIES,
+        method_labels=PAYMENT_METHODS,
+        author=reader.name or reader.email,
+    )
+    slug = f"campagne-{project.id}" if project else "general"
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="rapport-financier-{slug}-{year or "toutes-annees"}.pdf"',
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
 # ---------- summary ----------
 
 @router.get("/summary")

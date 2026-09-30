@@ -214,6 +214,19 @@ export interface FinanceSummary {
   }[];
 }
 
+/** Public: how each campaign's money is spent, as totals per category only */
+export interface PublicSpending {
+  projects: { project_id: number; spent: number; other_income: number; budget: number; by_category: Record<string, number> }[];
+  total_spent: number;
+  by_category: Record<string, number>;
+}
+
+export async function getPublicSpending(): Promise<PublicSpending> {
+  const response = await apiFetch(`${getAPIBase()}/transparency/spending`);
+  if (!response.ok) throw new Error("Failed to fetch spending");
+  return response.json();
+}
+
 export const financeApi = {
   meta(): Promise<FinanceMeta> {
     return adminRequest("/finance/meta");
@@ -271,6 +284,22 @@ export const financeApi = {
 
   reconciliation(state: "pending" | "done" | "all", year: number | null): Promise<ReconciliationRow[]> {
     return adminRequest(`/finance/reconciliation?state=${state}${year ? `&year=${year}` : ""}`);
+  },
+
+  /** Financial report (PDF) of one campaign, or of the whole platform when projectId is null */
+  async downloadReport(projectId: number | null, year: number | null): Promise<void> {
+    const params = new URLSearchParams();
+    if (projectId) params.set("project_id", String(projectId));
+    if (year) params.set("year", String(year));
+    const response = await apiFetch(`${getAPIBase()}/finance/reports/pdf?${params}`);
+    if (!response.ok) throw new Error(await errorDetail(response, "Rapport indisponible"));
+    const name = response.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1] ?? "rapport-financier.pdf";
+    const url = URL.createObjectURL(await response.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
   },
 
   reconcile(donationId: number, reconciled: boolean): Promise<{ id: number; reconciled_at: string | null }> {

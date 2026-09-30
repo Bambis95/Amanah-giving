@@ -177,6 +177,24 @@ def test_budget_reconciliation_and_summary(client, admin):
         "received": 525_000, "spent": 200_000, "available": 325_000, "budget": 120_000_000,
     }
 
+    # PDF report: one campaign, and the whole platform
+    for params in ({"project_id": project["id"], "year": date.today().year}, {}):
+        r = client.get("/api/v1/finance/reports/pdf", params=params)
+        assert r.status_code == 200 and r.content.startswith(b"%PDF"), params
+    assert client.get("/api/v1/finance/reports/pdf", params={"project_id": 999999}).status_code == 404
+
+    # Public transparency: totals per category only, nothing private
+    client.cookies.clear()
+    public = client.get("/api/v1/transparency/spending").json()
+    assert public["total_spent"] == 200_000
+    assert public["by_category"] == {"Équipement et matériel": 200_000}
+    row = next(p for p in public["projects"] if p["project_id"] == project["id"])
+    assert row == {"project_id": project["id"], "spent": 200_000, "other_income": 500_000, "budget": 120_000_000,
+                   "by_category": {"Équipement et matériel": 200_000}}
+    assert "Tables et bancs" not in str(public) and "Subvention mairie" not in str(public)
+    assert client.get("/api/v1/finance/reports/pdf").status_code == 401
+
     # Another year shows nothing
+    login(client, "tresorier@example.com")
     empty = client.get("/api/v1/finance/summary", params={"year": 2001}).json()
     assert empty["balance"] == 0 and empty["donations"]["count"] == 0
