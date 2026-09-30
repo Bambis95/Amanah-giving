@@ -1,5 +1,5 @@
 from core.database import Base
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, func
+from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String, func
 
 
 class Projects(Base):
@@ -10,6 +10,8 @@ class Projects(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
     image = Column(String, nullable=True)
+    # More photos, shown with the full text ("Lire la suite"): a list of image URLs
+    gallery = Column(JSON, nullable=True)
     category = Column(String, nullable=False)
     icon = Column(String, nullable=True)
     raised = Column(Integer, nullable=False)

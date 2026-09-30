@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ChevronRight, Heart, Users } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { CheckCircle, ChevronRight, Heart, Images, Users } from "lucide-react";
 import { Project } from "@/api";
 import { iconByName } from "@/lib/categories";
 
@@ -24,6 +25,8 @@ export default function ProjectCard({ project }: { project: Project }) {
   const completed = project.status === "completed";
   // Rough threshold for text that overflows three lines of the card
   const longDescription = project.description.length > 160 || project.description.includes("\n");
+  const gallery = project.gallery ?? [];
+  const photos = [project.image, ...gallery].filter((url): url is string => !!url);
 
   return (
     <Card className="group flex flex-col overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md motion-safe:hover:-translate-y-1">
@@ -57,6 +60,13 @@ export default function ProjectCard({ project }: { project: Project }) {
             )
           )}
         </div>
+        {gallery.length > 0 && (
+          <div className="absolute bottom-4 left-4">
+            <Badge variant="secondary" className="gap-1 bg-background/90 text-xs text-foreground/80 backdrop-blur-sm">
+              <Images className="h-3 w-3" aria-hidden="true" />+{gallery.length} photo{gallery.length > 1 ? "s" : ""}
+            </Badge>
+          </div>
+        )}
         {project.location && (
           <div className="absolute bottom-4 right-4">
             <Badge variant="secondary" className="bg-background/90 text-xs text-foreground/80 backdrop-blur-sm">
@@ -71,16 +81,34 @@ export default function ProjectCard({ project }: { project: Project }) {
         </h3>
         <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
         {/* The full text opens in a dialog, so expanding one card never stretches the others in its row */}
-        {longDescription && (
+        {(longDescription || gallery.length > 0) && (
           <Dialog>
             <DialogTrigger asChild>
               <button type="button" className="mt-1 self-start text-sm font-semibold text-primary hover:underline">
-                Lire la suite
+                {longDescription ? "Lire la suite" : "Voir les photos"}
               </button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-              {project.image && (
-                <img src={project.image} alt="" className="w-full rounded-lg object-contain" />
+              {photos.length === 1 && <img src={photos[0]} alt="" className="w-full rounded-lg object-contain" />}
+              {photos.length > 1 && (
+                <Carousel opts={{ loop: true }} className="w-full" aria-label={`Photos de la campagne ${project.title}`}>
+                  <CarouselContent>
+                    {photos.map((url, i) => (
+                      <CarouselItem key={`${url}-${i}`}>
+                        <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-muted">
+                          <img
+                            src={url}
+                            alt={`Photo ${i + 1} sur ${photos.length}`}
+                            loading={i === 0 ? "eager" : "lazy"}
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2 bg-background/90" aria-label="Photo précédente" />
+                  <CarouselNext className="right-2 bg-background/90" aria-label="Photo suivante" />
+                </Carousel>
               )}
               <DialogHeader>
                 <DialogTitle className="text-xl">{project.title}</DialogTitle>

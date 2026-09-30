@@ -43,6 +43,8 @@ export interface Project {
   title: string;
   description: string;
   image: string | null;
+  /** More photos, shown with the full text */
+  gallery?: string[] | null;
   category: string;
   icon: string | null;
   raised: number;

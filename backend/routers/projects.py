@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime, date
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
@@ -20,12 +20,29 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/entities/projects", tags=["projects"])
 
 
+MAX_GALLERY = 12
+
+
+def _check_gallery(value: Optional[List[str]]) -> Optional[List[str]]:
+    """Up to 12 photo addresses, each on this site (/...) or in HTTPS: nothing a browser could run."""
+    if value is None:
+        return None
+    urls = [u.strip() for u in value if u and u.strip()]
+    if len(urls) > MAX_GALLERY:
+        raise ValueError(f"{MAX_GALLERY} photos au maximum dans la galerie")
+    for url in urls:
+        if len(url) > 500 or not (url.startswith("https://") or (url.startswith("/") and not url.startswith("//"))):
+            raise ValueError("Adresse de photo invalide dans la galerie")
+    return urls
+
+
 # ---------- Pydantic Schemas ----------
 class ProjectsData(BaseModel):
     """Entity data schema (for create/update)"""
     title: str
     description: str
     image: Optional[str] = None
+    gallery: Optional[List[str]] = None
     category: str
     icon: Optional[str] = None
     raised: int
@@ -37,12 +54,16 @@ class ProjectsData(BaseModel):
     status: Optional[str] = None
     created_at: Optional[datetime] = None
 
+    _gallery = field_validator("gallery")(_check_gallery)
+
 
 class ProjectsUpdateData(BaseModel):
     """Update entity data (partial updates allowed)"""
     title: Optional[str] = None
     description: Optional[str] = None
     image: Optional[str] = None
+    # [] empties the gallery; None leaves it unchanged
+    gallery: Optional[List[str]] = None
     category: Optional[str] = None
     icon: Optional[str] = None
     raised: Optional[int] = None
@@ -54,6 +75,8 @@ class ProjectsUpdateData(BaseModel):
     status: Optional[str] = None
     created_at: Optional[datetime] = None
 
+    _gallery = field_validator("gallery")(_check_gallery)
+
 
 class ProjectsResponse(BaseModel):
     """Entity response schema"""
@@ -61,6 +84,7 @@ class ProjectsResponse(BaseModel):
     title: str
     description: str
     image: Optional[str] = None
+    gallery: Optional[List[str]] = None
     category: str
     icon: Optional[str] = None
     raised: int
@@ -205,7 +229,7 @@ async def get_projects(
 
 
 PROJECT_FIELDS = [
-    "title", "description", "image", "category", "icon", "raised", "goal",
+    "title", "description", "image", "gallery", "category", "icon", "raised", "goal",
     "donors", "location", "urgent", "is_featured", "status",
 ]
 

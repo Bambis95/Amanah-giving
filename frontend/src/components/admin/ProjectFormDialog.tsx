@@ -26,12 +26,14 @@ import { projectStatuses } from "./format";
 import { CATEGORIES, categoryLabel, iconNameFor } from "@/lib/categories";
 import { regionOf } from "@/lib/regions";
 import ImageUploadField from "./ImageUploadField";
+import GalleryField from "./GalleryField";
 
 const emptyForm = {
   title: "",
   description: "",
   category: "agriculture",
   image: "",
+  gallery: [] as string[],
   location: "",
   goal: "",
   raised: "0",
@@ -49,6 +51,7 @@ function toForm(project: Project): FormState {
     description: project.description,
     category: project.category,
     image: project.image ?? "",
+    gallery: project.gallery ?? [],
     location: project.location ?? "",
     goal: String(project.goal),
     raised: String(project.raised),
@@ -100,6 +103,7 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
       // The public pages pick the card icon from this field
       icon: iconNameFor(form.category),
       image: form.image.trim() || null,
+      gallery: form.gallery, // [] empties it
       location: form.location.trim() || null,
       goal,
       raised,
@@ -156,6 +160,7 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
           </div>
 
           <ImageUploadField value={form.image} onChange={(url) => set("image", url)} />
+          <GalleryField value={form.gallery} onChange={(urls) => set("gallery", urls)} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
