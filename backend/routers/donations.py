@@ -4,12 +4,14 @@ from typing import List, Optional
 
 from datetime import datetime, date
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from services.donations import DonationsService
+from services.email import donation_destination
+from services.receipt import build_receipt_pdf, receipt_number
 from dependencies.auth import ROLE_LEVELS, get_admin_user, get_current_user, get_staff_user, role_level
 from schemas.auth import UserResponse
 
@@ -212,6 +214,30 @@ async def get_donations(
     except Exception as e:
         logger.error(f"Error fetching donations {id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get("/{id}/receipt")
+async def download_receipt(
+    id: int,
+    current_user: UserResponse = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """PDF receipt of a paid donation: for its donor (signed-in account) and for presidents and admins."""
+    donation = await DonationsService(db).get_by_id(id)
+    manager = role_level(current_user.role) >= ROLE_LEVELS["president"]
+    if not donation or not (manager or donation.user_id == str(current_user.id)):
+        raise HTTPException(status_code=404, detail="Don introuvable")
+    if donation.payment_status != "paid":
+        raise HTTPException(status_code=409, detail="Le reçu est disponible une fois le don payé.")
+    pdf = build_receipt_pdf(donation, await donation_destination(db, donation))
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="recu-{receipt_number(donation)}.pdf"',
+            "Cache-Control": "private, no-store",
+        },
+    )
 
 
 # Donations are created and settled only by the payment flow (payment_checkout): the write

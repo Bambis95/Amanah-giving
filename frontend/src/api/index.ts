@@ -281,6 +281,13 @@ export const adminApi = {
     });
   },
 
+  async downloadReceipt(donationId: number): Promise<Blob> {
+    const response = await apiFetch(`${getAPIBase()}/entities/donations/${donationId}/receipt`);
+    if (response.status === 401) throw new Error("Session expirée, veuillez vous reconnecter");
+    if (!response.ok) throw new Error(await errorDetail(response, "Reçu indisponible"));
+    return response.blob();
+  },
+
   setSuspension(id: string, suspended: boolean): Promise<AdminUser> {
     return adminRequest(`/users/${encodeURIComponent(id)}/suspension`, {
       method: "PUT",

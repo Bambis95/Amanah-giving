@@ -80,6 +80,11 @@ class Settings(BaseSettings):
     # Platform identity (emails, payment page); the website has the same in src/lib/brand.ts
     site_short_name: str = "SENJAPO"
     site_name: str = "Plateforme Nationale de Collecte, de Solidarité et de Développement"
+    # Carrier and contacts printed on donation receipts (the website has them in src/lib/brand.ts, contact.ts)
+    carrier_name: str = "Club des Créateurs et Entrepreneurs du Sénégal (CCES)"
+    carrier_receipt: str = "Récépissé n° 022399/MISP/DGAT/DAPA"
+    contact_email: str = "ccecce035@gmail.com"
+    contact_phones: str = "+221 78 571 82 81 · +221 77 895 15 15"
 
     # Database: PostgreSQL is the official database of this project
     # (security, transactions, backups). Set DATABASE_URL to connect to it:

@@ -33,6 +33,10 @@ email-validator==2.3.0  # EmailStr fields
 # Campaign photos: resized and stripped of metadata before storage
 pillow>=11
 
+# Donation receipts (PDF, amount in words)
+reportlab>=4.2
+num2words>=0.5.13
+
 # PayDunya (Wave / Orange Money)
 paydunya==1.0.7
 

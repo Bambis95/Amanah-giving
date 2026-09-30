@@ -79,7 +79,7 @@ def build_donation_confirmation(
             "",
             *[f"{label} : {value}" for label, value in details],
             "",
-            "Conservez cet email comme justificatif de votre don.",
+            "Votre reçu de don est joint à cet email (PDF) : conservez-le comme justificatif.",
             "Pour toute question, répondez simplement à ce message.",
             "",
             "Avec toute notre gratitude,",
@@ -107,7 +107,7 @@ def build_donation_confirmation(
       <p style="margin:0 0 20px">Merci pour votre don de <strong>{html.escape(amount)}</strong>.
         Votre paiement a bien été reçu.</p>
       <table role="presentation" width="100%" style="border-top:1px solid #E5E7EB;border-bottom:1px solid #E5E7EB;margin-bottom:20px">{rows}</table>
-      <p style="margin:0 0 8px;font-size:13px;color:#6B7280">Conservez cet email comme justificatif de votre don.
+      <p style="margin:0 0 8px;font-size:13px;color:#6B7280">Votre reçu de don est joint à cet email (PDF) : conservez-le comme justificatif.
         Pour toute question, répondez simplement à ce message.</p>
       <p style="margin:20px 0 0">Avec toute notre gratitude,<br>L'équipe {html.escape(settings.site_short_name)}</p>
     </td></tr>
@@ -157,16 +157,33 @@ async def prepare_donation_confirmation(db: AsyncSession, donation: Donations) -
         if not recipient:
             logger.warning("No email address for donation %s, confirmation not sent", donation.id)
             return None
-        project_title = None
-        if donation.project_id:
-            project = (
-                await db.execute(select(Projects).where(Projects.id == donation.project_id))
-            ).scalar_one_or_none()
-            project_title = project.title if project else None
-        return build_donation_confirmation(donation, recipient, project_title)
+        project_title = await _project_title(db, donation)
+        message = build_donation_confirmation(donation, recipient, project_title)
     except Exception:
         logger.exception("Failed to prepare confirmation email for donation %s", donation.id)
         return None
+
+    # The PDF receipt travels with the thank-you; without it the email still goes
+    try:
+        from services.receipt import build_receipt_pdf, receipt_number
+
+        pdf = build_receipt_pdf(donation, project_title or CAUSE_LABELS.get(donation.cause, donation.cause))
+        message.add_attachment(pdf, maintype="application", subtype="pdf", filename=f"recu-{receipt_number(donation)}.pdf")
+    except Exception:
+        logger.exception("Failed to attach the receipt to donation %s", donation.id)
+    return message
+
+
+async def _project_title(db: AsyncSession, donation: Donations) -> Optional[str]:
+    if not donation.project_id:
+        return None
+    project = (await db.execute(select(Projects).where(Projects.id == donation.project_id))).scalar_one_or_none()
+    return project.title if project else None
+
+
+async def donation_destination(db: AsyncSession, donation: Donations) -> str:
+    """Campaign title, or the cause for a general donation (receipts)."""
+    return await _project_title(db, donation) or CAUSE_LABELS.get(donation.cause, donation.cause)
 
 
 def send_email(message: EmailMessage, context: str) -> None:

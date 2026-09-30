@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Check, Download, Loader2, QrCode, Search, X } from "lucide-react";
+import { Check, Download, FileText, Loader2, QrCode, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { adminApi, Donation } from "@/api";
@@ -117,6 +117,34 @@ function exportCsv(rows: Donation[]) {
   URL.revokeObjectURL(url);
 }
 
+/** PDF receipt of a paid donation (presidents and admins) */
+function ReceiptButton({ donation }: { donation: Donation }) {
+  const [busy, setBusy] = useState(false);
+  if (donation.payment_status !== "paid") return null;
+  const download = async () => {
+    setBusy(true);
+    try {
+      const blob = await adminApi.downloadReceipt(donation.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `recu-SENJAPO-${String(donation.id).padStart(6, "0")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Téléchargement impossible");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button variant="ghost" size="sm" onClick={download} disabled={busy} className="h-8 px-2" aria-label={`Reçu PDF du don ${donation.id}`}>
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+      <span className="ml-1.5">Reçu</span>
+    </Button>
+  );
+}
+
 export default function DonationsTab({
   donations,
   onChange,
@@ -205,7 +233,10 @@ export default function DonationsTab({
                 {d.message && <p className="text-xs text-muted-foreground italic mt-1">« {d.message} »</p>}
                 <div className="flex items-center justify-between mt-3">
                   <span className="text-xs text-muted-foreground">{formatDate(d.created_at)}</span>
-                  <PaymentStatusBadge status={d.payment_status} />
+                  <div className="flex items-center gap-2">
+                    {canManage && <ReceiptButton donation={d} />}
+                    <PaymentStatusBadge status={d.payment_status} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -220,6 +251,7 @@ export default function DonationsTab({
                 <TableHead>Cause</TableHead>
                 <TableHead>Moyen</TableHead>
                 <TableHead>Statut</TableHead>
+                {canManage && <TableHead className="w-0"><span className="sr-only">Reçu</span></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -247,6 +279,11 @@ export default function DonationsTab({
                   <TableCell>
                     <PaymentStatusBadge status={d.payment_status} />
                   </TableCell>
+                  {canManage && (
+                    <TableCell className="text-right">
+                      <ReceiptButton donation={d} />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
