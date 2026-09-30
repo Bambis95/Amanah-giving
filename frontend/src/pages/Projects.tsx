@@ -8,6 +8,7 @@ import { api, Project } from "@/api";
 import { CATEGORIES } from "@/lib/categories";
 import { REGIONS, regionOf } from "@/lib/regions";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const categories: { value: string; label: string; icon: React.ElementType }[] = [
   { value: "all", label: "Tous", icon: Filter },
@@ -15,6 +16,8 @@ const categories: { value: string; label: string; icon: React.ElementType }[] = 
 ];
 
 export default function ProjectsPage() {
+  const { t: dict } = useI18n();
+  const t = dict.projects;
   const [activeCategory, setActiveCategory] = useState("all");
   const [projects, setProjects] = useState<Project[]>([]);
   // Region filter lives in the URL, so a link such as /projects?region=Thiès can be shared
@@ -67,11 +70,11 @@ export default function ProjectsPage() {
       <section className="surface-hero px-4 pb-12 pt-24 sm:pt-28">
         <div className="mx-auto max-w-6xl text-center">
           <span className="mb-4 inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold">
-            {total} {total > 1 ? "Campagnes actives" : "Campagne active"}
+            {t.count(total)}
           </span>
-          <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Nos Campagnes</h1>
+          <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">{t.title}</h1>
           <p className="mx-auto max-w-xl text-white/75">
-            Des campagnes vérifiées et validées, partout au Sénégal : choisissez celle qui vous inspire le plus.
+            {t.intro}
           </p>
         </div>
       </section>
@@ -79,7 +82,7 @@ export default function ProjectsPage() {
       {/* Filters: sticky under the header, horizontally scrollable on small screens */}
       <section className="sticky top-16 z-30 border-b border-border bg-background/85 px-4 py-4 backdrop-blur-lg">
         <div className="mx-auto max-w-6xl">
-          <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Filtrer par catégorie">
+          <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label={t.filterCategory}>
             {categories.map((cat) => {
               const active = activeCategory === cat.value;
               return (
@@ -95,7 +98,7 @@ export default function ProjectsPage() {
                   }`}
                 >
                   <cat.icon className="h-4 w-4" aria-hidden="true" />
-                  {cat.label}
+                  {dict.categories[cat.value] ?? cat.label}
                 </button>
               );
             })}
@@ -111,16 +114,16 @@ export default function ProjectsPage() {
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <MapPin className="h-5 w-5 text-primary" aria-hidden="true" />
-                Campagnes par région
+                {t.byRegion}
               </h2>
               {activeRegion && (
                 <button type="button" onClick={() => setRegion(null)} className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
                   <X className="h-4 w-4" aria-hidden="true" />
-                  Toutes les régions
+                  {t.allRegions}
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7" role="group" aria-label="Filtrer par région">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7" role="group" aria-label={t.filterRegion}>
               {REGIONS.map((region) => {
                 const count = countByRegion.get(region) ?? 0;
                 const active = activeRegion === region;
@@ -150,7 +153,7 @@ export default function ProjectsPage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8" aria-busy="true" aria-label="Chargement des projets">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8" aria-busy="true" aria-label={t.loading}>
               {[0, 1, 2].map((i) => (
                 <div key={i} className="h-[26rem] animate-pulse rounded-xl border border-border bg-muted/60" />
               ))}
@@ -166,9 +169,7 @@ export default function ProjectsPage() {
           {!loading && visible.length === 0 && (
             <div className="text-center py-20">
               <p className="text-muted-foreground text-lg">
-                {activeRegion
-                  ? `Aucune campagne pour le moment dans la région de ${activeRegion}.`
-                  : "Aucune campagne pour cette cause pour le moment."}
+                {activeRegion ? t.noneInRegion(activeRegion) : t.noneForCause}
               </p>
             </div>
           )}

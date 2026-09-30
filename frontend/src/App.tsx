@@ -27,6 +27,7 @@ import Poster from './pages/Poster';
 import Membership from './pages/Membership';
 import MembershipPrint from './pages/MembershipPrint';
 import { AuthProvider } from './contexts/AuthContext';
+import { I18nProvider } from './i18n';
 import { ThemeProvider } from 'next-themes';
 import ScrollToTop from './components/ScrollToTop';
 import SessionTimeout from './components/SessionTimeout';
@@ -47,6 +48,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <AuthProvider>
+      <I18nProvider>
       <BrowserRouter>
         <ScrollToTop />
         <SessionTimeout />
@@ -80,6 +82,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </I18nProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

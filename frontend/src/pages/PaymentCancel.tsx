@@ -4,8 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { XCircle, Heart, ArrowLeft } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 export default function PaymentCancelPage() {
+  const { t } = useI18n();
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -16,20 +18,19 @@ export default function PaymentCancelPage() {
               <XCircle className="w-10 h-10 text-destructive" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-3">
-              Paiement Annulé
+              {t.cancel.title}
             </h2>
             <p className="text-muted-foreground mb-8">
-              Votre paiement a été annulé. Aucun montant n'a été débité de votre compte.
-              Vous pouvez réessayer à tout moment.
+              {t.cancel.text}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild variant="outline" className="rounded-lg border-primary text-primary"><Link to="/">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Retour à l'Accueil
+                  {t.donate.backHome}
                 </Link></Button>
               <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"><Link to="/donate">
                   <Heart className="w-4 h-4 mr-2" />
-                  Réessayer
+                  {t.cancel.retry}
                 </Link></Button>
             </div>
           </CardContent>

@@ -18,27 +18,31 @@ import Logo from "@/components/Logo";
 import { BRAND_NAME } from "@/lib/brand";
 import { isStaff } from "@/lib/roles";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Dictionary, useI18n } from "@/i18n";
 
-const navLinks = [
-  { href: "/", label: "Accueil" },
-  { href: "/projects", label: "Campagnes" },
-  { href: "/about", label: "À Propos" },
+const navLinks = (t: Dictionary["nav"]) => [
+  { href: "/", label: t.home },
+  { href: "/projects", label: t.campaigns },
+  { href: "/about", label: t.about },
   // Short labels keep the desktop bar on one line; the drawer shows the full ones
-  { href: "/adherer", label: "Rejoindre le Club", short: "Adhérer" },
-  { href: "/proposer", label: "Proposer une Campagne", short: "Proposer" },
-  { href: "/contact", label: "Contact" },
+  { href: "/adherer", label: t.join, short: t.joinShort },
+  { href: "/proposer", label: t.propose, short: t.proposeShort },
+  { href: "/contact", label: t.contact },
 ];
 
 export default function Navbar() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const t = useI18n().t.nav;
+  const links = navLinks(t);
   const displayName = user?.name || user?.email.split("@")[0];
 
   const handleLogout = async () => {
     setOpen(false);
     await logout();
-    toast.success("Vous êtes déconnecté");
+    toast.success(t.loggedOut);
   };
 
   const isActive = (href: string) => location.pathname === href;
@@ -53,7 +57,7 @@ export default function Navbar() {
 
           {/* Desktop links (lg+: below, everything moves to the drawer so nothing overflows on tablets) */}
           <div className="hidden items-center gap-0.5 lg:flex">
-            {navLinks.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
@@ -71,6 +75,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
+            <LanguageSwitcher />
             <ThemeToggle />
 
             <div className="hidden items-center gap-2 lg:flex">
@@ -92,28 +97,28 @@ export default function Navbar() {
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link to="/mon-espace">
                         <UserRound className="mr-2 h-4 w-4" />
-                        Mon espace
+                        {t.mySpace}
                       </Link>
                     </DropdownMenuItem>
                     {isStaff(user.role) && (
                       <DropdownMenuItem asChild className="cursor-pointer">
                         <Link to="/admin">
                           <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Tableau de bord
+                          {t.dashboard}
                         </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
-                      Se déconnecter
+                      {t.logout}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Button asChild variant="ghost" className="px-3 font-medium text-foreground/80">
-                  <Link to="/login" state={{ from: location.pathname }} aria-label="Se connecter" title="Se connecter">
+                  <Link to="/login" state={{ from: location.pathname }} aria-label={t.login} title={t.login}>
                     <LogIn className="h-4 w-4 xl:mr-2" />
-                    <span className="hidden xl:inline">Se connecter</span>
+                    <span className="hidden xl:inline">{t.login}</span>
                   </Link>
                 </Button>
               )}
@@ -123,13 +128,13 @@ export default function Navbar() {
             <Button asChild className="hidden font-semibold shadow-sm sm:inline-flex">
               <Link to="/donate">
                 <Heart className="mr-2 h-4 w-4" />
-                Faire un Don
+                {t.donate}
               </Link>
             </Button>
 
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden" aria-label="Ouvrir le menu">
+                <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden" aria-label={t.openMenu}>
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
@@ -138,7 +143,7 @@ export default function Navbar() {
                   <Logo size="sm" />
                 </SheetTitle>
                 <nav aria-label="Menu mobile" className="flex flex-col gap-1 p-4">
-                  {navLinks.map((link) => (
+                  {links.map((link) => (
                     <Link
                       key={link.href}
                       to={link.href}
@@ -165,34 +170,34 @@ export default function Navbar() {
                       <Button asChild variant="outline" className="h-11 w-full">
                         <Link to="/mon-espace" onClick={() => setOpen(false)}>
                           <UserRound className="mr-2 h-4 w-4" />
-                          Mon espace
+                          {t.mySpace}
                         </Link>
                       </Button>
                       {isStaff(user.role) && (
                         <Button asChild variant="outline" className="h-11 w-full">
                           <Link to="/admin" onClick={() => setOpen(false)}>
                             <LayoutDashboard className="mr-2 h-4 w-4" />
-                            Tableau de bord
+                            {t.dashboard}
                           </Link>
                         </Button>
                       )}
                       <Button variant="outline" className="h-11 w-full" onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
-                        Se déconnecter
+                        {t.logout}
                       </Button>
                     </>
                   ) : (
                     <Button asChild variant="outline" className="h-11 w-full">
                       <Link to="/login" state={{ from: location.pathname }} onClick={() => setOpen(false)}>
                         <LogIn className="mr-2 h-4 w-4" />
-                        Se connecter
+                        {t.login}
                       </Link>
                     </Button>
                   )}
                   <Button asChild className="h-11 w-full font-semibold">
                     <Link to="/donate" onClick={() => setOpen(false)}>
                       <Heart className="mr-2 h-4 w-4" />
-                      Faire un Don
+                      {t.donate}
                     </Link>
                   </Button>
                 </div>

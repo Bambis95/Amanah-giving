@@ -10,44 +10,26 @@ import LatestNews from "@/components/LatestNews";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { api, Project, PublicStats } from "@/api";
-import { formatAmount, formatNumber, plural, usePublicStats } from "@/hooks/use-public-stats";
+import { formatAmount, formatNumber, usePublicStats } from "@/hooks/use-public-stats";
 import { cn } from "@/lib/utils";
 import { softTone, solidTone, Tone } from "@/lib/tones";
 import { Heart, Users, FolderOpen, TrendingUp, ArrowRight, HandHeart, Lightbulb } from "lucide-react";
 import { BRAND_DESCRIPTOR, BRAND_NAME } from "@/lib/brand";
+import { Dictionary, useI18n } from "@/i18n";
 
 const HERO_IMG = "https://mgx-backend-cdn.metadl.com/generate/images/983496/2026-02-22/20fb421b-e0e3-4aa9-a282-e7aa1dd63cc3.png";
 
-function buildStats(s: PublicStats | null) {
+function buildStats(s: PublicStats | null, t: Dictionary["home"]) {
   const show = (value: string) => (s ? value : "…");
   return [
-    { icon: Users, value: show(formatNumber(s?.donors ?? 0)), label: plural(s?.donors ?? 0, "Donateur", "Donateurs"), tone: "primary" as Tone },
-    { icon: Heart, value: show(formatAmount(s?.total_raised ?? 0)), label: "FCFA collectés", tone: "highlight" as Tone },
-    { icon: FolderOpen, value: show(formatNumber(s?.active_projects ?? 0)), label: plural(s?.active_projects ?? 0, "Campagne active", "Campagnes actives"), tone: "info" as Tone },
-    { icon: TrendingUp, value: show(formatNumber(s?.funded_projects ?? 0)), label: plural(s?.funded_projects ?? 0, "Campagne financée", "Campagnes financées"), tone: "destructive" as Tone },
+    { icon: Users, value: show(formatNumber(s?.donors ?? 0)), label: t.donors(s?.donors ?? 0), tone: "primary" as Tone },
+    { icon: Heart, value: show(formatAmount(s?.total_raised ?? 0)), label: t.raised, tone: "highlight" as Tone },
+    { icon: FolderOpen, value: show(formatNumber(s?.active_projects ?? 0)), label: t.active(s?.active_projects ?? 0), tone: "info" as Tone },
+    { icon: TrendingUp, value: show(formatNumber(s?.funded_projects ?? 0)), label: t.funded(s?.funded_projects ?? 0), tone: "destructive" as Tone },
   ];
 }
 
-const steps: { step: string; title: string; description: string; tone: Tone }[] = [
-  {
-    step: "01",
-    title: "Choisissez une Campagne",
-    description: "Chaque campagne est vérifiée et validée avant d'être publiée. Vous pouvez aussi faire un don général.",
-    tone: "primary",
-  },
-  {
-    step: "02",
-    title: "Contribuez",
-    description: "Sélectionnez le montant et payez en toute sécurité par Wave, Orange Money ou carte bancaire.",
-    tone: "highlight",
-  },
-  {
-    step: "03",
-    title: "Suivez l'Impact",
-    description: "Suivez l'avancement de chaque collecte, l'utilisation des fonds et les réalisations.",
-    tone: "info",
-  },
-];
+const STEP_TONES: Tone[] = ["primary", "highlight", "info"];
 
 // Projects open to donations (paused ones are hidden, completed ones no longer need support)
 const isOpen = (p: Project) => !p.status || p.status === "active";
@@ -55,7 +37,10 @@ const isOpen = (p: Project) => !p.status || p.status === "active";
 export default function IndexPage() {
   const [featured, setFeatured] = useState<Project[] | null>(null);
   const { stats: platformStats, failed: statsFailed } = usePublicStats();
-  const stats = buildStats(platformStats);
+  const { lang, t: dict } = useI18n();
+  const t = dict.home;
+  const stats = buildStats(platformStats, t);
+  const steps = t.steps.map((s, i) => ({ ...s, step: `0${i + 1}`, tone: STEP_TONES[i] }));
   const site = useSiteSettings();
 
   useEffect(() => {
@@ -94,20 +79,19 @@ export default function IndexPage() {
             </span>
           </div>
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Une plateforme, plusieurs causes,{" "}
+            {t.heroTitle}{" "}
             <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
-              une solidarité nationale
+              {t.heroHighlight}
             </span>
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-white/80 sm:text-xl">
-            {site.hero_subtitle ??
-              "Soutenez des projets concrets : jeunes et formation, Daaras, artisans, agriculteurs, femmes et groupements, personnes vulnérables et projets communautaires."}
+            {(lang === "fr" && site.hero_subtitle) || t.heroSubtitle}
           </p>
           <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button asChild size="lg" className="h-14 rounded-xl px-8 text-base font-semibold shadow-lg sm:text-lg">
               <Link to="/donate">
                 <Heart className="mr-2 h-5 w-5" />
-                Faire un Don Maintenant
+                {t.donateNow}
               </Link>
             </Button>
             <Button
@@ -117,7 +101,7 @@ export default function IndexPage() {
               className="h-14 rounded-xl border-2 border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 hover:text-white sm:text-lg"
             >
               <Link to="/projects">
-                Voir les Campagnes
+                {t.seeCampaigns}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -134,7 +118,7 @@ export default function IndexPage() {
 
       {/* Stats (hidden if the figures cannot be loaded, rather than showing wrong ones) */}
       {!statsFailed && (
-        <section className="relative z-20 mx-auto -mt-14 max-w-6xl px-4" aria-label="Chiffres clés">
+        <section className="relative z-20 mx-auto -mt-14 max-w-6xl px-4" aria-label={t.keyFigures}>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
             {stats.map((stat) => (
               <Card key={stat.label} className="shadow-sm transition-shadow hover:shadow-md">
@@ -156,11 +140,11 @@ export default function IndexPage() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 text-center sm:mb-14">
             <span className="mb-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
-              Nos Causes
+              {t.causesBadge}
             </span>
-            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Campagnes en Cours</h2>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">{t.currentTitle}</h2>
             <p className="mx-auto max-w-xl text-muted-foreground">
-              Découvrez les campagnes qui ont le plus besoin de votre soutien en ce moment.
+              {t.currentText}
             </p>
           </div>
 
@@ -172,13 +156,13 @@ export default function IndexPage() {
               : featured.map((project) => <ProjectCard key={project.id} project={project} />)}
           </div>
           {featured?.length === 0 && (
-            <p className="text-center text-muted-foreground">Aucune campagne en cours pour le moment.</p>
+            <p className="text-center text-muted-foreground">{t.noneCurrent}</p>
           )}
 
           <div className="mt-10 text-center">
             <Button asChild variant="outline" size="lg" className="rounded-xl border-primary/40 text-primary hover:bg-accent hover:text-accent-foreground">
               <Link to="/projects">
-                Voir Toutes les Campagnes
+                {t.seeAll}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -194,9 +178,9 @@ export default function IndexPage() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center sm:mb-14">
             <span className="mb-4 inline-block rounded-full bg-highlight/15 px-4 py-1.5 text-sm font-semibold text-warning">
-              Comment ça marche
+              {t.howBadge}
             </span>
-            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Donner en 3 Étapes Simples</h2>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">{t.howTitle}</h2>
           </div>
 
           <ol className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
@@ -225,23 +209,22 @@ export default function IndexPage() {
           <div>
             <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
               <Lightbulb className="h-4 w-4" aria-hidden="true" />
-              Porteurs de projets
+              {t.holdersBadge}
             </span>
-            <h2 className="mb-3 text-2xl font-bold tracking-tight text-foreground md:text-3xl">Vous portez un projet à impact ?</h2>
+            <h2 className="mb-3 text-2xl font-bold tracking-tight text-foreground md:text-3xl">{t.holdersTitle}</h2>
             <p className="max-w-2xl text-muted-foreground">
-              Associations, groupements, organisations, créateurs et entrepreneurs : proposez votre campagne. Après
-              vérification et validation, elle sera publiée sur {BRAND_NAME} pour recevoir des contributions.
+              {t.holdersText(BRAND_NAME)}
             </p>
           </div>
           <div className="flex flex-col gap-3">
             <Button asChild size="lg" className="h-12 rounded-xl px-8 font-semibold">
               <Link to="/proposer">
-                Proposer une campagne
+                {t.propose}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 rounded-xl px-8 font-semibold">
-              <Link to="/adherer">Rejoindre le club</Link>
+              <Link to="/adherer">{t.joinClub}</Link>
             </Button>
           </div>
         </div>
@@ -250,9 +233,9 @@ export default function IndexPage() {
       {/* Keep me informed (phone / WhatsApp first: the way most visitors prefer to be reached) */}
       <section className="px-4 pb-16 sm:pb-20">
         <div className="mx-auto max-w-6xl rounded-2xl bg-muted/60 p-6 sm:p-10">
-          <h2 className="mb-2 text-2xl font-bold tracking-tight text-foreground">Restez informé</h2>
+          <h2 className="mb-2 text-2xl font-bold tracking-tight text-foreground">{t.newsTitle}</h2>
           <p className="mb-5 max-w-2xl text-muted-foreground">
-            Recevez les nouvelles de {BRAND_NAME} : nouvelles campagnes, événements et ouverture des dons en ligne.
+            {t.newsText(BRAND_NAME)}
           </p>
           <NotifyForm />
         </div>
@@ -262,10 +245,9 @@ export default function IndexPage() {
       <section className="surface-brand px-4 py-16 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <Heart className="mx-auto mb-6 h-12 w-12 fill-highlight text-highlight" aria-hidden="true" />
-          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Prêt à Faire la Différence ?</h2>
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">{t.ctaTitle}</h2>
           <p className="mx-auto mb-8 max-w-xl text-lg text-white/85">
-            Citoyens, diaspora, entreprises, associations, fondations : chaque contribution, aussi petite soit-elle,
-            fait avancer un projet concret.
+            {t.ctaText}
           </p>
           <Button
             asChild
@@ -273,7 +255,7 @@ export default function IndexPage() {
             className="h-14 w-full rounded-xl bg-highlight px-10 text-lg font-bold text-highlight-foreground shadow-lg hover:bg-highlight/90 sm:w-auto"
           >
             <Link to="/donate">
-              Faire un Don Maintenant
+              {t.donateNow}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

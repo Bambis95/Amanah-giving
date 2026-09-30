@@ -35,13 +35,17 @@ import NotifyForm from "@/components/NotifyForm";
 import MobileMoneyQR from "@/components/MobileMoneyQR";
 import { hasPaymentQr } from "@/lib/payment-qr";
 import { CATEGORIES, GENERAL_CAUSE, causeLabel } from "@/lib/categories";
+import { Dictionary, useI18n } from "@/i18n";
 
 const presetAmounts = [1000, 3000, 5000, 10000, 50000, 100000];
 
+// Long wording of a cause in the current language (the French one when not translated)
+const causeText = (value: string, fallback: string, t: Dictionary["categories"]) => t[`${value}Long`] ?? t[value] ?? fallback;
+
 // A general donation comes first: it is allocated where it is most needed
-const causes = [
-  { value: GENERAL_CAUSE.value, label: GENERAL_CAUSE.causeLabel },
-  ...CATEGORIES.map((c) => ({ value: c.value, label: c.causeLabel })),
+const causeOptions = (t: Dictionary["categories"]) => [
+  { value: GENERAL_CAUSE.value, label: causeText(GENERAL_CAUSE.value, GENERAL_CAUSE.causeLabel, t) },
+  ...CATEGORIES.map((c) => ({ value: c.value, label: causeText(c.value, c.causeLabel, t) })),
 ];
 
 // Select value for "donate to a cause, not a specific project"
@@ -50,23 +54,23 @@ const NO_PROJECT = "none";
 const paymentMethods = [
   {
     id: "stripe",
-    name: "Carte Bancaire",
+    name: "card",
     icon: CreditCard,
-    description: "Visa, Mastercard, etc.",
+    description: "cardText",
     color: "#635BFF",
   },
   {
     id: "orange_money",
     name: "Orange Money",
     icon: Smartphone,
-    description: "Paiement mobile sécurisé",
+    description: "mobileText",
     color: "#FF6600",
   },
   {
     id: "wave",
     name: "Wave",
     icon: Smartphone,
-    description: "Paiement mobile sécurisé",
+    description: "mobileText",
     color: "#1DC3E2",
   },
 ];
@@ -76,6 +80,9 @@ function formatCFA(amount: number) {
 }
 
 export default function DonatePage() {
+  const { t: dict } = useI18n();
+  const t = dict.donate;
+  const causes = causeOptions(dict.categories);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(5000);
   const [customAmount, setCustomAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("stripe");
@@ -122,12 +129,12 @@ export default function DonatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!finalAmount || finalAmount < 500) {
-      toast.error("Veuillez entrer un montant minimum de 500 FCFA");
+      toast.error(t.minAmount);
       return;
     }
     // Without an account, the email is the only way to reach the donor
     if (!user && !email.trim()) {
-      toast.error("Veuillez indiquer votre email pour faire un don sans compte");
+      toast.error(t.emailNeeded);
       document.getElementById("email")?.focus();
       return;
     }
@@ -157,10 +164,10 @@ export default function DonatePage() {
         // Show mobile payment instructions
         setMobileInstructions(response.instructions);
         setSubmitted(true);
-        toast.success("Don enregistré ! Suivez les instructions pour compléter le paiement.");
+        toast.success(t.recordedToast);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
+      const errorMessage = error instanceof Error ? error.message : t.error;
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -178,17 +185,17 @@ export default function DonatePage() {
                 <CheckCircle className="w-10 h-10 text-primary" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-3">
-                Don Enregistré !
+                {t.recorded}
               </h2>
               {mobileInstructions ? (
                 <>
                   <p className="text-muted-foreground mb-4">
-                    Votre don de{" "}
+                    {t.yourDonationOf}{" "}
                     <span className="font-bold text-primary">{formatCFA(finalAmount || 0)} FCFA</span>{" "}
-                    a été enregistré.
+                    {t.wasRecorded}
                   </p>
                   <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 mb-6 text-left">
-                    <p className="text-sm font-semibold text-warning mb-2">Instructions de paiement :</p>
+                    <p className="text-sm font-semibold text-warning mb-2">{t.instructions}</p>
                     <p className="text-sm text-warning">{mobileInstructions}</p>
                     <Button
                       variant="ghost"
@@ -196,25 +203,25 @@ export default function DonatePage() {
                       className="mt-2 text-warning"
                       onClick={() => {
                         navigator.clipboard.writeText(mobileInstructions);
-                        toast.success("Instructions copiées !");
+                        toast.success(t.copied);
                       }}
                     >
                       <Copy className="w-3 h-3 mr-1" />
-                      Copier
+                      {t.copy}
                     </Button>
                   </div>
                 </>
               ) : (
                 <p className="text-muted-foreground mb-6">
-                  Votre contribution de{" "}
+                  {t.contributionOf}{" "}
                   <span className="font-bold text-primary">{formatCFA(finalAmount || 0)} FCFA</span>{" "}
-                  a été enregistrée avec succès. Qu'Allah vous récompense pour votre générosité.
+                  {t.thanks}
                 </p>
               )}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button asChild variant="outline" className="rounded-lg border-primary text-primary"><Link to="/">
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Retour à l'Accueil
+                    {t.backHome}
                   </Link></Button>
                 <Button
                   onClick={() => {
@@ -224,7 +231,7 @@ export default function DonatePage() {
                   className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
                 >
                   <Heart className="w-4 h-4 mr-2" />
-                  Faire un Autre Don
+                  {t.another}
                 </Button>
               </div>
             </CardContent>
@@ -242,8 +249,8 @@ export default function DonatePage() {
         <Navbar />
         <section className="surface-brand px-4 pb-16 pt-24 sm:pt-28">
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="mb-4 text-3xl font-bold md:text-4xl">Faire un Don</h1>
-            <p className="mx-auto max-w-xl text-white/80">Une plateforme, plusieurs causes, une solidarité nationale.</p>
+            <h1 className="mb-4 text-3xl font-bold md:text-4xl">{t.title}</h1>
+            <p className="mx-auto max-w-xl text-white/80">{t.slogan}</p>
           </div>
         </section>
         <section className="-mt-6 px-4 py-12">
@@ -252,14 +259,13 @@ export default function DonatePage() {
               <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-accent">
                 <Clock className="h-8 w-8 text-primary" aria-hidden="true" />
               </div>
-              <h2 className="mb-3 text-2xl font-bold text-foreground">Les dons en ligne arrivent bientôt</h2>
+              <h2 className="mb-3 text-2xl font-bold text-foreground">{t.soonTitle}</h2>
               <p className="mb-6 text-muted-foreground">
-                Nous finalisons les dernières étapes, démarches officielles et paiements sécurisés, avant d'ouvrir les
-                dons. Laissez-nous vos coordonnées pour être prévenu de l'ouverture.
+                {t.soonText}
               </p>
               <NotifyForm stacked className="mb-6 text-left" />
               <Button asChild variant="outline" className="rounded-lg border-primary text-primary">
-                <Link to="/projects">Découvrir les campagnes</Link>
+                <Link to="/projects">{t.discover}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -280,12 +286,11 @@ export default function DonatePage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/20">
             <Heart className="w-4 h-4 text-highlight fill-highlight" />
-            <span className="text-sm font-medium">Votre générosité change des vies</span>
+            <span className="text-sm font-medium">{t.badge}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Faire un Don</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">{t.title}</h1>
           <p className="text-white/80 max-w-xl mx-auto">
-            Choisissez le montant, la campagne ou la cause, et le mode de paiement qui vous conviennent. Votre don est
-            affecté à la campagne choisie.
+            {t.intro}
           </p>
         </div>
       </section>
@@ -300,11 +305,11 @@ export default function DonatePage() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   1
                 </span>
-                Choisissez le Montant
+                {t.step1}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label="Montants proposés">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label={t.presets}>
                 {presetAmounts.map((amount) => (
                   <button
                     key={amount}
@@ -326,14 +331,14 @@ export default function DonatePage() {
                 ))}
               </div>
               <div>
-                <Label htmlFor="custom-amount" className="text-sm text-muted-foreground">Ou entrez un montant personnalisé</Label>
+                <Label htmlFor="custom-amount" className="text-sm text-muted-foreground">{t.custom}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="custom-amount"
                     type="number"
                     inputMode="numeric"
                     min={500}
-                    placeholder="Montant en FCFA"
+                    placeholder={t.customPlaceholder}
                     value={customAmount}
                     onChange={(e) => {
                       setCustomAmount(e.target.value);
@@ -356,17 +361,17 @@ export default function DonatePage() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   2
                 </span>
-                Choisissez une Campagne ou une Cause
+                {t.step2}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Label className="text-sm text-foreground/80">Campagne à soutenir</Label>
+              <Label className="text-sm text-foreground/80">{t.campaign}</Label>
               <Select value={projectId} onValueChange={setProjectId}>
                 <SelectTrigger className="h-12 rounded-xl border-border mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_PROJECT}>Aucune campagne précise (choisir une cause)</SelectItem>
+                  <SelectItem value={NO_PROJECT}>{t.noCampaign}</SelectItem>
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
                       {p.title}
@@ -379,7 +384,7 @@ export default function DonatePage() {
               {selectedProject ? (
                 <div className="mt-4 rounded-xl bg-accent p-4">
                   <p className="text-sm text-foreground/80">
-                    Cause : <span className="font-semibold">{causeLabel(selectedProject.category)}</span>
+                    {t.cause} : <span className="font-semibold">{causeText(selectedProject.category, causeLabel(selectedProject.category), dict.categories)}</span>
                   </p>
                   <div className="w-full h-2 bg-card rounded-full overflow-hidden mt-2">
                     <div
@@ -388,16 +393,15 @@ export default function DonatePage() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1.5">
-                    {formatCFA(selectedProject.raised)} FCFA collectés sur {formatCFA(selectedProject.goal)} FCFA (
-                    {projectProgress}%)
+                    {t.raisedOf(formatCFA(selectedProject.raised), formatCFA(selectedProject.goal), projectProgress)}
                   </p>
                 </div>
               ) : (
                 <div className="mt-4">
-                  <Label className="text-sm text-foreground/80">Cause</Label>
+                  <Label className="text-sm text-foreground/80">{t.cause}</Label>
                   <Select value={cause} onValueChange={setCause}>
                     <SelectTrigger className="h-12 rounded-xl border-border mt-1">
-                      <SelectValue placeholder="Sélectionnez une cause" />
+                      <SelectValue placeholder={t.causePlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
                       {causes.map((c) => (
@@ -419,7 +423,7 @@ export default function DonatePage() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   3
                 </span>
-                Mode de Paiement
+                {t.step3}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -441,8 +445,8 @@ export default function DonatePage() {
                       <method.icon className="w-5 h-5" style={{ color: method.color }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground text-sm">{method.name}</p>
-                      <p className="text-xs text-muted-foreground">{method.description}</p>
+                      <p className="font-semibold text-foreground text-sm">{method.name === "card" ? t.card : method.name}</p>
+                      <p className="text-xs text-muted-foreground">{t[method.description as "cardText" | "mobileText"]}</p>
                     </div>
                   </label>
                 ))}
@@ -457,26 +461,26 @@ export default function DonatePage() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">
                   4
                 </span>
-                Vos Informations
+                {t.step4}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">Prénom</Label>
+                  <Label htmlFor="firstName">{t.firstName}</Label>
                   <Input
                     id="firstName"
-                    placeholder="Votre prénom"
+                    placeholder={t.firstNamePlaceholder}
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="mt-1 h-11 rounded-xl border-border"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Nom</Label>
+                  <Label htmlFor="lastName">{t.lastName}</Label>
                   <Input
                     id="lastName"
-                    placeholder="Votre nom"
+                    placeholder={t.lastNamePlaceholder}
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     className="mt-1 h-11 rounded-xl border-border"
@@ -484,32 +488,29 @@ export default function DonatePage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="email">Email{user ? "" : " *"}</Label>
+                <Label htmlFor="email">{t.email}{user ? "" : " *"}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder={user ? user.email : "votre@email.com"}
+                  placeholder={user ? user.email : t.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required={!user}
                   className="mt-1 h-11 rounded-xl border-border scroll-mt-28"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {user
-                    ? "Laissez vide pour utiliser l'email de votre compte."
-                    : "Obligatoire pour que nous puissions vous contacter au sujet de votre don."}
+                  {user ? t.emailAccount : t.emailRequired}
                 </p>
                 {/* Explicit consent, unticked by default: only then does the donor receive the newsletter */}
                 <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-foreground/80">
                   <Checkbox checked={newsletter} onCheckedChange={(v) => setNewsletter(v === true)} className="mt-0.5" />
                   <span>
-                    Je souhaite recevoir par email les nouvelles des campagnes (quelques emails par an, désabonnement en un
-                    clic).
+                    {t.newsletter}
                   </span>
                 </label>
               </div>
               <div>
-                <Label htmlFor="phone">Téléphone</Label>
+                <Label htmlFor="phone">{t.phone}</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -520,10 +521,10 @@ export default function DonatePage() {
                 />
               </div>
               <div>
-                <Label htmlFor="message">Message (optionnel)</Label>
+                <Label htmlFor="message">{t.message}</Label>
                 <Textarea
                   id="message"
-                  placeholder="Un mot d'encouragement..."
+                  placeholder={t.messagePlaceholder}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="mt-1 rounded-xl border-border resize-none"
@@ -537,7 +538,7 @@ export default function DonatePage() {
           <Card className="surface-brand border-0 shadow-md">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <span className="text-white/80">Montant du don</span>
+                <span className="text-white/80">{t.amount}</span>
                 <span className="text-3xl font-bold">
                   {finalAmount ? formatCFA(finalAmount) : "0"} FCFA
                 </span>
@@ -551,23 +552,23 @@ export default function DonatePage() {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Traitement en cours...
+                    {t.processing}
                   </>
                 ) : (
                   <>
                     <Heart className="w-5 h-5 mr-2" />
-                    Confirmer le Don
+                    {t.confirm}
                   </>
                 )}
               </Button>
               <div className="flex items-center justify-center gap-2 mt-4 text-white/60 text-sm">
                 <Shield className="w-4 h-4" />
-                <span>Paiement 100% sécurisé</span>
+                <span>{t.secure}</span>
               </div>
               <p className="mt-3 text-center text-xs text-white/60">
-                En confirmant, vous acceptez nos{" "}
-                <Link to="/conditions" className="underline hover:text-white">conditions d'utilisation</Link> et notre{" "}
-                <Link to="/confidentialite" className="underline hover:text-white">politique de confidentialité</Link>.
+                {t.acceptPrefix}{" "}
+                <Link to="/conditions" className="underline hover:text-white">{t.terms}</Link> {t.and}{" "}
+                <Link to="/confidentialite" className="underline hover:text-white">{t.privacy}</Link>.
               </p>
             </CardContent>
           </Card>
