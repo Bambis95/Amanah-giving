@@ -296,6 +296,38 @@ async def reset_password(payload: ResetPasswordRequest, http_request: Request, d
     return {"message": "Votre mot de passe a été modifié. Vous pouvez vous connecter."}
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/change-password")
+async def change_password(
+    payload: ChangePasswordRequest,
+    http_request: Request,
+    response: Response,
+    current: UserResponse = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Change one's own password (current one required). Other devices are signed out."""
+    user = await db.get(User, current.id)
+    if not user or not verify_password(payload.current_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Mot de passe actuel incorrect.")
+    check_password_strength(payload.new_password)
+    if verify_password(payload.new_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit être différent de l'actuel.")
+    user.password_hash = hash_password(payload.new_password)
+    # Sessions opened elsewhere (a lost phone) stop; this browser gets a fresh session
+    user.token_version = (user.token_version or 0) + 1
+    await db.commit()
+    issue_session(response, user)
+    await audit.record(
+        db, Actor(id=user.id, email=user.email, ip=client_ip(http_request)), "security.password_change",
+        f"Mot de passe changé : {user.email}", target_type="user", target_id=user.id,
+    )
+    return {"message": "Mot de passe modifié. Vos autres appareils ont été déconnectés."}
+
+
 class MeResponse(UserResponse):
     # Inactivity before automatic logout, so the website's timer matches the server
     idle_minutes: int

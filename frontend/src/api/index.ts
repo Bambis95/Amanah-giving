@@ -644,6 +644,34 @@ export const api = {
     return (await response.json()).message;
   },
 
+  // ---------- Donor space ----------
+  async getMyDonations(): Promise<Donation[]> {
+    const response = await apiFetch(`${getAPIBase()}/entities/donations?limit=500&sort=-id`);
+    if (response.status === 401) throw new Error("Session expirée, veuillez vous reconnecter");
+    if (!response.ok) throw new Error(await errorDetail(response, "Chargement impossible"));
+    return (await response.json()).items;
+  },
+
+  async updateProfileName(name: string): Promise<AuthUser> {
+    const response = await apiFetch(`${getAPIBase()}/users/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response, "Modification impossible"));
+    return response.json();
+  },
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<string> {
+    const response = await apiFetch(`${getAPIBase()}/auth/change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response, "Modification impossible"));
+    return (await response.json()).message;
+  },
+
   // Staff invitation link (public: the token is the proof)
   async getInvitation(token: string): Promise<InvitationPreview> {
     const response = await apiFetch(`${getAPIBase()}/invitations/preview?token=${encodeURIComponent(token)}`);

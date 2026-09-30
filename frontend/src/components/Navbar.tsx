@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Heart, LogIn, LogOut, User, LayoutDashboard } from "lucide-react";
+import { Menu, Heart, LogIn, LogOut, User, UserRound, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -89,6 +89,12 @@ export default function Navbar() {
                       <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/mon-espace">
+                        <UserRound className="mr-2 h-4 w-4" />
+                        Mon espace
+                      </Link>
+                    </DropdownMenuItem>
                     {isStaff(user.role) && (
                       <DropdownMenuItem asChild className="cursor-pointer">
                         <Link to="/admin">
@@ -156,6 +162,12 @@ export default function Navbar() {
                         <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
                         <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                       </div>
+                      <Button asChild variant="outline" className="h-11 w-full">
+                        <Link to="/mon-espace" onClick={() => setOpen(false)}>
+                          <UserRound className="mr-2 h-4 w-4" />
+                          Mon espace
+                        </Link>
+                      </Button>
                       {isStaff(user.role) && (
                         <Button asChild variant="outline" className="h-11 w-full">
                           <Link to="/admin" onClick={() => setOpen(false)}>
