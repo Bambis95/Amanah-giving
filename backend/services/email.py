@@ -178,6 +178,64 @@ def send_email(message: EmailMessage, context: str) -> None:
         logger.exception("Failed to send email (%s)", context)
 
 
+def deliver(message: EmailMessage, context: str) -> bool:
+    """Blocking send that reports the outcome, for when the request depends on it (login code)."""
+    try:
+        _send(message)
+        logger.info("Email sent (%s)", context)
+        return True
+    except Exception:
+        logger.exception("Failed to send email (%s)", context)
+        return False
+
+
+def build_login_code_email(recipient: str, name: Optional[str], code: str, valid_minutes: int) -> EmailMessage:
+    site = settings.site_short_name
+    greeting = f"Bonjour {name}," if name else "Bonjour,"
+    spaced = f"{code[:3]} {code[3:]}"
+    text = "\n".join(
+        [
+            greeting,
+            "",
+            f"Voici votre code de connexion au tableau de bord {site} : {spaced}",
+            f"Il est valable {valid_minutes} minutes.",
+            "",
+            "Si vous n'essayez pas de vous connecter, changez votre mot de passe : quelqu'un le connaît.",
+            "",
+            f"L'équipe {site}",
+        ]
+    )
+    body_html = f"""\
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:24px;background:#F5F7FA;font-family:Arial,Helvetica,sans-serif;color:#374151">
+  <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
+    <tr><td style="background:#044990;padding:24px;color:#ffffff">
+      <div style="font-size:20px;font-weight:bold">{html.escape(site)}</div>
+      <div style="font-size:14px;opacity:.85">Code de connexion</div>
+    </td></tr>
+    <tr><td style="padding:24px">
+      <p style="margin:0 0 12px">{html.escape(greeting)}</p>
+      <p style="margin:0 0 16px">Voici votre code de connexion au tableau de bord :</p>
+      <p style="margin:0 0 16px;text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;color:#1A1A2E">{html.escape(spaced)}</p>
+      <p style="margin:0 0 16px;font-size:13px;color:#6B7280">Il est valable {valid_minutes} minutes. Ne le communiquez à personne :
+        l'équipe {html.escape(site)} ne vous le demandera jamais.</p>
+      <p style="margin:0;font-size:13px;color:#6B7280">Si vous n'essayez pas de vous connecter, changez votre mot de passe :
+        quelqu'un le connaît.</p>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+    message = EmailMessage()
+    message["Subject"] = f"{spaced} : votre code de connexion {site}"
+    message["From"] = formataddr((settings.email_from_name, settings.email_from))
+    message["To"] = recipient
+    message.set_content(text)
+    message.add_alternative(body_html, subtype="html")
+    return message
+
+
 def build_invitation_email(
     recipient: str,
     name: Optional[str],

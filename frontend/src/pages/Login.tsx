@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { BRAND_NAME } from "@/lib/brand";
 import { isStaff } from "@/lib/roles";
+import { LoginCodeChallenge } from "@/api";
+import LoginCodeStep from "@/components/LoginCodeStep";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,6 +32,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [codeStep, setCodeStep] = useState<LoginCodeChallenge | null>(null);
 
   // Already signed in: nothing to do here
   useEffect(() => {
@@ -54,12 +57,23 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const me = await login(email.trim(), password);
-      toast.success(`Bienvenue${me.name ? `, ${me.name}` : ""} !`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Échec de la connexion");
+      await signIn();
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Also used to resend the code (a new sign-in sends a new one)
+  const signIn = async () => {
+    try {
+      const result = await login(email.trim(), password);
+      if ("code_required" in result) {
+        setCodeStep(result);
+        return;
+      }
+      toast.success(`Bienvenue${result.name ? `, ${result.name}` : ""} !`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Échec de la connexion");
     }
   };
 
@@ -116,6 +130,22 @@ export default function LoginPage() {
       {label}
     </Button>
   );
+
+  if (codeStep) {
+    return (
+      <AuthLayout title="Vérifiez votre email" subtitle="Une étape de plus pour protéger le tableau de bord.">
+        <LoginCodeStep
+          key={codeStep.challenge}
+          step={codeStep}
+          onResend={signIn}
+          onBack={() => {
+            setCodeStep(null);
+            setPassword("");
+          }}
+        />
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout

@@ -1,10 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
-import { api, AuthUser } from "@/api";
+import { api, AuthUser, LoginCodeChallenge } from "@/api";
 
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<AuthUser>;
+  /** The signed-in user, or the code step for presidents and admins */
+  login: (email: string, password: string) => Promise<AuthUser | LoginCodeChallenge>;
+  loginWithCode: (challenge: string, code: string) => Promise<AuthUser>;
   register: (email: string, password: string, name?: string) => Promise<AuthUser>;
   /** Create the invited account (role set by the invitation) and open its session */
   acceptInvitation: (token: string, password: string, name?: string) => Promise<AuthUser>;
@@ -46,6 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.login(email, password);
+    if ("code_required" in result) return result; // presidents and admins: second step
+    setUser(result.user);
+    return result.user;
+  }, []);
+
+  const loginWithCode = useCallback(async (challenge: string, code: string) => {
+    const result = await api.loginWithCode(challenge, code);
     setUser(result.user);
     return result.user;
   }, []);
@@ -53,7 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(
     async (email: string, password: string, name?: string) => {
       await api.register(email, password, name);
-      return login(email, password);
+      const result = await login(email, password);
+      // A new account is a donor account: it never needs a code
+      if ("code_required" in result) throw new Error("Compte créé : connectez-vous pour continuer");
+      return result;
     },
     [login]
   );
@@ -83,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, acceptInvitation, logout, keepAlive }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithCode, register, acceptInvitation, logout, keepAlive }}>
       {children}
     </AuthContext.Provider>
   );

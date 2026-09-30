@@ -123,6 +123,10 @@ Quand le compte marchand est validé :
   de la base (`alembic upgrade head`) s'appliquent avant le démarrage.
 - **Sauvegardes** : vérifiez celles incluses dans l'offre de `senjapo-db` et faites un export
   avant chaque changement important.
+- **Code de connexion** : les présidents et administrateurs reçoivent un code à 6 chiffres par
+  email à chaque connexion. Si aucun email ne peut partir (SMTP absent ou en panne), la connexion
+  se fait sans code et le **Journal** le signale (« Connexion sans code ») : vérifiez alors les
+  réglages `SMTP_*`. `LOGIN_CODE_REQUIRED=false` désactive le code (déconseillé).
 - **Emails** : Gmail limite l'envoi à quelques centaines par jour ; au-delà, passez à un
   service d'envoi (Brevo, Mailjet…) avec une adresse à votre nom de domaine.
 

@@ -37,6 +37,8 @@ os.environ.update(
         "JWT_EXPIRE_MINUTES": "60",
         "ADMIN_IDLE_MINUTES": "15",
         "SESSION_MAX_HOURS": "12",
+        # Most tests sign admins in directly; tests/test_login_code.py turns the email code on
+        "LOGIN_CODE_REQUIRED": "false",
         "STRIPE_SECRET_KEY": "",
         "PAYDUNYA_MODE": "test",
         "PAYDUNYA_MASTER_KEY": "test-master-key",
@@ -60,6 +62,7 @@ TABLES = [
     "password_reset_tokens",
     "invitations",
     "images",
+    "login_codes",
     "contact_messages",
     "donations",
     "projects",

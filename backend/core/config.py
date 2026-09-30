@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     # Absolute limit after login, even for an active session
     session_max_hours: int = 12
     session_cookie_secure: bool = False  # set to true in production (HTTPS only)
+    # Presidents and admins confirm each sign-in with a code sent by email. Skipped (and logged)
+    # when no email can be sent, so a mail outage never locks the team out.
+    login_code_required: bool = True
     # Extra origins allowed by CORS, comma-separated; FRONTEND_URL is always allowed
     cors_origins: str = ""
 

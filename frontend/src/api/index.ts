@@ -30,6 +30,14 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+/** Presidents and admins: the password was right, a code was emailed */
+export interface LoginCodeChallenge {
+  code_required: true;
+  challenge: string;
+  email_hint: string;
+  expires_in_minutes: number;
+}
+
 export interface Project {
   id: number;
   title: string;
@@ -340,7 +348,7 @@ export const api = {
   },
 
   // Authentication
-  async login(email: string, password: string): Promise<LoginResponse> {
+  async login(email: string, password: string): Promise<LoginResponse | LoginCodeChallenge> {
     const response = await apiFetch(`${getAPIBase()}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -348,6 +356,16 @@ export const api = {
     });
     if (response.status === 401) throw new Error("Email ou mot de passe incorrect");
     if (!response.ok) throw new Error(await errorDetail(response, "Échec de la connexion"));
+    return response.json();
+  },
+
+  async loginWithCode(challenge: string, code: string): Promise<LoginResponse> {
+    const response = await apiFetch(`${getAPIBase()}/auth/login/code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challenge, code }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response, "Code refusé"));
     return response.json();
   },
 

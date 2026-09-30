@@ -16,6 +16,7 @@ from models.password_reset import PasswordResetToken
 from pydantic import BaseModel, EmailStr
 from schemas.auth import UserResponse
 from services.auth import hash_password, register_user, verify_password
+from services import login_code
 from services.email import build_password_reset_email, email_enabled, send_email
 from services.login_throttle import clear_failures, record_failure, seconds_until_allowed
 from sqlalchemy import func, select, update
@@ -131,6 +132,28 @@ async def login(
     # Checked after the password, so the answer reveals nothing to someone guessing
     if user.suspended_at is not None:
         raise HTTPException(status_code=403, detail=ACCOUNT_SUSPENDED)
+
+    # Presidents and admins: the password alone opens no session, a code sent by email does
+    if login_code.required_for(user):
+        challenge = await login_code.start(db, user)
+        if challenge:
+            return {
+                "code_required": True,
+                "challenge": challenge,
+                "email_hint": login_code.mask_email(user.email),
+                "expires_in_minutes": login_code.CODE_MINUTES,
+            }
+        # No email could be sent: let the person in rather than lock the team out, and say so
+        await audit.record(
+            db, Actor(id=user.id, email=user.email, ip=ip), "security.login_code_unavailable",
+            f"Connexion sans code (envoi d'email impossible) : {user.email}",
+            target_type="user", target_id=user.id,
+        )
+
+    return await _signed_in(response, user, db)
+
+
+async def _signed_in(response: Response, user: User, db: AsyncSession) -> dict:
     user.last_login = datetime.now(timezone.utc)
     await db.commit()
 
@@ -147,6 +170,25 @@ async def login(
             "idle_minutes": idle_minutes_for(user.role),
         },
     }
+
+
+class LoginCodeRequest(BaseModel):
+    challenge: str
+    code: str
+
+
+@router.post("/login/code")
+async def login_with_code(
+    payload: LoginCodeRequest, http_request: Request, response: Response, db: AsyncSession = Depends(get_db)
+):
+    """Second step for presidents and admins: the emailed code opens the session."""
+    try:
+        user = await login_code.verify(db, payload.challenge, payload.code)
+    except login_code.CodeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if user.suspended_at is not None:
+        raise HTTPException(status_code=403, detail=ACCOUNT_SUSPENDED)
+    return await _signed_in(response, user, db)
 
 
 @router.post("/logout")
