@@ -38,10 +38,10 @@ class SuspensionRequest(BaseModel):
 
 
 class UpdateRoleRequest(BaseModel):
-    role: Literal["user", "member", "president", "admin"]
+    role: Literal["user", "member", "treasurer", "president", "admin"]
 
 
-ROLE_LABELS = {"user": "utilisateur", "member": "membre du club", "president": "président", "admin": "administrateur"}
+ROLE_LABELS = {"user": "utilisateur", "member": "membre du club", "treasurer": "trésorier", "president": "président", "admin": "administrateur"}
 # What a president may grant or take away: membership only
 PRESIDENT_MANAGED = ("user", "member")
 

@@ -135,12 +135,148 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string | null;
-  role: "user" | "member" | "president" | "admin";
+  role: "user" | "member" | "treasurer" | "president" | "admin";
   created_at: string | null;
   last_login: string | null;
   /** Set while the account is suspended */
   suspended_at?: string | null;
 }
+
+// ---------- Finances ----------
+
+export type EntryKind = "income" | "expense";
+
+export interface FinanceMeta {
+  income_categories: Record<string, string>;
+  expense_categories: Record<string, string>;
+  payment_methods: Record<string, string>;
+}
+
+export interface FinanceEntryInput {
+  kind: EntryKind;
+  entry_date: string; // YYYY-MM-DD
+  amount: number;
+  category: string;
+  label: string;
+  project_id: number | null;
+  payment_method: string;
+  reference: string | null;
+  document_id: string | null;
+}
+
+export interface FinanceEntry extends FinanceEntryInput {
+  id: number;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+}
+
+export interface BudgetLine {
+  id?: number;
+  label: string;
+  category: string;
+  planned_amount: number;
+}
+
+export interface ReconciliationRow {
+  id: number;
+  created_at: string | null;
+  amount: number;
+  payment_method: string;
+  payment_provider: string | null;
+  payment_reference: string | null;
+  donor_name: string | null;
+  project_title: string | null;
+  reconciled_at: string | null;
+  reconciled_by_name: string | null;
+}
+
+export interface FinanceSummary {
+  year: number | null;
+  donations: { total: number; count: number; by_method: Record<string, number> };
+  reconciliation: { reconciled_total: number; reconciled_count: number; pending_total: number; pending_count: number };
+  other_income: number;
+  expenses: number;
+  balance: number;
+  by_category: { income: Record<string, number>; expense: Record<string, number> };
+  months: { month: number; donations: number; other_income: number; expenses: number }[];
+  projects: {
+    id: number;
+    title: string;
+    status: string | null;
+    goal: number;
+    received: number;
+    spent: number;
+    available: number;
+    budget: number;
+  }[];
+}
+
+export const financeApi = {
+  meta(): Promise<FinanceMeta> {
+    return adminRequest("/finance/meta");
+  },
+
+  summary(year: number | null): Promise<FinanceSummary> {
+    return adminRequest(`/finance/summary${year ? `?year=${year}` : ""}`);
+  },
+
+  entries(year: number | null): Promise<FinanceEntry[]> {
+    return adminRequest(`/finance/entries${year ? `?year=${year}` : ""}`);
+  },
+
+  createEntry(data: FinanceEntryInput): Promise<FinanceEntry> {
+    return adminRequest("/finance/entries", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateEntry(id: number, data: FinanceEntryInput): Promise<FinanceEntry> {
+    return adminRequest(`/finance/entries/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  cancelEntry(id: number, reason: string): Promise<FinanceEntry> {
+    return adminRequest(`/finance/entries/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) });
+  },
+
+  async uploadDocument(file: File): Promise<{ id: string; filename: string; content_type: string; size: number }> {
+    const body = new FormData();
+    body.append("file", file);
+    const response = await apiFetch(`${getAPIBase()}/finance/documents`, { method: "POST", body });
+    if (response.status === 401) throw new Error("Session expirée, veuillez vous reconnecter");
+    if (response.status === 413) throw new Error("Justificatif trop lourd (10 Mo au maximum)");
+    if (!response.ok) throw new Error(await errorDetail(response, "L'envoi du justificatif a échoué"));
+    return response.json();
+  },
+
+  /** The document is private: fetched with the session, then opened from memory */
+  async openDocument(id: string): Promise<void> {
+    const response = await apiFetch(`${getAPIBase()}/finance/documents/${id}`);
+    if (!response.ok) throw new Error(await errorDetail(response, "Justificatif indisponible"));
+    const url = URL.createObjectURL(await response.blob());
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
+
+  budget(projectId: number): Promise<BudgetLine[]> {
+    return adminRequest(`/finance/budgets/${projectId}`);
+  },
+
+  saveBudget(projectId: number, lines: BudgetLine[]): Promise<BudgetLine[]> {
+    return adminRequest(`/finance/budgets/${projectId}`, {
+      method: "PUT",
+      body: JSON.stringify(lines.map(({ label, category, planned_amount }) => ({ label, category, planned_amount }))),
+    });
+  },
+
+  reconciliation(state: "pending" | "done" | "all", year: number | null): Promise<ReconciliationRow[]> {
+    return adminRequest(`/finance/reconciliation?state=${state}${year ? `&year=${year}` : ""}`);
+  },
+
+  reconcile(donationId: number, reconciled: boolean): Promise<{ id: number; reconciled_at: string | null }> {
+    return adminRequest(`/finance/reconciliation/${donationId}`, { method: "POST", body: JSON.stringify({ reconciled }) });
+  },
+};
 
 export interface UploadedImage {
   id: string;
@@ -150,7 +286,7 @@ export interface UploadedImage {
   size: number;
 }
 
-export type StaffRole = "member" | "president" | "admin";
+export type StaffRole = "member" | "treasurer" | "president" | "admin";
 
 export interface Invitation {
   id: number;
@@ -180,7 +316,7 @@ interface ListResponse<T> {
   total: number;
 }
 
-export type AuditCategory = "project" | "donation" | "message" | "user" | "setting" | "security";
+export type AuditCategory = "project" | "donation" | "finance" | "message" | "user" | "setting" | "security";
 
 export interface MobileDepositDeclaration {
   amount: number;

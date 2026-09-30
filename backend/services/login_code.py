@@ -18,7 +18,7 @@ from starlette.concurrency import run_in_threadpool
 
 logger = logging.getLogger(__name__)
 
-ROLES_WITH_CODE = ("president", "admin")
+ROLES_WITH_CODE = ("treasurer", "president", "admin")
 CODE_MINUTES = 10
 MAX_ATTEMPTS = 5
 

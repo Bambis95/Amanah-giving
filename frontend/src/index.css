@@ -50,6 +50,10 @@
 
     --radius: 0.75rem;
 
+    /* Finance chart: income vs expenses (validated for colour blindness and contrast) */
+    --chart-income: #0b5aae;
+    --chart-expense: #d96200;
+
     /* Brand sections: page headers and call-to-action bands (white text on top) */
     --surface-hero-from: 214 64% 13%;
     --surface-hero-to: 212 58% 21%;
@@ -69,6 +73,9 @@
   .dark {
     --background: 222 22% 7%;
     --foreground: 210 20% 96%;
+
+    --chart-income: #4a8fd6;
+    --chart-expense: #e0690a;
 
     --card: 222 20% 10%;
     --card-foreground: 210 20% 96%;

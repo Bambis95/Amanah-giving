@@ -29,4 +29,8 @@ class Donations(Base):
     donor_phone = Column(String, nullable=True)
     message = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+
+    # Checked by the treasurer against the operator's statement (PayTech, Wave, Orange Money)
+    reconciled_at = Column(DateTime(timezone=True), nullable=True)
+    reconciled_by = Column(String, nullable=True)
   

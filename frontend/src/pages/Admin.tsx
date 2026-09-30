@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Heart,
   History,
+  Landmark,
   LayoutDashboard,
   Loader2,
   Mail,
@@ -27,11 +28,12 @@ import UsersTab from "@/components/admin/UsersTab";
 import AuditTab from "@/components/admin/AuditTab";
 import OverviewTab, { OverviewTarget } from "@/components/admin/OverviewTab";
 import { formatCFA } from "@/components/admin/format";
-import { canManage as roleCanManage, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
+import { canEditFinance, canManage as roleCanManage, canReadFinance, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
+import FinanceTab from "@/components/admin/finance/FinanceTab";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
 
-type Section = "overview" | "donations" | "messages" | "projects" | "users" | "audit";
+type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit";
 
 interface StatTileProps {
   icon: React.ElementType;
@@ -143,6 +145,7 @@ export default function AdminPage() {
     { id: "donations", label: "Dons", icon: Heart, count: manager && pendingDeposits ? pendingDeposits : donations.length, alert: manager && pendingDeposits > 0 },
     ...(manager ? [{ id: "messages" as Section, label: "Messages", icon: Mail, count: unread || undefined, alert: unread > 0 }] : []),
     { id: "projects", label: "Campagnes", icon: FolderOpen, count: projects.length },
+    ...(canReadFinance(user.role) ? [{ id: "finances" as Section, label: "Finances", icon: Landmark }] : []),
     ...(manager
       ? [
           { id: "users" as Section, label: "Membres & comptes", icon: Users, count: users.length },
@@ -302,6 +305,7 @@ export default function AdminPage() {
                   {current.id === "donations" && <DonationsTab donations={donations} onChange={setDonations} canManage={manager} />}
                   {current.id === "messages" && <MessagesTab messages={messages} onChange={setMessages} initialKind={messageKind} />}
                   {current.id === "projects" && <ProjectsTab projects={projects} onChange={setProjects} readOnly={!manager} />}
+                  {current.id === "finances" && <FinanceTab projects={projects} canEdit={canEditFinance(user.role)} />}
                   {current.id === "users" && (
                     <UsersTab users={users} currentUserId={user.id} currentRole={user.role} onChange={setUsers} />
                   )}

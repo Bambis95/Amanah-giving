@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, FolderOpen, HandCoins, Loader2, Mail, Settings, ShieldAlert, Users } from "lucide-react";
+import { ChevronDown, FolderOpen, HandCoins, Landmark, Loader2, Mail, Settings, ShieldAlert, Users } from "lucide-react";
 import { adminApi, AuditCategory, AuditLogEntry } from "@/api";
 import { formatDate } from "./format";
 
@@ -9,6 +9,7 @@ const categories: { value: AuditCategory | "all"; label: string }[] = [
   { value: "all", label: "Tout" },
   { value: "project", label: "Campagnes" },
   { value: "donation", label: "Dons" },
+  { value: "finance", label: "Finances" },
   { value: "message", label: "Messages" },
   { value: "user", label: "Utilisateurs" },
   { value: "setting", label: "Paramètres" },
@@ -18,6 +19,7 @@ const categories: { value: AuditCategory | "all"; label: string }[] = [
 const categoryIcons: Record<string, React.ElementType> = {
   project: FolderOpen,
   donation: HandCoins,
+  finance: Landmark,
   message: Mail,
   user: Users,
   setting: Settings,
@@ -43,6 +45,16 @@ const fieldLabels: Record<string, string> = {
   email: "Email",
   subject: "Sujet",
   compte_existant: "Compte existant",
+  gallery: "Galerie",
+  kind: "Type",
+  entry_date: "Date",
+  amount: "Montant",
+  label: "Libellé",
+  project_id: "Campagne",
+  payment_method: "Moyen de paiement",
+  reference: "Référence",
+  document_id: "Justificatif",
+  total: "Total",
 };
 
 function formatValue(value: unknown): string {

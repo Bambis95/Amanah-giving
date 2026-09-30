@@ -124,8 +124,12 @@ async def get_optional_user(
 #   member    : reads the dashboard (figures, campaigns, donations without donor contact details)
 #   president : runs the club day to day (campaigns, deposits, messages, audit log, members)
 #   admin     : everything, including technical settings and president/admin accounts
-ROLE_LEVELS = {"user": 0, "member": 1, "president": 2, "admin": 3}
-STAFF_ROLES = ("member", "president", "admin")
+#   treasurer : a member who also keeps the accounts (Finances section)
+ROLE_LEVELS = {"user": 0, "member": 1, "treasurer": 1, "president": 2, "admin": 3}
+# Finances: the treasurer and admins keep the accounts; the president reads them
+FINANCE_EDITORS = ("treasurer", "admin")
+FINANCE_READERS = ("treasurer", "president", "admin")
+STAFF_ROLES = ("member", "treasurer", "president", "admin")
 
 
 def role_level(role: Optional[str]) -> int:
@@ -144,6 +148,19 @@ def _require(min_role: str, detail: str):
 get_staff_user = _require("member", "Accès réservé aux membres du club")
 get_manager_user = _require("president", "Accès réservé au président et aux administrateurs")
 get_admin_user = _require("admin", "Admin access required")
+
+
+async def get_finance_reader(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
+    if current_user.role not in FINANCE_READERS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé au trésorier, au président et aux administrateurs")
+    return current_user
+
+
+async def get_finance_actor(request: Request, current_user: UserResponse = Depends(get_current_user)) -> Actor:
+    """Treasurer or admin (writes to the accounts), with who/where for the audit log."""
+    if current_user.role not in FINANCE_EDITORS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Seuls le trésorier et les administrateurs modifient les comptes")
+    return Actor(id=current_user.id, email=current_user.email, ip=client_ip(request))
 
 
 async def get_manager_actor(request: Request, manager: UserResponse = Depends(get_manager_user)) -> Actor:

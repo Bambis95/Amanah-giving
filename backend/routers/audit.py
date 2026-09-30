@@ -38,7 +38,7 @@ class AuditLogPage(BaseModel):
 
 @router.get("", response_model=AuditLogPage)
 async def list_audit_logs(
-    category: Optional[Literal["project", "donation", "message", "user", "setting", "security"]] = None,
+    category: Optional[Literal["project", "donation", "message", "user", "setting", "security", "finance"]] = None,
     before_id: Optional[int] = Query(None, description="Return entries older than this id"),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),

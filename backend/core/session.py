@@ -17,7 +17,7 @@ REFRESH_MARGIN_SECONDS = 60
 
 
 # Accounts that see the dashboard (donor data) get the short idle timeout
-STAFF_ROLES = ("member", "president", "admin")
+STAFF_ROLES = ("member", "treasurer", "president", "admin")
 
 
 def idle_minutes_for(role: Optional[str]) -> int:

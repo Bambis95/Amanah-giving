@@ -123,6 +123,10 @@ Quand le compte marchand est validé :
   de la base (`alembic upgrade head`) s'appliquent avant le démarrage.
 - **Sauvegardes** : vérifiez celles incluses dans l'offre de `senjapo-db` et faites un export
   avant chaque changement important.
+- **Finances** : le **trésorier** (rôle nommé par un administrateur) et les administrateurs tiennent
+  les comptes dans *Tableau de bord → Finances* ; le président les consulte. Les dons en ligne y sont
+  comptés automatiquement ; tout le reste (subventions, cotisations, espèces, dépenses) se saisit avec
+  son justificatif. Une écriture ne s'efface jamais : elle s'annule avec un motif, visible dans le Journal.
 - **Code de connexion** : les présidents et administrateurs reçoivent un code à 6 chiffres par
   email à chaque connexion. Si aucun email ne peut partir (SMTP absent ou en panne), la connexion
   se fait sans code et le **Journal** le signale (« Connexion sans code ») : vérifiez alors les
