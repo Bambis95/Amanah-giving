@@ -59,6 +59,7 @@ TABLES = [
     "login_attempts",
     "password_reset_tokens",
     "invitations",
+    "images",
     "contact_messages",
     "donations",
     "projects",

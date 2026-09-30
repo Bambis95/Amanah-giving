@@ -25,6 +25,7 @@ import { adminApi, Project, ProjectInput } from "@/api";
 import { projectStatuses } from "./format";
 import { CATEGORIES, categoryLabel, iconNameFor } from "@/lib/categories";
 import { regionOf } from "@/lib/regions";
+import ImageUploadField from "./ImageUploadField";
 
 const emptyForm = {
   title: "",
@@ -85,8 +86,10 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
       toast.error("Le titre et la description sont obligatoires");
       return;
     }
-    if (!(goal > 0) || raised < 0 || donors < 0) {
-      toast.error("L'objectif doit être positif et les montants ne peuvent pas être négatifs");
+    // A completed past action may have no fundraising goal (0): its card then shows no progress bar
+    const goalOk = form.status === "completed" ? goal >= 0 : goal > 0;
+    if (!goalOk || raised < 0 || donors < 0) {
+      toast.error("L'objectif doit être positif (0 possible pour une action terminée) et les montants ne peuvent pas être négatifs");
       return;
     }
 
@@ -152,6 +155,8 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
             />
           </div>
 
+          <ImageUploadField value={form.image} onChange={(url) => set("image", url)} />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Catégorie</Label>
@@ -196,33 +201,21 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="project-location">Lieu</Label>
-              <Input
-                id="project-location"
-                placeholder="Ex. : Thiès, Sénégal"
-                value={form.location}
-                onChange={(e) => set("location", e.target.value)}
-                aria-describedby="project-location-hint"
-              />
-              {/* The public "projects by region" grid reads the region from this text */}
-              <p id="project-location-hint" className="text-xs text-muted-foreground">
-                {regionOf(form.location)
-                  ? `Classé dans la région : ${regionOf(form.location)}`
-                  : "Indiquez la région (ex. : Thiès) pour classer le projet par région."}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="project-image">URL de l'image</Label>
-              <Input
-                id="project-image"
-                type="url"
-                placeholder="https://…"
-                value={form.image}
-                onChange={(e) => set("image", e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="project-location">Lieu</Label>
+            <Input
+              id="project-location"
+              placeholder="Ex. : Thiès, Sénégal"
+              value={form.location}
+              onChange={(e) => set("location", e.target.value)}
+              aria-describedby="project-location-hint"
+            />
+            {/* The public "projects by region" grid reads the region from this text */}
+            <p id="project-location-hint" className="text-xs text-muted-foreground">
+              {regionOf(form.location)
+                ? `Classé dans la région : ${regionOf(form.location)}`
+                : "Indiquez la région (ex. : Thiès) pour classer le projet par région."}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -231,7 +224,7 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
               <Input
                 id="project-goal"
                 type="number"
-                min={1}
+                min={form.status === "completed" ? 0 : 1}
                 value={form.goal}
                 onChange={(e) => set("goal", e.target.value)}
                 required

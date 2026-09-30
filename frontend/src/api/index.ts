@@ -130,6 +130,14 @@ export interface AdminUser {
   last_login: string | null;
 }
 
+export interface UploadedImage {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+  size: number;
+}
+
 export type StaffRole = "member" | "president" | "admin";
 
 export interface Invitation {
@@ -259,6 +267,18 @@ export const adminApi = {
       method: "PUT",
       body: JSON.stringify({ role }),
     });
+  },
+
+  /** Campaign photo: the server resizes it and returns its public URL */
+  async uploadImage(file: File): Promise<UploadedImage> {
+    const body = new FormData();
+    body.append("file", file);
+    // No Content-Type header: the browser sets the multipart boundary itself
+    const response = await apiFetch(`${getAPIBase()}/images`, { method: "POST", body });
+    if (response.status === 401) throw new Error("Session expirée, veuillez vous reconnecter");
+    if (response.status === 413) throw new Error("Photo trop lourde (12 Mo au maximum)");
+    if (!response.ok) throw new Error(await errorDetail(response, "L'envoi de la photo a échoué"));
+    return response.json();
   },
 
   getInvitations(): Promise<Invitation[]> {

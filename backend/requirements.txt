@@ -30,6 +30,9 @@ python-jose[cryptography]>=3.3.0
 bcrypt==5.0.0
 email-validator==2.3.0  # EmailStr fields
 
+# Campaign photos: resized and stripped of metadata before storage
+pillow>=11
+
 # PayDunya (Wave / Orange Money)
 paydunya==1.0.7
 
