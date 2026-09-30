@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from core.session import clear_session, idle_minutes_for, issue_session
 from core.config import settings
 from core.database import get_db
-from dependencies.auth import client_ip, get_current_user
+from dependencies.auth import ACCOUNT_SUSPENDED, client_ip, get_current_user
 from services import audit
 from services.audit import Actor
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
@@ -128,6 +128,9 @@ async def login(
         )
 
     await clear_failures(db, email)
+    # Checked after the password, so the answer reveals nothing to someone guessing
+    if user.suspended_at is not None:
+        raise HTTPException(status_code=403, detail=ACCOUNT_SUSPENDED)
     user.last_login = datetime.now(timezone.utc)
     await db.commit()
 

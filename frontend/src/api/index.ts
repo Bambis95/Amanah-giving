@@ -128,6 +128,8 @@ export interface AdminUser {
   role: "user" | "member" | "president" | "admin";
   created_at: string | null;
   last_login: string | null;
+  /** Set while the account is suspended */
+  suspended_at?: string | null;
 }
 
 export interface UploadedImage {
@@ -266,6 +268,13 @@ export const adminApi = {
     return adminRequest(`/users/${encodeURIComponent(id)}/role`, {
       method: "PUT",
       body: JSON.stringify({ role }),
+    });
+  },
+
+  setSuspension(id: string, suspended: boolean): Promise<AdminUser> {
+    return adminRequest(`/users/${encodeURIComponent(id)}/suspension`, {
+      method: "PUT",
+      body: JSON.stringify({ suspended }),
     });
   },
 

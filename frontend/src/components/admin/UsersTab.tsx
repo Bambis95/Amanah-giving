@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Clock, Search, ShieldCheck, UserPlus, X } from "lucide-react";
+import { Ban, Clock, RotateCcw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi, AdminUser, Invitation } from "@/api";
 import InviteDialog from "./InviteDialog";
@@ -50,7 +50,40 @@ function RoleBadge({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
           Vous
         </Badge>
       )}
+      {user.suspended_at && (
+        <Badge variant="outline" className="gap-1 border-destructive/40 text-destructive">
+          <Ban className="h-3 w-3" aria-hidden="true" />
+          Suspendu
+        </Badge>
+      )}
     </div>
+  );
+}
+
+interface SuspendToggleProps {
+  user: AdminUser;
+  isSelf: boolean;
+  currentRole: string;
+  busy: boolean;
+  onAsk: (user: AdminUser, suspend: boolean) => void;
+}
+
+/** Suspend / reactivate: same reach as role changes (a president handles members only) */
+function SuspendToggle({ user, isSelf, currentRole, busy, onAsk }: SuspendToggleProps) {
+  if (isSelf || !assignableRoles(currentRole).includes(user.role as Role)) return null;
+  const suspended = !!user.suspended_at;
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      disabled={busy}
+      onClick={() => onAsk(user, !suspended)}
+      className={cn("h-9 shrink-0", !suspended && "text-destructive hover:text-destructive")}
+    >
+      {suspended ? <RotateCcw className="mr-1.5 h-4 w-4" /> : <Ban className="mr-1.5 h-4 w-4" />}
+      {suspended ? "Réactiver" : "Suspendre"}
+    </Button>
   );
 }
 
@@ -91,6 +124,23 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [revoking, setRevoking] = useState<Invitation | null>(null);
+  const [suspension, setSuspension] = useState<{ user: AdminUser; suspend: boolean } | null>(null);
+
+  const applySuspension = async () => {
+    if (!suspension) return;
+    const { user, suspend } = suspension;
+    setSuspension(null);
+    setBusyId(user.id);
+    try {
+      const updated = await adminApi.setSuspension(user.id, suspend);
+      onChange(users.map((u) => (u.id === updated.id ? updated : u)));
+      toast.success(`${user.name || user.email} : compte ${suspend ? "suspendu" : "réactivé"}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Modification impossible");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     adminApi
@@ -240,8 +290,11 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
                   <p className="mt-2 text-xs text-muted-foreground">
                     Inscrit le {formatDate(u.created_at)} · Dernière connexion : {formatDate(u.last_login)}
                   </p>
-                  <div className="mt-3">
-                    <RoleControl user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onChoose={choose} />
+                  <div className="mt-3 flex gap-2">
+                    <div className="min-w-0 flex-1">
+                      <RoleControl user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onChoose={choose} />
+                    </div>
+                    <SuspendToggle user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onAsk={(user, suspend) => setSuspension({ user, suspend })} />
                   </div>
                 </div>
               ))}
@@ -255,7 +308,7 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
                     <TableHead>Rôle</TableHead>
                     <TableHead>Inscription</TableHead>
                     <TableHead>Dernière connexion</TableHead>
-                    <TableHead className="text-right">Changer le rôle</TableHead>
+                    <TableHead className="text-right">Rôle et accès</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -273,8 +326,9 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
                       <TableCell className="whitespace-nowrap text-muted-foreground">{formatDate(u.created_at)}</TableCell>
                       <TableCell className="whitespace-nowrap text-muted-foreground">{formatDate(u.last_login)}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end">
+                        <div className="flex items-center justify-end gap-2">
                           <RoleControl user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onChoose={choose} />
+                          <SuspendToggle user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onAsk={(user, suspend) => setSuspension({ user, suspend })} />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -299,6 +353,31 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
             <AlertDialogFooter>
               <AlertDialogCancel>Annuler</AlertDialogCancel>
               <AlertDialogAction onClick={applyRole}>Confirmer</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={suspension !== null} onOpenChange={(open) => !open && setSuspension(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {suspension &&
+                  `${suspension.suspend ? "Suspendre" : "Réactiver"} le compte de ${suspension.user.name || suspension.user.email} ?`}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {suspension?.suspend
+                  ? "La personne est déconnectée tout de suite, sur tous ses appareils, et ne peut plus se connecter. Son compte, son rôle et son historique sont conservés : vous pourrez le réactiver."
+                  : "La personne pourra de nouveau se connecter, avec le même rôle qu'avant."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={applySuspension}
+                className={suspension?.suspend ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : undefined}
+              >
+                {suspension?.suspend ? "Suspendre" : "Réactiver"}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

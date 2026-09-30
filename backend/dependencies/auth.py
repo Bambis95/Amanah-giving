@@ -51,6 +51,7 @@ def _check_origin(request: Request) -> None:
 
 
 SESSION_EXPIRED = "Session expirée, veuillez vous reconnecter"
+ACCOUNT_SUSPENDED = "Ce compte est suspendu. Contactez un responsable de la plateforme."
 
 
 async def _load_user(token: str, db: AsyncSession, response: Optional[Response] = None) -> UserResponse:
@@ -71,6 +72,8 @@ async def _load_user(token: str, db: AsyncSession, response: Optional[Response] 
     user = await db.get(User, user_id)
     if not user or payload.get("tv", 0) != user.token_version or session_expired(payload):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_EXPIRED)
+    if user.suspended_at is not None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=ACCOUNT_SUSPENDED)
 
     # Activity extends the session (sliding idle timeout), within the absolute limit
     if response is not None and needs_refresh(payload, user.role):

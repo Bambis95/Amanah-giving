@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Literal, Optional
 
 from core.database import get_db
@@ -27,9 +27,14 @@ class AdminUserResponse(BaseModel):
     role: str
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
+    suspended_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+
+class SuspensionRequest(BaseModel):
+    suspended: bool
 
 
 class UpdateRoleRequest(BaseModel):
@@ -86,6 +91,45 @@ async def update_user_role(
             target_type="user", target_id=user.id,
             details={"role": {"avant": previous, "apres": user.role}},
         )
+    return user
+
+
+@router.put("/{user_id}/suspension", response_model=AdminUserResponse)
+async def set_suspension(
+    user_id: str,
+    payload: SuspensionRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    manager: UserResponse = Depends(get_manager_user),
+):
+    """Suspend or reactivate an account. Same reach as role changes: a president handles members only."""
+    if user_id == manager.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vous ne pouvez pas suspendre votre propre compte.")
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur introuvable.")
+    if manager.role != "admin" and user.role not in PRESIDENT_MANAGED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seul un administrateur peut suspendre un président ou un administrateur.",
+        )
+
+    if payload.suspended and user.suspended_at is None:
+        user.suspended_at = datetime.now(timezone.utc)
+        # Every open session (phone, computer) stops at once
+        user.token_version = (user.token_version or 0) + 1
+        action, summary = "user.suspend", f"Compte suspendu : {user.email}"
+    elif not payload.suspended and user.suspended_at is not None:
+        user.suspended_at = None
+        action, summary = "user.reactivate", f"Compte réactivé : {user.email}"
+    else:
+        return user  # already in the requested state
+    await db.commit()
+    await db.refresh(user)
+    await audit.record(
+        db, Actor(id=manager.id, email=manager.email, ip=client_ip(request)), action, summary,
+        target_type="user", target_id=user.id,
+    )
     return user
 
 

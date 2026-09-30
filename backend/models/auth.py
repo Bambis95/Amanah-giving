@@ -15,3 +15,5 @@ class User(Base):
     last_login = Column(DateTime(timezone=True), nullable=True)
     # Bumped to invalidate every existing session of the account (e.g. after a password reset)
     token_version = Column(Integer, nullable=False, server_default="0", default=0)
+    # Set while the account is suspended: no sign-in, every session refused
+    suspended_at = Column(DateTime(timezone=True), nullable=True)
