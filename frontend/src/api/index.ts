@@ -200,7 +200,8 @@ async function adminRequest<T>(path: string, init: RequestInit = {}): Promise<T>
     headers: { "Content-Type": "application/json", ...init.headers },
   });
   if (response.status === 401) throw new Error("Session expirée, veuillez vous reconnecter");
-  if (response.status === 403) throw new Error("Accès réservé aux administrateurs");
+  // The server says why (role too low, blocked origin...): show its reason
+  if (response.status === 403) throw new Error(await errorDetail(response, "Accès réservé aux administrateurs"));
   if (!response.ok) throw new Error(await errorDetail(response, "La requête a échoué"));
   return response.json();
 }
