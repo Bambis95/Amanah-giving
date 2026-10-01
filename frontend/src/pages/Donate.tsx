@@ -91,6 +91,7 @@ export default function DonatePage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [newsletter, setNewsletter] = useState(false);
+  const [showName, setShowName] = useState(false);
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -152,6 +153,7 @@ export default function DonatePage() {
         donor_last_name: lastName || undefined,
         donor_email: email.trim() || user?.email || undefined,
         newsletter,
+        anonymous: !showName,
         donor_phone: phone || undefined,
         message: message || undefined,
       });
@@ -506,6 +508,14 @@ export default function DonatePage() {
                   <Checkbox checked={newsletter} onCheckedChange={(v) => setNewsletter(v === true)} className="mt-0.5" />
                   <span>
                     {t.newsletter}
+                  </span>
+                </label>
+                {/* Explicit consent too: by default the donation stays anonymous on the campaign page */}
+                <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-foreground/80">
+                  <Checkbox checked={showName} onCheckedChange={(v) => setShowName(v === true)} className="mt-0.5" />
+                  <span>
+                    {t.showName}
+                    <span className="block text-xs text-muted-foreground">{t.showNameHint}</span>
                   </span>
                 </label>
               </div>

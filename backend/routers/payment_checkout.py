@@ -53,6 +53,8 @@ class CreateDonationCheckoutRequest(BaseModel):
     message: Optional[str] = None
     # Opt-in box of the donation form: receive the newsletter
     newsletter: bool = False
+    # "Ne pas afficher mon nom": hidden from the campaign's list of supporters
+    anonymous: bool = False
 
 
 class CreateDonationCheckoutResponse(BaseModel):
@@ -346,6 +348,7 @@ async def create_donation_checkout(
                 "donor_email": data.donor_email,
                 "donor_phone": data.donor_phone,
                 "message": data.message,
+            "anonymous": data.anonymous,
             }
 
             donation = await donations_service.create(
@@ -393,6 +396,7 @@ async def create_donation_checkout(
             "donor_email": data.donor_email,
             "donor_phone": data.donor_phone,
             "message": data.message,
+            "anonymous": data.anonymous,
         }
 
         try:
@@ -628,6 +632,7 @@ async def _paytech_checkout(
             "donor_email": data.donor_email,
             "donor_phone": data.donor_phone,
             "message": data.message,
+            "anonymous": data.anonymous,
         },
         user_id=user_id,
     )

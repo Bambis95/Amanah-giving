@@ -54,6 +54,8 @@ export interface Project {
   urgent: boolean | null;
   is_featured: boolean | null;
   status: string | null;
+  /** Last day of the fundraiser (YYYY-MM-DD), shown as a countdown */
+  end_date?: string | null;
   created_at: string | null;
 }
 
@@ -76,6 +78,8 @@ export interface DonationCheckoutRequest {
   message?: string;
   /** Opt-in: receive the newsletter */
   newsletter?: boolean;
+  /** Hidden from the campaign's list of supporters */
+  anonymous?: boolean;
 }
 
 export interface DonationCheckoutResponse {
@@ -317,6 +321,20 @@ export async function getCampaignNews(limit = 6, projectId?: number): Promise<Ca
   if (projectId) params.set("project_id", String(projectId));
   const response = await apiFetch(`${getAPIBase()}/updates?${params}`);
   if (!response.ok) throw new Error("Failed to fetch news");
+  return response.json();
+}
+
+export interface Supporter {
+  /** null: anonymous */
+  name: string | null;
+  amount: number | null;
+  created_at: string | null;
+}
+
+/** Latest paid donations of a campaign, as the donors chose to appear */
+export async function getSupporters(projectId: number, limit = 10): Promise<{ total: number; items: Supporter[] }> {
+  const response = await apiFetch(`${getAPIBase()}/supporters/${projectId}?limit=${limit}`);
+  if (!response.ok) throw new Error("Failed to fetch supporters");
   return response.json();
 }
 

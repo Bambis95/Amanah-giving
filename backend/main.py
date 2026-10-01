@@ -129,6 +129,7 @@ from routers.project_updates import router as project_updates_router
 from routers.share import router as share_router
 from routers.newsletter import router as newsletter_router
 from routers.export import router as export_router
+from routers.supporters import router as supporters_router
 
 
 # ============================================================
@@ -157,6 +158,7 @@ app.include_router(project_updates_router)
 app.include_router(share_router)
 app.include_router(newsletter_router)
 app.include_router(export_router)
+app.include_router(supporters_router)
 
 
 # ============================================================

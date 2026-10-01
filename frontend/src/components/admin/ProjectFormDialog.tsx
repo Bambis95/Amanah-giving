@@ -41,6 +41,7 @@ const emptyForm = {
   status: "active",
   urgent: false,
   is_featured: false,
+  end_date: "",
 };
 
 type FormState = typeof emptyForm;
@@ -59,6 +60,7 @@ function toForm(project: Project): FormState {
     status: project.status ?? "active",
     urgent: !!project.urgent,
     is_featured: !!project.is_featured,
+    end_date: project.end_date ?? "",
   };
 }
 
@@ -111,6 +113,7 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
       status: form.status,
       urgent: form.urgent,
       is_featured: form.is_featured,
+      end_date: form.end_date || null,
     };
 
     setSaving(true);
@@ -255,6 +258,21 @@ export default function ProjectFormDialog({ open, project, onOpenChange, onSaved
                 onChange={(e) => set("donors", e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="project-end">Date de fin de la collecte</Label>
+            <Input
+              id="project-end"
+              type="date"
+              className="sm:max-w-xs"
+              value={form.end_date}
+              onChange={(e) => set("end_date", e.target.value)}
+              aria-describedby="project-end-hint"
+            />
+            <p id="project-end-hint" className="text-xs text-muted-foreground">
+              Facultatif. Affiche « Il reste N jours » sur la campagne ; les dons restent possibles après cette date.
+            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 pt-1">

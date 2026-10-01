@@ -1,6 +1,6 @@
 
 from core.database import Base
-from sqlalchemy import Column, DateTime, Integer, String, func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, func
 
 
 class Donations(Base):
@@ -28,6 +28,8 @@ class Donations(Base):
     donor_email = Column(String, nullable=True)
     donor_phone = Column(String, nullable=True)
     message = Column(String, nullable=True)
+    # Donor's choice on the donation form; None (older donations, QR deposits) is never shown publicly
+    anonymous = Column(Boolean, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
 
     # Checked by the treasurer against the operator's statement (PayTech, Wave, Orange Money)

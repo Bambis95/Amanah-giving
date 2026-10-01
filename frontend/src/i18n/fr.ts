@@ -114,6 +114,15 @@ const fr = {
     goal: "Objectif :",
     progress: (p: number) => `Collecte : ${p} % de l'objectif`,
     finished: "Projet terminé",
+    daysLeft: (n: number): string => (n === 0 ? "Dernier jour" : `Il reste ${n} jour${n > 1 ? "s" : ""}`),
+  },
+  supporters: {
+    title: "Ils soutiennent cette campagne",
+    count: (n: number): string => `${n} don${n > 1 ? "s" : ""}`,
+    anonymous: "Un donateur anonyme",
+    gave: (amount: string) => `a donné ${amount} FCFA`,
+    donated: "a fait un don",
+    first: "Soyez le premier à soutenir cette campagne.",
   },
   notify: {
     required: "Indiquez votre nom et votre téléphone",
@@ -173,6 +182,8 @@ const fr = {
     emailRequired: "Obligatoire pour que nous puissions vous contacter au sujet de votre don.",
     newsletter:
       "Je souhaite recevoir par email les nouvelles des campagnes (quelques emails par an, désabonnement en un clic).",
+    showName: "Afficher mon prénom et l'initiale de mon nom parmi les soutiens de la campagne.",
+    showNameHint: "Sinon, votre don apparaît comme « Un donateur anonyme », sans le montant.",
     phone: "Téléphone",
     message: "Message (optionnel)",
     messagePlaceholder: "Un mot d'encouragement...",

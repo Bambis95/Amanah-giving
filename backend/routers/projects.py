@@ -52,6 +52,7 @@ class ProjectsData(BaseModel):
     urgent: Optional[bool] = None
     is_featured: Optional[bool] = None
     status: Optional[str] = None
+    end_date: Optional[date] = None
     created_at: Optional[datetime] = None
 
     _gallery = field_validator("gallery")(_check_gallery)
@@ -73,6 +74,7 @@ class ProjectsUpdateData(BaseModel):
     urgent: Optional[bool] = None
     is_featured: Optional[bool] = None
     status: Optional[str] = None
+    end_date: Optional[date] = None
     created_at: Optional[datetime] = None
 
     _gallery = field_validator("gallery")(_check_gallery)
@@ -94,6 +96,7 @@ class ProjectsResponse(BaseModel):
     urgent: Optional[bool] = None
     is_featured: Optional[bool] = None
     status: Optional[str] = None
+    end_date: Optional[date] = None
     created_at: Optional[datetime] = None
 
     class Config:
@@ -230,7 +233,7 @@ async def get_projects(
 
 PROJECT_FIELDS = [
     "title", "description", "image", "gallery", "category", "icon", "raised", "goal",
-    "donors", "location", "urgent", "is_featured", "status",
+    "donors", "location", "urgent", "is_featured", "status", "end_date",
 ]
 
 
@@ -368,8 +371,10 @@ async def update_projects(
 
     service = ProjectsService(db)
     try:
-        # Only include non-None values for partial updates
+        # Only include non-None values for partial updates; an explicit null removes the end date
         update_dict = {k: v for k, v in data.model_dump().items() if v is not None}
+        if "end_date" in data.model_fields_set and data.end_date is None:
+            update_dict["end_date"] = None
         result = await _update_with_audit(service, actor, id, update_dict)
         if not result:
             logger.warning(f"Projects with id {id} not found for update")

@@ -12,16 +12,26 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CheckCircle, ChevronRight, Heart, Images, MessageCircle, Users } from "lucide-react";
+import { CheckCircle, ChevronRight, Clock, Heart, Images, MessageCircle, Users } from "lucide-react";
 import { Project } from "@/api";
 import CampaignNewsList from "./CampaignNewsList";
 import ShareCampaign from "./ShareCampaign";
+import SupportersList from "./SupportersList";
 import { whatsappLink } from "@/lib/share";
 import { iconByName } from "@/lib/categories";
 import { useI18n } from "@/i18n";
 
 function formatCFA(amount: number) {
   return new Intl.NumberFormat("fr-FR").format(amount);
+}
+
+/** Whole days from today to the end date (0 on the last day), or null when there is none or it is past */
+function daysLeft(endDate: string | null | undefined): number | null {
+  if (!endDate) return null;
+  const [y, m, d] = endDate.split("-").map(Number);
+  const today = new Date();
+  const days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) / 86_400_000);
+  return days >= 0 ? days : null;
 }
 
 /** `autoOpen`: open the campaign's dialog at once (shared link /projects?campagne=ID) */
@@ -31,6 +41,7 @@ export default function ProjectCard({ project, autoOpen = false }: { project: Pr
   const progress = project.goal > 0 ? Math.round((project.raised / project.goal) * 100) : 0;
   const IconComponent = iconByName(project.icon);
   const completed = project.status === "completed";
+  const remaining = completed ? null : daysLeft(project.end_date);
   // Rough threshold for text that overflows three lines of the card
   const longDescription = project.description.length > 160 || project.description.includes("\n");
   const gallery = project.gallery ?? [];
@@ -134,6 +145,7 @@ export default function ProjectCard({ project, autoOpen = false }: { project: Pr
               <DialogDescription asChild>
                 <div className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{project.description}</div>
               </DialogDescription>
+              <SupportersList projectId={project.id} />
               <CampaignNewsList projectId={project.id} />
               <ShareCampaign project={project} />
               {!completed && (
@@ -171,6 +183,12 @@ export default function ProjectCard({ project, autoOpen = false }: { project: Pr
               </div>
               <div className="flex justify-between mt-1.5">
                 <span className="text-xs text-muted-foreground">{t.goal} {formatCFA(project.goal)} FCFA</span>
+                {remaining !== null && (
+                  <span className={`flex items-center gap-1 text-xs font-medium ${remaining <= 7 ? "text-destructive" : "text-muted-foreground"}`}>
+                    <Clock className="h-3 w-3" aria-hidden="true" />
+                    {t.daysLeft(remaining)}
+                  </span>
+                )}
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Users className="w-3 h-3" />
                   {project.donors || 0}
