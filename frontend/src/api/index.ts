@@ -782,6 +782,12 @@ export const api = {
     return response.json();
   },
 
+  async getProject(id: number): Promise<Project> {
+    const response = await apiFetch(`${getAPIBase()}/entities/projects/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch project");
+    return response.json();
+  },
+
   async getFeaturedProjects(): Promise<ProjectsListResponse> {
     const url = `${getAPIBase()}/entities/projects/all?limit=6&query=${encodeURIComponent(JSON.stringify({ is_featured: true }))}`;
     const response = await apiFetch(url);

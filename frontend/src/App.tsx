@@ -32,6 +32,7 @@ const Partners = lazy(() => import('./pages/Partners'));
 const Transparency = lazy(() => import('./pages/Transparency'));
 const Stand = lazy(() => import('./pages/Stand'));
 const Poster = lazy(() => import('./pages/Poster'));
+const CampaignPoster = lazy(() => import('./pages/CampaignPoster'));
 const Membership = lazy(() => import('./pages/Membership'));
 const MembershipPrint = lazy(() => import('./pages/MembershipPrint'));
 
@@ -86,6 +87,7 @@ const App = () => (
           {/* Event material: stand screen and printable poster (not linked from the menus) */}
           <Route path="/stand" element={<Stand />} />
           <Route path="/affiche" element={<Poster />} />
+          <Route path="/affiche/campagne/:id" element={<CampaignPoster />} />
           <Route path="/confidentialite" element={<Privacy />} />
           <Route path="/conditions" element={<Terms />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />

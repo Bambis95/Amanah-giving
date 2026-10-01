@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Newspaper, Pencil, Plus, Trash2 } from "lucide-react";
+import { Newspaper, Pencil, Plus, QrCode, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi, Project } from "@/api";
 import { categoryLabel, formatCFA, projectStatuses } from "./format";
@@ -87,6 +87,14 @@ function ProjectActions({ project, onEdit, onDelete, onNews }: ProjectActionsPro
       <Button variant="outline" size="sm" onClick={() => onNews(project)} aria-label={`Actualités de ${project.title}`} title="Actualités">
         <Newspaper className="w-4 h-4" />
       </Button>
+      {/* Printable A4 poster with a QR code straight to this campaign's donation form */}
+      {project.status !== "paused" && (
+        <Button asChild variant="outline" size="sm" title="Affiche avec QR code">
+          <a href={`/affiche/campagne/${project.id}`} target="_blank" rel="noopener noreferrer" aria-label={`Affiche à imprimer de ${project.title}`}>
+            <QrCode className="w-4 h-4" />
+          </a>
+        </Button>
+      )}
       <Button variant="outline" size="sm" onClick={() => onEdit(project)} aria-label="Modifier">
         <Pencil className="w-4 h-4" />
       </Button>
