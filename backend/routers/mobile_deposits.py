@@ -46,6 +46,8 @@ class DepositDeclaration(BaseModel):
     project_id: Optional[int] = None
     cause: str = Field(default="general", max_length=40)
     message: Optional[str] = Field(default=None, max_length=1000)
+    # "Je reste anonyme" (checked by default): hidden from the campaign's list of supporters
+    anonymous: bool = True
 
 
 class DepositDeclared(BaseModel):
@@ -99,6 +101,7 @@ async def declare_deposit(
             "donor_email": data.donor_email,
             "donor_phone": data.donor_phone.strip(),
             "message": data.message,
+            "anonymous": data.anonymous,
         },
         user_id=str(current_user.id) if current_user else None,
     )

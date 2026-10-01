@@ -116,6 +116,10 @@ const wo: Dictionary = {
     finished: "Liggéey bi jeex na",
     daysLeft: (n) => (n === 0 ? "Bés bu mujj bi" : `Des na ${n} fan`),
   },
+  anon: {
+    label: "Bëgguma ñu xam sama tur",
+    hint: "Sa tur du feeñ ci ñiy jàppale kàmpaañ bi. Dindil ko ngir wone sa tur ak araf bu jëkk bu sa sant.",
+  },
   supporters: {
     title: "Ñoo ngi jàppale kàmpaañ bii",
     count: (n) => `${n} ndimbal`,
@@ -181,8 +185,12 @@ const wo: Dictionary = {
     emailAccount: "Bàyyil ko neen ngir jëfandikoo email bu sa kont.",
     emailRequired: "War na ngir ñu mën laa jokkoo ci sa ndimbal.",
     newsletter: "Bëgg naa jot xibaari kàmpaañ yi ci email (ay bataaxal yu néew ci at mi, mën naa bàyyi saa su ma neexee).",
-    showName: "Wone sama tur ak araf bu jëkk bu sama sant ci ñiy jàppale kàmpaañ bi.",
-    showNameHint: "Su dul loolu, sa ndimbal dina feeñ niki « Ku jàppale te bëggul ñu xam ko », te xaalis bi du feeñ.",
+    pickTitle: "Tànnal xaalisu sa ndimbal",
+    pickText: "Bësal benn xaalis : dinga dem ci fey ak Wave walla Orange Money.",
+    customGo: "Kontine",
+    cardSoonTitle: "Fey ak kaart banka : ci kanam",
+    cardSoonText:
+      "Fey ak kaart ci internet dina ñëw ci kanam. Bàyyil sa xibaar ngir ñu xamal la, walla jàppale léegi ak Wave walla Orange Money ci kaw.",
     phone: "Telefon",
     message: "Bataaxal (du war)",
     messagePlaceholder: "Benn baat bu dooleel...",

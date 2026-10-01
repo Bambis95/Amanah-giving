@@ -90,3 +90,18 @@ def test_online_payments_cannot_be_confirmed_by_hand(client, admin):
         "VALUES (5000, 'general', 'wave', 'pending', 'paydunya') RETURNING id"
     )[0]["id"]
     assert client.post(f"{URL}/{donation_id}/confirm").status_code == 404
+
+
+def test_qr_donors_are_anonymous_unless_they_choose_otherwise(client, admin):
+    project = make_project(client)
+    client.cookies.clear()
+    hidden = declare(client, project_id=project["id"]).json()["donation_id"]  # box left checked
+    shown = declare(client, project_id=project["id"], transaction_ref="T-XYZ-99999", donor_first_name="Fatou",
+                    donor_last_name="Sow", anonymous=False).json()["donation_id"]
+    login(client, "admin@example.com")
+    for donation_id in (hidden, shown):
+        assert client.post(f"{URL}/{donation_id}/confirm").status_code == 200
+    wall = client.get(f"/api/v1/supporters/{project['id']}").json()
+    assert wall["total"] == 2
+    assert sorted((i["name"] or "-", i["amount"] or 0) for i in wall["items"]) == [("-", 0), ("Fatou S.", 5000)]
+    assert "Awa" not in str(wall)

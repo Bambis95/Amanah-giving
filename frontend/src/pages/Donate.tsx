@@ -37,7 +37,7 @@ import { hasPaymentQr } from "@/lib/payment-qr";
 import { CATEGORIES, GENERAL_CAUSE, causeLabel } from "@/lib/categories";
 import { Dictionary, useI18n } from "@/i18n";
 
-const presetAmounts = [1000, 3000, 5000, 10000, 50000, 100000];
+const presetAmounts = [1000, 2000, 5000, 10000, 50000, 100000];
 
 // Long wording of a cause in the current language (the French one when not translated)
 const causeText = (value: string, fallback: string, t: Dictionary["categories"]) => t[`${value}Long`] ?? t[value] ?? fallback;
@@ -91,7 +91,10 @@ export default function DonatePage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [newsletter, setNewsletter] = useState(false);
-  const [showName, setShowName] = useState(false);
+  const [anonymous, setAnonymous] = useState(true);
+  // Amount picked above the QR codes (pre-launch page): fills the deposit form
+  const [qrAmount, setQrAmount] = useState<number | null>(null);
+  const [qrCustom, setQrCustom] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -127,6 +130,12 @@ export default function DonatePage() {
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
+  // A tap on an amount fills the QR deposit form and scrolls to the QR codes
+  const goToQr = (amount: number) => {
+    setQrAmount(amount);
+    setTimeout(() => document.getElementById("qr-paiement")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!finalAmount || finalAmount < 500) {
@@ -153,7 +162,7 @@ export default function DonatePage() {
         donor_last_name: lastName || undefined,
         donor_email: email.trim() || user?.email || undefined,
         newsletter,
-        anonymous: !showName,
+        anonymous,
         donor_phone: phone || undefined,
         message: message || undefined,
       });
@@ -255,15 +264,72 @@ export default function DonatePage() {
             <p className="mx-auto max-w-xl text-white/80">{dict.brand.slogan}</p>
           </div>
         </section>
-        <section className="-mt-6 px-4 py-12">
+        {/* Deposits with the official QR codes do not depend on online payments */}
+        {hasPaymentQr && (
+          <>
+            <section className="-mt-6 px-4 pt-12">
+              <Card className="mx-auto max-w-3xl shadow-sm">
+                <CardContent className="space-y-4 p-6 sm:p-8">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-foreground">{t.pickTitle}</h2>
+                    <p className="mt-1 text-muted-foreground">{t.pickText}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label={t.presets}>
+                    {presetAmounts.map((amount) => (
+                      <button
+                        key={amount}
+                        type="button"
+                        aria-pressed={qrAmount === amount}
+                        onClick={() => goToQr(amount)}
+                        className={`min-h-[4.5rem] rounded-xl border-2 p-3 text-center font-bold tabular-nums transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-4 ${
+                          qrAmount === amount ? "border-primary bg-accent text-primary" : "border-border text-foreground/80 hover:border-primary/50"
+                        }`}
+                      >
+                        {formatCFA(amount)}
+                        <span className="block text-xs font-normal text-muted-foreground">FCFA</span>
+                      </button>
+                    ))}
+                  </div>
+                  <form
+                    className="flex gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const value = parseInt(qrCustom.replace(/\D/g, ""), 10);
+                      if (!value || value < 100) return toast.error(t.minAmount);
+                      goToQr(value);
+                    }}
+                  >
+                    <Label htmlFor="qr-custom" className="sr-only">{t.custom}</Label>
+                    <Input
+                      id="qr-custom"
+                      inputMode="numeric"
+                      placeholder={t.customPlaceholder}
+                      value={qrCustom}
+                      onChange={(e) => setQrCustom(e.target.value)}
+                      className="h-12 rounded-xl"
+                    />
+                    <Button type="submit" className="h-12 shrink-0 rounded-xl px-5 font-semibold">{t.customGo}</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </section>
+            <MobileMoneyQR
+              projects={projects}
+              amount={qrAmount}
+              projectId={projectId === NO_PROJECT ? null : projectId}
+              className="mx-auto max-w-3xl px-4 py-12"
+            />
+          </>
+        )}
+        <section className={hasPaymentQr ? "px-4 pb-16" : "-mt-6 px-4 py-12"}>
           <Card className="mx-auto max-w-lg text-center shadow-sm">
             <CardContent className="p-8 sm:p-10">
               <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-accent">
                 <Clock className="h-8 w-8 text-primary" aria-hidden="true" />
               </div>
-              <h2 className="mb-3 text-2xl font-bold text-foreground">{t.soonTitle}</h2>
+              <h2 className="mb-3 text-2xl font-bold text-foreground">{hasPaymentQr ? t.cardSoonTitle : t.soonTitle}</h2>
               <p className="mb-6 text-muted-foreground">
-                {t.soonText}
+                {hasPaymentQr ? t.cardSoonText : t.soonText}
               </p>
               <NotifyForm stacked className="mb-6 text-left" />
               <Button asChild variant="outline" className="rounded-lg border-primary text-primary">
@@ -272,8 +338,6 @@ export default function DonatePage() {
             </CardContent>
           </Card>
         </section>
-        {/* Deposits with the official QR codes do not depend on online payments */}
-        {hasPaymentQr && <MobileMoneyQR projects={projects} className="mx-auto max-w-3xl px-4 pb-16" />}
         <Footer />
       </div>
     );
@@ -510,12 +574,12 @@ export default function DonatePage() {
                     {t.newsletter}
                   </span>
                 </label>
-                {/* Explicit consent too: by default the donation stays anonymous on the campaign page */}
+                {/* Anonymous by default: the name only appears on the campaign page if the donor unticks this */}
                 <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-foreground/80">
-                  <Checkbox checked={showName} onCheckedChange={(v) => setShowName(v === true)} className="mt-0.5" />
+                  <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5" />
                   <span>
-                    {t.showName}
-                    <span className="block text-xs text-muted-foreground">{t.showNameHint}</span>
+                    {dict.anon.label}
+                    <span className="block text-xs text-muted-foreground">{dict.anon.hint}</span>
                   </span>
                 </label>
               </div>
@@ -586,7 +650,12 @@ export default function DonatePage() {
       </section>
 
       {/* Alternative: pay with the official Wave / Orange Money QR code, then declare the deposit */}
-      <MobileMoneyQR projects={projects} className="mx-auto max-w-3xl px-4 pb-16" />
+      <MobileMoneyQR
+        projects={projects}
+        amount={finalAmount}
+        projectId={projectId === NO_PROJECT ? null : projectId}
+        className="mx-auto max-w-3xl px-4 pb-16"
+      />
 
       <Footer />
     </div>

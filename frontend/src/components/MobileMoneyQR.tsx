@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,9 +25,19 @@ function formatCFA(amount: number) {
  * Pay by scanning the official Wave / Orange Money QR code, then declare the deposit so it can be
  * checked by the team and counted (the operator does not notify the platform of these payments).
  */
-export default function MobileMoneyQR({ projects = [], className }: { projects?: Project[]; className?: string }) {
+interface MobileMoneyQRProps {
+  projects?: Project[];
+  /** Amount already chosen on the page: fills the form */
+  amount?: number | null;
+  /** Campaign already chosen (?project=ID, e.g. from a poster): selected in the form */
+  projectId?: string | null;
+  className?: string;
+}
+
+export default function MobileMoneyQR({ projects = [], amount: chosenAmount, projectId, className }: MobileMoneyQRProps) {
   const source = useVisitSource();
-  const t = useI18n().t.qr;
+  const { t: dict } = useI18n();
+  const t = dict.qr;
   const [operator, setOperator] = useState<"wave" | "orange_money">("wave");
   const [amount, setAmount] = useState("");
   const [reference, setReference] = useState("");
@@ -37,6 +48,15 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
   const [campaign, setCampaign] = useState(GENERAL);
   const [loading, setLoading] = useState(false);
   const [declared, setDeclared] = useState<number | null>(null);
+  const [anonymous, setAnonymous] = useState(true);
+
+  useEffect(() => {
+    if (chosenAmount && chosenAmount > 0) setAmount(String(chosenAmount));
+  }, [chosenAmount]);
+
+  useEffect(() => {
+    if (projectId && projects.some((p) => String(p.id) === projectId)) setCampaign(projectId);
+  }, [projectId, projects]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +77,7 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
         project_id: campaign === GENERAL ? undefined : Number(campaign),
         cause: GENERAL,
         message: sourceLine(source) ?? undefined,
+        anonymous,
       });
       setDeclared(value);
     } catch (error) {
@@ -67,7 +88,7 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
   };
 
   return (
-    <section className={cn("space-y-6", className)} aria-labelledby="qr-title">
+    <section id="qr-paiement" className={cn("scroll-mt-20 space-y-6", className)} aria-labelledby="qr-title">
       <div className="text-center">
         <h2 id="qr-title" className="flex items-center justify-center gap-2 text-2xl font-bold text-foreground">
           <QrCode className="h-6 w-6 text-primary" aria-hidden="true" />
@@ -182,6 +203,14 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
                 <Label htmlFor="dep-email">{t.email}</Label>
                 <Input id="dep-email" type="email" autoComplete="email" placeholder={t.emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 h-11 rounded-xl" />
               </div>
+
+              <label className="flex cursor-pointer items-start gap-2.5 text-sm text-foreground/80">
+                <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5" />
+                <span>
+                  {dict.anon.label}
+                  <span className="block text-xs text-muted-foreground">{dict.anon.hint}</span>
+                </span>
+              </label>
 
               <Button type="submit" size="lg" disabled={loading} className="w-full rounded-xl font-semibold">
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}

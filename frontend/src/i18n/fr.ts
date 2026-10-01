@@ -116,6 +116,11 @@ const fr = {
     finished: "Projet terminé",
     daysLeft: (n: number): string => (n === 0 ? "Dernier jour" : `Il reste ${n} jour${n > 1 ? "s" : ""}`),
   },
+  // "Je reste anonyme", on both donation forms (checked by default)
+  anon: {
+    label: "Je reste anonyme",
+    hint: "Votre nom n'apparaîtra pas parmi les soutiens de la campagne. Décochez pour afficher votre prénom et l'initiale de votre nom.",
+  },
   supporters: {
     title: "Ils soutiennent cette campagne",
     count: (n: number): string => `${n} don${n > 1 ? "s" : ""}`,
@@ -182,8 +187,12 @@ const fr = {
     emailRequired: "Obligatoire pour que nous puissions vous contacter au sujet de votre don.",
     newsletter:
       "Je souhaite recevoir par email les nouvelles des campagnes (quelques emails par an, désabonnement en un clic).",
-    showName: "Afficher mon prénom et l'initiale de mon nom parmi les soutiens de la campagne.",
-    showNameHint: "Sinon, votre don apparaît comme « Un donateur anonyme », sans le montant.",
+    pickTitle: "Choisissez le montant de votre don",
+    pickText: "Touchez un montant : vous passez directement au paiement par Wave ou Orange Money.",
+    customGo: "Continuer",
+    cardSoonTitle: "Paiement par carte bancaire : bientôt",
+    cardSoonText:
+      "Le paiement en ligne par carte arrive bientôt. Laissez-nous vos coordonnées pour être prévenu, ou donnez dès maintenant avec Wave ou Orange Money ci-dessus.",
     phone: "Téléphone",
     message: "Message (optionnel)",
     messagePlaceholder: "Un mot d'encouragement...",

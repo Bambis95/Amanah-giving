@@ -497,6 +497,8 @@ export interface MobileDepositDeclaration {
   project_id?: number;
   cause?: string;
   message?: string;
+  /** "Je reste anonyme": hidden from the campaign's supporters */
+  anonymous?: boolean;
 }
 
 export interface AuditLogEntry {

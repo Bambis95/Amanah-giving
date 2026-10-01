@@ -115,6 +115,10 @@ const en: Dictionary = {
     finished: "Project completed",
     daysLeft: (n) => (n === 0 ? "Last day" : `${n} day${n > 1 ? "s" : ""} left`),
   },
+  anon: {
+    label: "I stay anonymous",
+    hint: "Your name will not appear among the campaign's supporters. Untick to show your first name and last-name initial.",
+  },
   supporters: {
     title: "They support this campaign",
     count: (n) => `${n} donation${n > 1 ? "s" : ""}`,
@@ -180,8 +184,12 @@ const en: Dictionary = {
     emailAccount: "Leave empty to use your account's email.",
     emailRequired: "Required so that we can contact you about your donation.",
     newsletter: "I would like to receive campaign news by email (a few emails a year, one-click unsubscribe).",
-    showName: "Show my first name and last-name initial among the campaign's supporters.",
-    showNameHint: "Otherwise your donation appears as “An anonymous donor”, without the amount.",
+    pickTitle: "Choose the amount of your donation",
+    pickText: "Tap an amount: you go straight to paying with Wave or Orange Money.",
+    customGo: "Continue",
+    cardSoonTitle: "Card payment: coming soon",
+    cardSoonText:
+      "Online card payment is coming soon. Leave your details to be told, or give right now with Wave or Orange Money above.",
     phone: "Phone",
     message: "Message (optional)",
     messagePlaceholder: "A word of encouragement...",
