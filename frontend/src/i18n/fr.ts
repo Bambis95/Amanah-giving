@@ -1,7 +1,7 @@
 // Source texts of the public pages. English (en.ts) and Wolof (wo.ts) follow the same shape.
 // Campaign texts, legal pages, sign-in and the dashboard stay in French.
 const fr = {
-  lang: { label: "Langue", fr: "Français", en: "English", wo: "Wolof" },
+  lang: { label: "Langue", fr: "Français", en: "English", wo: "Wolof", ar: "العربية" },
   nav: {
     home: "Accueil",
     campaigns: "Campagnes",

@@ -2,7 +2,7 @@ import type { Dictionary } from "./fr";
 
 // Wolof (Latin orthography). Draft: to be reviewed by a native speaker before it is promoted.
 const wo: Dictionary = {
-  lang: { label: "Làkk", fr: "Français", en: "English", wo: "Wolof" },
+  lang: { label: "Làkk", fr: "Français", en: "English", wo: "Wolof", ar: "العربية" },
   nav: {
     home: "Kër",
     campaigns: "Kàmpaañ yi",

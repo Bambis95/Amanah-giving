@@ -28,9 +28,9 @@ export default function CampaignNewsList({ projectId }: { projectId: number }) {
           <li key={n.id} className="relative">
             <span className="absolute -left-[1.4rem] top-1.5 h-2.5 w-2.5 rounded-full bg-primary" aria-hidden="true" />
             <time dateTime={n.published_at} className="text-xs text-muted-foreground">{dateFormat.format(new Date(n.published_at))}</time>
-            <p className="font-medium text-foreground">{n.title}</p>
+            <p dir="auto" className="font-medium text-foreground">{n.title}</p>
             {n.image && <img src={n.image} alt="" loading="lazy" className="my-2 max-h-56 w-full rounded-lg object-cover" />}
-            <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{n.body}</p>
+            <p dir="auto" className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{n.body}</p>
           </li>
         ))}
       </ol>

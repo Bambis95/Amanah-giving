@@ -19,7 +19,7 @@ import ShareCampaign from "./ShareCampaign";
 import SupportersList from "./SupportersList";
 import { whatsappLink } from "@/lib/share";
 import { iconByName } from "@/lib/categories";
-import { useI18n } from "@/i18n";
+import { isRtl, useI18n } from "@/i18n";
 
 function formatCFA(amount: number) {
   return new Intl.NumberFormat("fr-FR").format(amount);
@@ -37,7 +37,8 @@ function daysLeft(endDate: string | null | undefined): number | null {
 /** `autoOpen`: open the campaign's dialog at once (shared link /projects?campagne=ID) */
 export default function ProjectCard({ project, autoOpen = false }: { project: Project; autoOpen?: boolean }) {
   const [open, setOpen] = useState(autoOpen);
-  const t = useI18n().t.card;
+  const { lang, t: dict } = useI18n();
+  const t = dict.card;
   const progress = project.goal > 0 ? Math.round((project.raised / project.goal) * 100) : 0;
   const IconComponent = iconByName(project.icon);
   const completed = project.status === "completed";
@@ -105,10 +106,10 @@ export default function ProjectCard({ project, autoOpen = false }: { project: Pr
         )}
       </div>
       <CardContent className="flex flex-1 flex-col p-5">
-        <h3 className="mb-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
+        <h3 dir="auto" className="mb-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
           {project.title}
         </h3>
-        <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
+        <p dir="auto" className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
         {/* The full text, photos and news open in a dialog, so expanding one card never stretches the others in its row */}
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -119,7 +120,7 @@ export default function ProjectCard({ project, autoOpen = false }: { project: Pr
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
               {photos.length === 1 && <img src={photos[0]} alt="" className="w-full rounded-lg object-contain" />}
               {photos.length > 1 && (
-                <Carousel opts={{ loop: true }} className="w-full" aria-label={t.photosOf(project.title)}>
+                <Carousel opts={{ loop: true, direction: isRtl(lang) ? "rtl" : "ltr" }} className="w-full" aria-label={t.photosOf(project.title)}>
                   <CarouselContent>
                     {photos.map((url, i) => (
                       <CarouselItem key={`${url}-${i}`}>
@@ -139,11 +140,11 @@ export default function ProjectCard({ project, autoOpen = false }: { project: Pr
                 </Carousel>
               )}
               <DialogHeader>
-                <DialogTitle className="text-xl">{project.title}</DialogTitle>
+                <DialogTitle dir="auto" className="text-xl">{project.title}</DialogTitle>
                 {project.location && <p className="text-sm text-muted-foreground">{project.location}</p>}
               </DialogHeader>
               <DialogDescription asChild>
-                <div className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{project.description}</div>
+                <div dir="auto" className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{project.description}</div>
               </DialogDescription>
               <SupportersList projectId={project.id} />
               <CampaignNewsList projectId={project.id} />

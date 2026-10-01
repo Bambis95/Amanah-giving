@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
 import { AuthProvider } from './contexts/AuthContext';
 import { I18nProvider } from './i18n';
+import DocumentDirection from './components/DocumentDirection';
 import { ThemeProvider } from 'next-themes';
 import ScrollToTop from './components/ScrollToTop';
 import SessionTimeout from './components/SessionTimeout';
@@ -62,6 +63,7 @@ const App = () => (
       <I18nProvider>
       <BrowserRouter>
         <ScrollToTop />
+        <DocumentDirection />
         <SessionTimeout />
         <Suspense fallback={<PageFallback />}>
         <Routes>

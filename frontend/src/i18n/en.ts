@@ -1,7 +1,7 @@
 import type { Dictionary } from "./fr";
 
 const en: Dictionary = {
-  lang: { label: "Language", fr: "Français", en: "English", wo: "Wolof" },
+  lang: { label: "Language", fr: "Français", en: "English", wo: "Wolof", ar: "العربية" },
   nav: {
     home: "Home",
     campaigns: "Campaigns",

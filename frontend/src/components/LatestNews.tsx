@@ -45,8 +45,8 @@ export default function LatestNews() {
                   <time dateTime={n.published_at}>{dateFormat.format(new Date(n.published_at))}</time>
                   {n.project_title && <> · {n.project_title}</>}
                 </p>
-                <h3 className="mt-1 font-semibold text-foreground">{n.title}</h3>
-                <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{n.body}</p>
+                <h3 dir="auto" className="mt-1 font-semibold text-foreground">{n.title}</h3>
+                <p dir="auto" className="mt-2 line-clamp-4 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{n.body}</p>
               </CardContent>
             </Card>
           ))}

@@ -136,7 +136,7 @@ export default function ContactPage() {
                   </div>
                   <h3 className="font-bold text-foreground text-sm mb-1">{info.title}</h3>
                   {info.details.map((d) => (
-                    <p key={d} className="text-sm text-foreground/80">{d}</p>
+                    <p key={d} dir="auto" className="text-sm text-foreground/80">{d}</p>
                   ))}
                   {info.subtitle && (
                     <p className="text-xs text-muted-foreground mt-1">{info.subtitle}</p>
