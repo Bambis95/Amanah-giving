@@ -401,6 +401,7 @@ const wo: Dictionary = {
     intro: (brand) =>
       `Scannerl QR code bu ${brand} ci sa application Wave walla Orange Money, te nga xamle sa fey ci suuf ngir mu dem ci kàmpaañ bi nga tànn.`,
     soon: "QR code bi dina ñëw ci kanam",
+    openApp: (name) => `Fey ak ${name}`,
     howTo: (name) => `Ubbil ${name}, bësal « Scanner », te nga bind xaalisu sa ndimbal.`,
     thanks: "Jërëjëf ci sa ndimbal !",
     declared: (amount, brand, withEmail) =>

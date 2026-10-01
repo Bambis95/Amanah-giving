@@ -401,6 +401,7 @@ const en: Dictionary = {
     intro: (brand) =>
       `Scan the official ${brand} QR code with your Wave or Orange Money app, then declare your payment below so it goes to the campaign you choose.`,
     soon: "QR code coming soon",
+    openApp: (name) => `Pay with ${name}`,
     howTo: (name) => `Open ${name}, tap “Scan”, then enter the amount of your donation.`,
     thanks: "Thank you for your donation!",
     declared: (amount, brand, withEmail) =>

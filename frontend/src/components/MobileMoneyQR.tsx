@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, Loader2, QrCode, Send } from "lucide-react";
+import { CheckCircle, Loader2, QrCode, Send, Smartphone } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { api, Project } from "@/api";
 import { BRAND_NAME } from "@/lib/brand";
@@ -83,12 +84,11 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
             <div className="h-2" style={{ backgroundColor: qr.color }} aria-hidden="true" />
             <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
               <p className="text-lg font-bold text-foreground">{qr.name}</p>
-              {qr.image ? (
-                <img
-                  src={qr.image}
-                  alt={`QR code ${qr.name} ${BRAND_NAME}`}
-                  className="h-52 w-52 rounded-xl bg-white object-contain p-2 ring-1 ring-black/5"
-                />
+              {qr.url ? (
+                // White background in both themes: scanners need dark modules on light
+                <div className="rounded-xl bg-white p-3 ring-1 ring-black/5">
+                  <QRCodeSVG value={qr.url} size={184} level="M" marginSize={0} title={`QR code ${qr.name} ${BRAND_NAME}`} />
+                </div>
               ) : (
                 <div className="flex h-52 w-52 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-muted-foreground">
                   <QrCode className="h-12 w-12" aria-hidden="true" />
@@ -98,6 +98,15 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
               <p className="text-sm text-muted-foreground">
                 {t.howTo(qr.name)}
               </p>
+              {/* On a phone the screen cannot scan itself: the same link opens the operator's app */}
+              {qr.url && (
+                <Button asChild variant="outline" className="h-auto min-h-11 w-full whitespace-normal py-2 font-semibold" style={{ borderColor: qr.color }}>
+                  <a href={qr.url} target="_blank" rel="noopener noreferrer">
+                    <Smartphone className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t.openApp(qr.name)}
+                  </a>
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}

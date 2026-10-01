@@ -405,6 +405,7 @@ const fr = {
     intro: (brand: string) =>
       `Scannez le QR code officiel ${brand} avec votre application Wave ou Orange Money, puis déclarez votre dépôt ci-dessous pour qu'il soit affecté à la campagne choisie.`,
     soon: "QR code bientôt disponible",
+    openApp: (name: string) => `Payer avec ${name}`,
     howTo: (name: string) => `Ouvrez ${name}, touchez « Scanner », puis saisissez le montant de votre don.`,
     thanks: "Merci pour votre don !",
     declared: (amount: string, brand: string, withEmail: boolean) =>
