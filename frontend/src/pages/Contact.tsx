@@ -296,7 +296,7 @@ export default function ContactPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md surface-brand">
+            <Card className="surface-brand border-0 text-white shadow-md">
               <CardContent className="p-6">
                 <h3 className="font-bold text-lg mb-3">Modes de Paiement</h3>
                 <p className="text-white/80 text-sm mb-4">

@@ -535,7 +535,7 @@ export default function DonatePage() {
           </Card>
 
           {/* Summary & Submit */}
-          <Card className="surface-brand border-0 shadow-md">
+          <Card className="surface-brand border-0 text-white shadow-md">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-white/80">{t.amount}</span>

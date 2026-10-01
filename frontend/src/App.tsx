@@ -1,38 +1,48 @@
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
-import Donate from './pages/Donate';
-import Projects from './pages/Projects';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentCancel from './pages/PaymentCancel';
-import NotFound from './pages/NotFound';
-import Login from './pages/Login';
-import Admin from './pages/Admin';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import AcceptInvitation from './pages/AcceptInvitation';
-import Account from './pages/Account';
-import Unsubscribe from './pages/Unsubscribe';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
-import Join from './pages/Join';
-import Partners from './pages/Partners';
-import Transparency from './pages/Transparency';
-import Stand from './pages/Stand';
-import Poster from './pages/Poster';
-import Membership from './pages/Membership';
-import MembershipPrint from './pages/MembershipPrint';
 import { AuthProvider } from './contexts/AuthContext';
 import { I18nProvider } from './i18n';
 import { ThemeProvider } from 'next-themes';
 import ScrollToTop from './components/ScrollToTop';
 import SessionTimeout from './components/SessionTimeout';
 
+// The home page ships with the first download; every other page loads when first visited
+const Donate = lazy(() => import('./pages/Donate'));
+const Projects = lazy(() => import('./pages/Projects'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
+const PaymentCancel = lazy(() => import('./pages/PaymentCancel'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Login = lazy(() => import('./pages/Login'));
+const Admin = lazy(() => import('./pages/Admin'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
+const Account = lazy(() => import('./pages/Account'));
+const Unsubscribe = lazy(() => import('./pages/Unsubscribe'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Join = lazy(() => import('./pages/Join'));
+const Partners = lazy(() => import('./pages/Partners'));
+const Transparency = lazy(() => import('./pages/Transparency'));
+const Stand = lazy(() => import('./pages/Stand'));
+const Poster = lazy(() => import('./pages/Poster'));
+const Membership = lazy(() => import('./pages/Membership'));
+const MembershipPrint = lazy(() => import('./pages/MembershipPrint'));
+
 const queryClient = new QueryClient();
+
+// Shown for the instant a page's code is being fetched
+const PageFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background" aria-busy="true">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);
 
 const App = () => (
   // Theme: saved choice, else system preference, else light; applied as the "dark" class
@@ -52,6 +62,7 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <SessionTimeout />
+        <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
@@ -81,6 +92,7 @@ const App = () => (
           <Route path="/payment/cancel" element={<PaymentCancel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
       </I18nProvider>
       </AuthProvider>
