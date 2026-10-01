@@ -9,6 +9,7 @@ import io
 import json
 import zipfile
 from datetime import date, datetime, timezone
+from typing import Dict, Tuple
 
 from core.database import get_db
 from dependencies.auth import get_admin_actor
@@ -70,34 +71,47 @@ def _csv(rows, columns) -> bytes:
     return ("﻿" + out.getvalue()).encode("utf-8")
 
 
-@router.get("")
-async def export_all(db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_admin_actor)):
+async def build_archive(db: AsyncSession, with_files: bool = True) -> Tuple[bytes, Dict[str, int]]:
+    """The ZIP and the number of rows per table. Without files: CSVs only (small enough for an email)."""
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     buffer = io.BytesIO()
-    counts = {}
+    counts: Dict[str, int] = {}
     with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for name, (model, hidden) in TABLES.items():
             columns = [c.name for c in model.__table__.columns if c.name not in hidden]
             rows = list((await db.execute(select(model))).scalars())
             counts[name] = len(rows)
             archive.writestr(f"{name}.csv", _csv(rows, columns))
-        for image in (await db.execute(select(StoredImage))).scalars():
-            archive.writestr(f"fichiers/photos/{image.id}.{EXTENSIONS.get(image.content_type, 'bin')}", image.data)
-        for doc in (await db.execute(select(FinanceDocument))).scalars():
-            archive.writestr(f"fichiers/justificatifs/{doc.id}.{EXTENSIONS.get(doc.content_type, 'bin')}", doc.data)
+        if with_files:
+            for image in (await db.execute(select(StoredImage))).scalars():
+                archive.writestr(f"fichiers/photos/{image.id}.{EXTENSIONS.get(image.content_type, 'bin')}", image.data)
+            for doc in (await db.execute(select(FinanceDocument))).scalars():
+                archive.writestr(f"fichiers/justificatifs/{doc.id}.{EXTENSIONS.get(doc.content_type, 'bin')}", doc.data)
+        files_note = (
+            "Les photos et les justificatifs financiers sont dans le dossier fichiers/, nommés par leur identifiant\n"
+            "(colonnes image, gallery, document_id).\n"
+            if with_files
+            else "Les photos et justificatifs ne sont pas inclus : téléchargez l'export complet depuis le tableau de bord.\n"
+        )
         archive.writestr(
             "LISEZMOI.txt",
-            "Export complet de la plateforme SENJAPO du " + stamp + ".\n\n"
-            "Chaque fichier .csv s'ouvre dans Excel (séparateur « ; »). Les photos et les justificatifs financiers\n"
-            "sont dans le dossier fichiers/, nommés par leur identifiant (colonnes image, gallery, document_id).\n"
+            "Export des données de la plateforme SENJAPO du " + stamp + ".\n\n"
+            "Chaque fichier .csv s'ouvre dans Excel (séparateur « ; »).\n" + files_note +
             "Les mots de passe, codes et jetons de sécurité ne sont jamais exportés.\n",
         )
+    return buffer.getvalue(), counts
+
+
+@router.get("")
+async def export_all(db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_admin_actor)):
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    content, counts = await build_archive(db)
     await audit.record(
         db, actor, "security.data_export", "Export complet des données téléchargé",
         target_type="export", details=counts,
     )
     return Response(
-        content=buffer.getvalue(),
+        content=content,
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="senjapo-export-{stamp}.zip"', "Cache-Control": "private, no-store"},
     )

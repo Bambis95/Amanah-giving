@@ -122,7 +122,19 @@ Quand le compte marchand est validé :
 - **Mises à jour** : chaque `git push` sur `main` redéploie automatiquement ; les migrations
   de la base (`alembic upgrade head`) s'appliquent avant le démarrage.
 - **Sauvegardes** : vérifiez celles incluses dans l'offre de `senjapo-db` et faites un export
-  avant chaque changement important.
+  avant chaque changement important (*Réglages du site → Télécharger toutes les données*).
+  En plus, chaque semaine, les administrateurs reçoivent par email une **sauvegarde automatique**
+  (fichiers CSV, sans les photos), si l'envoi d'emails est configuré. `BACKUP_EMAIL_DAYS` règle
+  l'intervalle en jours (7 par défaut, `0` pour l'arrêter). Chaque envoi est inscrit au Journal.
+- **Alertes paiement** : si un donateur ne peut pas atteindre la page de paiement (prestataire en
+  panne, clés invalides), les administrateurs reçoivent un email, au plus un par heure.
+- **Surveillance du site** (gratuit, 5 minutes) : créez un compte sur **uptimerobot.com**, puis deux
+  moniteurs *HTTP(s)*, toutes les 5 minutes, avec votre email en contact d'alerte :
+  1. `https://senjapo.onrender.com` (le site) ;
+  2. `https://senjapo-api.onrender.com/health/full` (le serveur et la base de données : il répond
+     une erreur 503 si la base ne répond plus).
+  Vous êtes prévenu par email (ou SMS/application) dès qu'un des deux tombe, puis quand il revient.
+  Remplacez les adresses quand le nom de domaine sera branché.
 - **Finances** : le **trésorier** (rôle nommé par un administrateur) et les administrateurs tiennent
   les comptes dans *Tableau de bord → Finances* ; le président les consulte. Les dons en ligne y sont
   comptés automatiquement ; tout le reste (subventions, cotisations, espèces, dépenses) se saisit avec

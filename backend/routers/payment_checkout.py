@@ -17,7 +17,7 @@ from core.database import get_db
 from services.payment import PaymentService, CheckoutSessionRequest, CheckoutError
 from services.donations import DonationsService
 from services.paydunya import create_checkout, fetch_invoice_status, PayDunyaError
-from services import newsletter, paytech
+from services import alerts, newsletter, paytech
 from routers.site import load_site_settings
 
 # Donations whose cause is this are club membership fees (Adhérer page), counted apart in the accounts
@@ -368,6 +368,7 @@ async def create_donation_checkout(
                 "Stripe checkout error: %s",
                 str(exc),
             )
+            await alerts.payment_unavailable(db, "Stripe", str(exc))
 
             raise HTTPException(
                 status_code=500,
@@ -473,6 +474,7 @@ async def create_donation_checkout(
                 donation.id,
                 str(exc),
             )
+            await alerts.payment_unavailable(db, "PayDunya", str(exc))
 
             try:
                 await donations_service.update(
@@ -502,6 +504,7 @@ async def create_donation_checkout(
                 "PayDunya returned an invalid checkout for donation %s",
                 donation.id,
             )
+            await alerts.payment_unavailable(db, "PayDunya", "réponse sans adresse de paiement")
 
             try:
                 await donations_service.update(
@@ -656,6 +659,7 @@ async def _paytech_checkout(
         )
     except paytech.PayTechError as exc:
         logger.error("PayTech checkout error for donation %s: %s", donation.id, exc)
+        await alerts.payment_unavailable(donations_service.db, "PayTech", str(exc))
         await donations_service.update(donation.id, {"payment_status": "failed"}, user_id=user_id)
         raise HTTPException(
             status_code=502,

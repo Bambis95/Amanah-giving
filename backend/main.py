@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import traceback
@@ -70,9 +71,13 @@ async def lifespan(app: FastAPI):
     await initialize_admin_user()
     # MODULE_STARTUP_END
 
+    # Emails the data to the administrators every BACKUP_EMAIL_DAYS days (services/backup.py)
+    backup_task = asyncio.create_task(backup_loop())
+
     logger.info("=== Application startup completed successfully ===")
     yield
 
+    backup_task.cancel()
     # MODULE_SHUTDOWN_START
     await close_database()
     # MODULE_SHUTDOWN_END
@@ -130,6 +135,7 @@ from routers.share import router as share_router
 from routers.newsletter import router as newsletter_router
 from routers.export import router as export_router
 from routers.supporters import router as supporters_router
+from services.backup import backup_loop
 
 
 # ============================================================
@@ -245,6 +251,16 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/health/full")
+async def full_health_check():
+    """For an uptime monitor: 503 when the database does not answer, so the alert fires."""
+    from fastapi.responses import JSONResponse
+    from services.database import check_database_health
+
+    healthy = await check_database_health()
+    return JSONResponse({"status": "healthy" if healthy else "unhealthy"}, status_code=200 if healthy else 503)
 
 
 # ============================================================
