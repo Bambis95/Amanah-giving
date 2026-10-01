@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Newspaper } from "lucide-react";
 import { CampaignNews, getCampaignNews } from "@/api";
-
-const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" });
+import { dateLocale, useI18n } from "@/i18n";
 
 /** News of one campaign, newest first, as a small timeline (inside the campaign dialog) */
 export default function CampaignNewsList({ projectId }: { projectId: number }) {
   const [items, setItems] = useState<CampaignNews[]>([]);
+  const { lang, t } = useI18n();
+  const dateFormat = new Intl.DateTimeFormat(dateLocale(lang), { dateStyle: "long" });
 
   useEffect(() => {
     getCampaignNews(20, projectId)
@@ -20,7 +21,7 @@ export default function CampaignNewsList({ projectId }: { projectId: number }) {
     <section aria-labelledby={`news-${projectId}`} className="border-t border-border pt-4">
       <h3 id={`news-${projectId}`} className="mb-3 flex items-center gap-2 font-semibold text-foreground">
         <Newspaper className="h-4 w-4 text-primary" aria-hidden="true" />
-        Actualités de la campagne
+        {t.news.campaign}
       </h3>
       <ol className="space-y-4 border-l-2 border-accent pl-4">
         {items.map((n) => (

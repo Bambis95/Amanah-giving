@@ -11,6 +11,7 @@ import { BRAND_NAME } from "@/lib/brand";
 import { PAYMENT_QR } from "@/lib/payment-qr";
 import { sourceLine, useVisitSource } from "@/hooks/use-visit-source";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const GENERAL = "general";
 
@@ -24,6 +25,7 @@ function formatCFA(amount: number) {
  */
 export default function MobileMoneyQR({ projects = [], className }: { projects?: Project[]; className?: string }) {
   const source = useVisitSource();
+  const t = useI18n().t.qr;
   const [operator, setOperator] = useState<"wave" | "orange_money">("wave");
   const [amount, setAmount] = useState("");
   const [reference, setReference] = useState("");
@@ -38,9 +40,9 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const value = parseInt(amount.replace(/\D/g, ""), 10);
-    if (!value || value < 100) return toast.error("Indiquez le montant envoyé (100 FCFA minimum)");
-    if (reference.trim().length < 4) return toast.error("Indiquez la référence de la transaction (reçue par SMS)");
-    if (phone.trim().length < 6) return toast.error("Indiquez le numéro utilisé pour le paiement");
+    if (!value || value < 100) return toast.error(t.errAmount);
+    if (reference.trim().length < 4) return toast.error(t.errReference);
+    if (phone.trim().length < 6) return toast.error(t.errPhone);
     setLoading(true);
     try {
       await api.declareMobileDeposit({
@@ -57,7 +59,7 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
       });
       setDeclared(value);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "La déclaration n'a pas pu être envoyée.");
+      toast.error(error instanceof Error ? error.message : t.errSend);
     } finally {
       setLoading(false);
     }
@@ -68,11 +70,10 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
       <div className="text-center">
         <h2 id="qr-title" className="flex items-center justify-center gap-2 text-2xl font-bold text-foreground">
           <QrCode className="h-6 w-6 text-primary" aria-hidden="true" />
-          Payer en scannant le QR code
+          {t.title}
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-muted-foreground">
-          Scannez le QR code officiel {BRAND_NAME} avec votre application Wave ou Orange Money, puis déclarez votre
-          dépôt ci-dessous pour qu'il soit affecté à la campagne choisie.
+          {t.intro(BRAND_NAME)}
         </p>
       </div>
 
@@ -91,11 +92,11 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
               ) : (
                 <div className="flex h-52 w-52 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-muted-foreground">
                   <QrCode className="h-12 w-12" aria-hidden="true" />
-                  <span className="text-sm">QR code bientôt disponible</span>
+                  <span className="text-sm">{t.soon}</span>
                 </div>
               )}
               <p className="text-sm text-muted-foreground">
-                Ouvrez {qr.name}, touchez « Scanner », puis saisissez le montant de votre don.
+                {t.howTo(qr.name)}
               </p>
             </CardContent>
           </Card>
@@ -107,16 +108,14 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
           {declared !== null ? (
             <div className="py-6 text-center" role="status">
               <CheckCircle className="mx-auto mb-3 h-12 w-12 text-primary" aria-hidden="true" />
-              <h3 className="mb-2 text-xl font-bold text-foreground">Merci pour votre don !</h3>
+              <h3 className="mb-2 text-xl font-bold text-foreground">{t.thanks}</h3>
               <p className="text-muted-foreground">
-                Votre dépôt de {formatCFA(declared)} FCFA est enregistré. Il sera confirmé après vérification par
-                l'équipe {BRAND_NAME}
-                {email.trim() ? ", et vous recevrez un email de confirmation." : "."}
+                {t.declared(formatCFA(declared), BRAND_NAME, !!email.trim())}
               </p>
             </div>
           ) : (
-            <form onSubmit={submit} className="space-y-4" noValidate aria-label="Déclarer mon dépôt">
-              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Opérateur utilisé">
+            <form onSubmit={submit} className="space-y-4" noValidate aria-label={t.form}>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t.operator}>
                 {PAYMENT_QR.map((qr) => (
                   <button
                     key={qr.id}
@@ -136,25 +135,25 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="dep-amount">Montant envoyé (FCFA) *</Label>
-                  <Input id="dep-amount" inputMode="numeric" placeholder="Ex. : 5 000" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-1 h-11 rounded-xl" />
+                  <Label htmlFor="dep-amount">{t.amount}</Label>
+                  <Input id="dep-amount" inputMode="numeric" placeholder={t.amountPlaceholder} value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-1 h-11 rounded-xl" />
                 </div>
                 <div>
-                  <Label htmlFor="dep-ref">Référence de la transaction *</Label>
-                  <Input id="dep-ref" placeholder="Ex. : T123ABC456" value={reference} onChange={(e) => setReference(e.target.value)} className="mt-1 h-11 rounded-xl" />
+                  <Label htmlFor="dep-ref">{t.reference}</Label>
+                  <Input id="dep-ref" placeholder={t.referencePlaceholder} value={reference} onChange={(e) => setReference(e.target.value)} className="mt-1 h-11 rounded-xl" />
                 </div>
                 <div>
-                  <Label htmlFor="dep-phone">Numéro utilisé pour payer *</Label>
+                  <Label htmlFor="dep-phone">{t.phone}</Label>
                   <Input id="dep-phone" type="tel" autoComplete="tel" placeholder="+221 7X XXX XX XX" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1 h-11 rounded-xl" />
                 </div>
                 <div>
-                  <Label>Campagne soutenue</Label>
+                  <Label>{t.campaign}</Label>
                   <Select value={campaign} onValueChange={setCampaign}>
-                    <SelectTrigger className="mt-1 h-11 rounded-xl" aria-label="Campagne soutenue">
+                    <SelectTrigger className="mt-1 h-11 rounded-xl" aria-label={t.campaign}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={GENERAL}>Don général</SelectItem>
+                      <SelectItem value={GENERAL}>{t.general}</SelectItem>
                       {projects.map((p) => (
                         <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>
                       ))}
@@ -162,25 +161,25 @@ export default function MobileMoneyQR({ projects = [], className }: { projects?:
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="dep-first">Prénom</Label>
+                  <Label htmlFor="dep-first">{t.firstName}</Label>
                   <Input id="dep-first" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="mt-1 h-11 rounded-xl" />
                 </div>
                 <div>
-                  <Label htmlFor="dep-last">Nom</Label>
+                  <Label htmlFor="dep-last">{t.lastName}</Label>
                   <Input id="dep-last" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="mt-1 h-11 rounded-xl" />
                 </div>
               </div>
               <div>
-                <Label htmlFor="dep-email">Email (pour recevoir la confirmation)</Label>
-                <Input id="dep-email" type="email" autoComplete="email" placeholder="vous@exemple.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 h-11 rounded-xl" />
+                <Label htmlFor="dep-email">{t.email}</Label>
+                <Input id="dep-email" type="email" autoComplete="email" placeholder={t.emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 h-11 rounded-xl" />
               </div>
 
               <Button type="submit" size="lg" disabled={loading} className="w-full rounded-xl font-semibold">
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                Déclarer mon dépôt
+                {t.submit}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Votre don est compté dans la campagne une fois le dépôt vérifié par l'équipe {BRAND_NAME}.
+                {t.note(BRAND_NAME)}
               </p>
             </form>
           )}

@@ -14,7 +14,7 @@ import { formatAmount, formatNumber, usePublicStats } from "@/hooks/use-public-s
 import { cn } from "@/lib/utils";
 import { softTone, solidTone, Tone } from "@/lib/tones";
 import { Heart, Users, FolderOpen, TrendingUp, ArrowRight, HandHeart, Lightbulb } from "lucide-react";
-import { BRAND_DESCRIPTOR, BRAND_NAME } from "@/lib/brand";
+import { BRAND_NAME } from "@/lib/brand";
 import { Dictionary, useI18n } from "@/i18n";
 
 const HERO_IMG = "https://mgx-backend-cdn.metadl.com/generate/images/983496/2026-02-22/20fb421b-e0e3-4aa9-a282-e7aa1dd63cc3.png";
@@ -75,7 +75,7 @@ export default function IndexPage() {
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
             <HandHeart className="h-4 w-4 text-highlight" aria-hidden="true" />
             <span className="text-sm font-medium">
-              {BRAND_NAME} · {BRAND_DESCRIPTOR}
+              {BRAND_NAME} · {dict.brand.descriptor}
             </span>
           </div>
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">

@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Newspaper } from "lucide-react";
 import { CampaignNews, getCampaignNews } from "@/api";
-
-const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" });
+import { dateLocale, useI18n } from "@/i18n";
 
 /** Home page: the latest campaign news (hidden until there is at least one) */
 export default function LatestNews() {
   const [items, setItems] = useState<CampaignNews[]>([]);
+  const { lang, t: dict } = useI18n();
+  const t = dict.news;
+  const dateFormat = new Intl.DateTimeFormat(dateLocale(lang), { dateStyle: "long" });
 
   useEffect(() => {
     getCampaignNews(3)
@@ -25,12 +27,12 @@ export default function LatestNews() {
           <div>
             <p className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-highlight">
               <Newspaper className="h-4 w-4" aria-hidden="true" />
-              Nouvelles du terrain
+              {t.badge}
             </p>
-            <h2 id="latest-news" className="text-2xl font-bold text-foreground sm:text-3xl">Ce que vos dons ont permis</h2>
+            <h2 id="latest-news" className="text-2xl font-bold text-foreground sm:text-3xl">{t.title}</h2>
           </div>
           <Link to="/projects" className="group flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-            Toutes les campagnes
+            {t.all}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
         </div>

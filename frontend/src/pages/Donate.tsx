@@ -250,7 +250,7 @@ export default function DonatePage() {
         <section className="surface-brand px-4 pb-16 pt-24 sm:pt-28">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="mb-4 text-3xl font-bold md:text-4xl">{t.title}</h1>
-            <p className="mx-auto max-w-xl text-white/80">{t.slogan}</p>
+            <p className="mx-auto max-w-xl text-white/80">{dict.brand.slogan}</p>
           </div>
         </section>
         <section className="-mt-6 px-4 py-12">

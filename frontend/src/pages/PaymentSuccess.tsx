@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CheckCircle, XCircle, Clock, Heart, Loader2, RefreshCw } from "lucide-react";
 import { api, VerifyPaymentResponse } from "@/api";
+import { useI18n } from "@/i18n";
 
 // Amounts are stored in FCFA (XOF has no cents): display them as they are
 function formatCFA(amount: number) {
@@ -24,6 +25,7 @@ const RETRY_DELAY_MS = 5000;
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
+  const t = useI18n().t.success;
   const sessionId = searchParams.get("session_id"); // Stripe
   const donationId = Number(searchParams.get("donation_id")) || null; // PayDunya / PayTech
   const providerParam = searchParams.get("provider");
@@ -44,12 +46,12 @@ export default function PaymentSuccessPage() {
         result = await api.verifyMobilePayment(provider, donationId);
       } else {
         setState("failed");
-        setMessage("Lien de retour de paiement incomplet.");
+        setMessage(t.badLink);
         return;
       }
     } catch {
       setState("failed");
-      setMessage("Impossible de vérifier le paiement pour le moment. Réessayez dans quelques instants.");
+      setMessage(t.cannotCheck);
       return;
     }
 
@@ -65,12 +67,10 @@ export default function PaymentSuccessPage() {
     } else {
       setState("failed");
       setMessage(
-        result.payment_status === "cancelled"
-          ? "Le paiement a été annulé. Aucun montant n'a été débité."
-          : "Le paiement n'a pas été confirmé."
+        result.payment_status === "cancelled" ? t.cancelled : t.notConfirmed
       );
     }
-  }, [sessionId, donationId, provider]);
+  }, [sessionId, donationId, provider, t]);
 
   useEffect(() => {
     check();
@@ -93,7 +93,7 @@ export default function PaymentSuccessPage() {
             {state === "loading" && (
               <div className="py-8">
                 <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-                <p className="text-muted-foreground">Vérification du paiement…</p>
+                <p className="text-muted-foreground">{t.checking}</p>
               </div>
             )}
 
@@ -102,15 +102,15 @@ export default function PaymentSuccessPage() {
                 <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="w-10 h-10 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground mb-3">Merci pour votre don !</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-3">{t.thanksTitle}</h2>
                 <p className="text-muted-foreground mb-8">
-                  Votre don
+                  {t.yourDonation}
                   {amount !== null && (
                     <>
-                      {" "}de <span className="font-bold text-primary">{formatCFA(amount)}</span>
+                      {" "}{t.of} <span className="font-bold text-primary">{formatCFA(amount)}</span>
                     </>
                   )}{" "}
-                  a bien été reçu. Un email de confirmation vous sera envoyé si vous avez indiqué votre adresse.
+                  {t.received}
                 </p>
               </>
             )}
@@ -120,15 +120,15 @@ export default function PaymentSuccessPage() {
                 <div className="w-20 h-20 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Clock className="w-10 h-10 text-warning" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground mb-3">Paiement en cours de confirmation</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-3">{t.pendingTitle}</h2>
                 <p className="text-muted-foreground mb-6">
-                  Nous attendons la confirmation de votre opérateur
-                  {amount !== null && <> pour votre don de {formatCFA(amount)}</>}. Cela peut prendre quelques
-                  minutes.
+                  {t.pendingText}
+                  {amount !== null && t.pendingFor(formatCFA(amount))}
+                  {t.pendingWait}
                 </p>
                 <Button variant="outline" onClick={recheck} className="mb-6">
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Vérifier à nouveau
+                  {t.recheck}
                 </Button>
               </>
             )}
@@ -138,7 +138,7 @@ export default function PaymentSuccessPage() {
                 <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <XCircle className="w-10 h-10 text-destructive" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground mb-3">Paiement non confirmé</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-3">{t.failedTitle}</h2>
                 <p className="text-sm text-muted-foreground mb-8">{message}</p>
               </>
             )}
@@ -146,11 +146,11 @@ export default function PaymentSuccessPage() {
             {state !== "loading" && (
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button asChild variant="outline" className="w-full sm:w-auto"><Link to="/">
-                    Retour à l'accueil
+                    {t.home}
                   </Link></Button>
                 <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"><Link to={state === "failed" ? "/donate" : "/projects"}>
                     <Heart className="w-4 h-4 mr-2" />
-                    {state === "failed" ? "Réessayer le don" : "Découvrir les campagnes"}
+                    {state === "failed" ? t.retry : t.discover}
                   </Link></Button>
               </div>
             )}

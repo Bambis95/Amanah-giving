@@ -31,49 +31,45 @@ import { useSiteSettings } from "@/hooks/use-site-settings";
 import type { SiteSettings } from "@/api";
 import { CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_NAME } from "@/lib/brand";
 import { softTone, textTone, Tone } from "@/lib/tones";
+import { Dictionary, useI18n } from "@/i18n";
 
-const contactCards = (site: SiteSettings) => [
+const contactCards = (site: SiteSettings, t: Dictionary["contact"]) => [
   {
     icon: Phone,
-    title: "Téléphone",
+    title: t.phone,
     details: site.contact_phones,
     subtitle: "",
     tone: "primary" as Tone,
   },
   {
     icon: Mail,
-    title: "Email",
+    title: t.email,
     details: [site.contact_email],
     subtitle: "",
     tone: "info" as Tone,
   },
   {
     icon: BadgeCheck,
-    title: "Porteur",
+    title: t.carrier,
     details: [CARRIER_SHORT],
-    subtitle: `Récépissé ${CARRIER_RECEIPT}`,
+    subtitle: t.receipt(CARRIER_RECEIPT),
     tone: "highlight" as Tone,
   },
   {
     icon: Handshake,
-    title: "Partenaire",
+    title: t.partner,
     details: [PARTNER_NAME],
     subtitle: "",
     tone: "destructive" as Tone,
   },
 ];
 
-const subjects = [
-  { value: "general", label: "Question Générale" },
-  { value: "donation", label: "Question sur un Don" },
-  { value: "project", label: "Proposer une Campagne" },
-  { value: "partnership", label: "Partenariat" },
-  { value: "volunteer", label: "Bénévolat" },
-  { value: "other", label: "Autre" },
-];
+// Stored values (the admin's Messages tab labels them)
+const SUBJECTS = ["general", "donation", "project", "partnership", "volunteer", "other"];
 
 export default function ContactPage() {
-  const contactInfo = contactCards(useSiteSettings());
+  const t = useI18n().t.contact;
+  const contactInfo = contactCards(useSiteSettings(), t);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -85,7 +81,7 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !message) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
+      toast.error(t.required);
       return;
     }
 
@@ -100,9 +96,9 @@ export default function ContactPage() {
         message,
       });
       setSubmitted(true);
-      toast.success("Message envoyé avec succès !");
+      toast.success(t.sent);
     } catch (error) {
-      toast.error("Erreur lors de l'envoi du message. Veuillez réessayer.");
+      toast.error(t.failed);
     } finally {
       setLoading(false);
     }
@@ -117,11 +113,11 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block bg-white/10 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-white/20">
             <MessageCircle className="w-4 h-4 inline mr-1" />
-            Contactez-nous
+            {t.badge}
           </span>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Nous Sommes à Votre Écoute</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">{t.title}</h1>
           <p className="text-white/70 max-w-xl mx-auto">
-            Une question, une suggestion ou un projet à proposer ? N'hésitez pas à nous contacter.
+            {t.intro}
           </p>
         </div>
       </section>
@@ -164,9 +160,9 @@ export default function ContactPage() {
                     <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
                       <CheckCircle className="w-8 h-8 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">Message Envoyé !</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">{t.sentTitle}</h3>
                     <p className="text-muted-foreground mb-6">
-                      Merci de nous avoir contactés. Nous vous répondrons dans les plus brefs délais.
+                      {t.sentText}
                     </p>
                     <Button
                       onClick={() => {
@@ -179,19 +175,19 @@ export default function ContactPage() {
                       }}
                       className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
                     >
-                      Envoyer un Autre Message
+                      {t.another}
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Envoyez-nous un Message</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">{t.formTitle}</h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="name">Nom Complet *</Label>
+                          <Label htmlFor="name">{t.name}</Label>
                           <Input
                             id="name"
-                            placeholder="Votre nom"
+                            placeholder={t.namePlaceholder}
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
@@ -199,11 +195,11 @@ export default function ContactPage() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="email">Email *</Label>
+                          <Label htmlFor="email">{t.emailLabel}</Label>
                           <Input
                             id="email"
                             type="email"
-                            placeholder="votre@email.com"
+                            placeholder={t.emailPlaceholder}
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -213,7 +209,7 @@ export default function ContactPage() {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="phone">Téléphone</Label>
+                          <Label htmlFor="phone">{t.phone}</Label>
                           <Input
                             id="phone"
                             type="tel"
@@ -224,15 +220,15 @@ export default function ContactPage() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="subject">Sujet</Label>
+                          <Label htmlFor="subject">{t.subject}</Label>
                           <Select value={subject} onValueChange={setSubject}>
                             <SelectTrigger className="mt-1 h-11 rounded-xl border-border">
-                              <SelectValue placeholder="Choisir un sujet" />
+                              <SelectValue placeholder={t.subjectPlaceholder} />
                             </SelectTrigger>
                             <SelectContent>
-                              {subjects.map((s) => (
-                                <SelectItem key={s.value} value={s.value}>
-                                  {s.label}
+                              {SUBJECTS.map((s) => (
+                                <SelectItem key={s} value={s}>
+                                  {t.subjects[s]}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -240,10 +236,10 @@ export default function ContactPage() {
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="message">Message *</Label>
+                        <Label htmlFor="message">{t.message}</Label>
                         <Textarea
                           id="message"
-                          placeholder="Écrivez votre message ici..."
+                          placeholder={t.messagePlaceholder}
                           required
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
@@ -260,12 +256,12 @@ export default function ContactPage() {
                         {loading ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Envoi en cours...
+                            {t.sending}
                           </>
                         ) : (
                           <>
                             <Send className="w-4 h-4 mr-2" />
-                            Envoyer le Message
+                            {t.send}
                           </>
                         )}
                       </Button>
@@ -280,17 +276,16 @@ export default function ContactPage() {
           <div className="lg:col-span-2 space-y-6">
             <Card className="shadow-sm">
               <CardContent className="space-y-4 p-6">
-                <h3 className="font-bold text-foreground">Vous avez un projet ou souhaitez nous soutenir ?</h3>
+                <h3 className="font-bold text-foreground">{t.projectTitle}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Le {CARRIER_NAME} ({CARRIER_SHORT}) accueille les campagnes des associations, groupements et porteurs de
-                  projets, ainsi que les partenariats.
+                  {t.projectText(CARRIER_NAME, CARRIER_SHORT)}
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
                   <Button asChild className="rounded-lg">
-                    <Link to="/proposer">Proposer une campagne</Link>
+                    <Link to="/proposer">{t.propose}</Link>
                   </Button>
                   <Button asChild variant="outline" className="rounded-lg">
-                    <Link to="/partenaires">Devenir partenaire</Link>
+                    <Link to="/partenaires">{t.partners}</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -298,9 +293,9 @@ export default function ContactPage() {
 
             <Card className="surface-brand border-0 text-white shadow-md">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-3">Modes de Paiement</h3>
+                <h3 className="font-bold text-lg mb-3">{t.methodsTitle}</h3>
                 <p className="text-white/80 text-sm mb-4">
-                  Nous acceptons plusieurs modes de paiement pour faciliter vos dons :
+                  {t.methodsText}
                 </p>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
@@ -308,7 +303,7 @@ export default function ContactPage() {
                       <span className="text-xs font-bold">CB</span>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Carte bancaire</p>
+                      <p className="text-sm font-semibold">{t.card}</p>
                       <p className="text-xs text-white/60">Visa, Mastercard</p>
                     </div>
                   </div>
@@ -318,7 +313,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Orange Money</p>
-                      <p className="text-xs text-white/60">Paiement mobile sécurisé</p>
+                      <p className="text-xs text-white/60">{t.mobile}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
@@ -327,7 +322,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Wave</p>
-                      <p className="text-xs text-white/60">Paiement mobile sécurisé</p>
+                      <p className="text-xs text-white/60">{t.mobile}</p>
                     </div>
                   </div>
                 </div>

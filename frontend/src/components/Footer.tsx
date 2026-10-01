@@ -3,7 +3,7 @@ import { BadgeCheck, Facebook, Instagram, Mail, MessageCircle, Music2, Phone, Yo
 import Logo from "@/components/Logo";
 import { telHref } from "@/lib/contact";
 import { useSiteSettings, whatsappHref } from "@/hooks/use-site-settings";
-import { BRAND_NAME, BRAND_SLOGAN, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_LEGAL, PARTNER_NAME } from "@/lib/brand";
+import { BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_LEGAL, PARTNER_NAME } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
 import { useI18n } from "@/i18n";
 
@@ -38,7 +38,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <Logo variant="onDark" />
-            <p className="max-w-sm text-sm italic leading-relaxed text-white/80">« {BRAND_SLOGAN} »</p>
+            <p className="max-w-sm text-sm italic leading-relaxed text-white/80">« {t.brand.slogan} »</p>
             <p className="max-w-sm text-sm leading-relaxed text-white/65">
               {t.footer.initiative(BRAND_NAME, CARRIER_NAME, CARRIER_SHORT, PARTNER_NAME)}
             </p>

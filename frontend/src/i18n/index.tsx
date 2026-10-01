@@ -47,3 +47,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 }
 
 export const useI18n = () => useContext(I18nContext);
+
+/** Locale for dates and numbers; Wolof readers are used to the French formats */
+export const dateLocale = (lang: Lang) => (lang === "en" ? "en-GB" : "fr-FR");
