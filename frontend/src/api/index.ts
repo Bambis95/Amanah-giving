@@ -24,6 +24,7 @@ export interface AuthUser {
   role: string;
   /** Inactivity before automatic logout (set by the server: shorter for admins) */
   idle_minutes?: number;
+  is_technical_owner?: boolean;
 }
 
 export interface LoginResponse {
@@ -146,6 +147,16 @@ export interface AdminUser {
   last_login: string | null;
   /** Set while the account is suspended */
   suspended_at?: string | null;
+  /** Service provider named in the contract: protected, hands the status over himself */
+  is_technical_owner?: boolean;
+}
+
+export interface AuditChainCheck {
+  intact: boolean;
+  checked: number;
+  unsealed_before: number;
+  first_broken_id: number | null;
+  last_seal: string | null;
 }
 
 // ---------- Finances ----------
@@ -575,6 +586,17 @@ export const adminApi = {
     if (beforeId) params.set("before_id", String(beforeId));
     return adminRequest(`/admin/audit-logs?${params}`);
   },
+
+  /** Recompute the journal's seals: proves nothing recorded was changed or removed */
+  verifyAuditChain(): Promise<AuditChainCheck> {
+    return adminRequest("/admin/audit-logs/verify");
+  },
+
+  /** Technical owner only: hand the status to another admin (or give it up with null) */
+  transferTechnicalOwner(toUserId: string | null): Promise<AdminUser[]> {
+    return adminRequest("/users/technical-owner/transfer", { method: "POST", body: JSON.stringify({ to_user_id: toUserId }) });
+  },
+
 
   getUsers(): Promise<AdminUser[]> {
     return adminRequest("/users");

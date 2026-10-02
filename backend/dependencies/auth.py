@@ -80,7 +80,10 @@ async def _load_user(token: str, db: AsyncSession, response: Optional[Response] 
         auth_time = int(payload.get("auth_time") or payload.get("iat") or 0) or None
         issue_session(response, user, auth_time=auth_time)
 
-    return UserResponse(id=user.id, email=user.email, name=user.name, role=user.role, last_login=user.last_login)
+    return UserResponse(
+        id=user.id, email=user.email, name=user.name, role=user.role, last_login=user.last_login,
+        is_technical_owner=bool(user.is_technical_owner),
+    )
 
 
 async def get_current_user(

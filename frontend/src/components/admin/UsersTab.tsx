@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Ban, Clock, RotateCcw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
+import { Ban, Clock, KeyRound, RotateCcw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi, AdminUser, Invitation } from "@/api";
 import InviteDialog from "./InviteDialog";
@@ -46,6 +46,12 @@ function RoleBadge({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
         {isStaff(role) && <ShieldCheck className="h-3 w-3" aria-hidden="true" />}
         {ROLE_LABELS[role]}
       </Badge>
+      {user.is_technical_owner && (
+        <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+          <KeyRound className="h-3 w-3" aria-hidden="true" />
+          Propriétaire technique
+        </Badge>
+      )}
       {isSelf && (
         <Badge variant="outline" className="text-muted-foreground">
           Vous
@@ -71,7 +77,7 @@ interface SuspendToggleProps {
 
 /** Suspend / reactivate: same reach as role changes (a president handles members only) */
 function SuspendToggle({ user, isSelf, currentRole, busy, onAsk }: SuspendToggleProps) {
-  if (isSelf || !assignableRoles(currentRole).includes(user.role as Role)) return null;
+  if (isSelf || user.is_technical_owner || !assignableRoles(currentRole).includes(user.role as Role)) return null;
   const suspended = !!user.suspended_at;
   return (
     <Button
@@ -99,6 +105,7 @@ interface RoleControlProps {
 function RoleControl({ user, isSelf, currentRole, busy, onChoose }: RoleControlProps) {
   const options = assignableRoles(currentRole);
   if (isSelf) return <span className="text-xs text-muted-foreground">Votre propre rôle ne peut pas être modifié</span>;
+  if (user.is_technical_owner) return <span className="text-xs text-muted-foreground">Protégé (propriétaire technique)</span>;
   if (!options.includes(user.role as Role)) {
     return <span className="text-xs text-muted-foreground">Géré par un administrateur</span>;
   }
@@ -126,6 +133,24 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [revoking, setRevoking] = useState<Invitation | null>(null);
   const [suspension, setSuspension] = useState<{ user: AdminUser; suspend: boolean } | null>(null);
+  // Technical owner: handing over to an admin ("" = giving the status up)
+  const [transferTo, setTransferTo] = useState<string | null>(null);
+  const owner = users.find((u) => u.is_technical_owner) ?? null;
+  const iAmOwner = owner?.id === currentUserId;
+  const successors = users.filter((u) => u.role === "admin" && !u.suspended_at && u.id !== currentUserId);
+
+  const applyTransfer = async () => {
+    if (transferTo === null) return;
+    const target = transferTo || null;
+    setTransferTo(null);
+    try {
+      const updated = await adminApi.transferTechnicalOwner(target);
+      onChange(users.map((u) => updated.find((x) => x.id === u.id) ?? u));
+      toast.success(target ? "Statut de propriétaire technique transféré" : "Vous avez renoncé au statut de propriétaire technique");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Transfert impossible");
+    }
+  };
 
   const applySuspension = async () => {
     if (!suspension) return;
@@ -213,6 +238,31 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
             </p>
           ))}
         </div>
+
+        {owner && (
+          <div className="mb-4 rounded-xl border border-primary/30 bg-accent/40 p-4 text-sm">
+            <p className="flex items-center gap-2 font-semibold text-foreground">
+              <KeyRound className="h-4 w-4 text-primary" aria-hidden="true" />
+              Propriétaire technique : {owner.name || owner.email}
+              {owner.name && <span className="font-normal text-muted-foreground">({owner.email})</span>}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              Prestataire qui développe et héberge la plateforme, selon le contrat de prestation. Son rôle ne peut être ni
+              changé ni suspendu par un autre compte ; lui seul peut transférer ce statut (fin de contrat, passation).
+              Toutes ses actions figurent au Journal, comme celles de chacun.
+            </p>
+            {iAmOwner && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" disabled={successors.length === 0} onClick={() => setTransferTo(successors[0]?.id ?? "")}>
+                  Transférer à un administrateur
+                </Button>
+                <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setTransferTo("")}>
+                  Renoncer au statut
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-4 flex flex-col gap-3 rounded-xl border border-dashed border-primary/30 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm">
@@ -380,6 +430,37 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
               >
                 {suspension?.suspend ? "Suspendre" : "Réactiver"}
               </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={transferTo !== null} onOpenChange={(open) => !open && setTransferTo(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{transferTo ? "Transférer le statut de propriétaire technique ?" : "Renoncer au statut de propriétaire technique ?"}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {transferTo
+                  ? "La personne choisie devient propriétaire technique ; vous restez administrateur, mais votre rôle pourra alors être changé par les autres administrateurs."
+                  : "Plus personne n'aura ce statut ; vous restez administrateur, mais votre rôle pourra être changé par les autres administrateurs. À faire lors de la passation prévue au contrat."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {transferTo ? (
+              <Select value={transferTo} onValueChange={setTransferTo}>
+                <SelectTrigger aria-label="Nouveau propriétaire technique">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {successors.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name ? `${u.name} (${u.email})` : u.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : null}
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={applyTransfer}>{transferTo ? "Transférer" : "Renoncer"}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

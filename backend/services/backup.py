@@ -50,6 +50,7 @@ async def send_backup_if_due(db: AsyncSession, now: Optional[datetime] = None) -
         return False
 
     content, counts = await build_archive(db, with_files=False)
+    seal = (await audit.verify_chain(db))["last_seal"] or "aucun"
     stamp = now.strftime("%Y-%m-%d")
     if len(content) > MAX_ATTACHMENT:
         logger.warning("Backup too large to email (%s bytes): use the export button", len(content))
@@ -60,7 +61,10 @@ async def send_backup_if_due(db: AsyncSession, now: Optional[datetime] = None) -
         "Vous trouverez en pièce jointe la sauvegarde des données de la plateforme (fichiers CSV, lisibles dans Excel) : "
         "campagnes, dons, comptes, finances, abonnés, messages et journal.\n\n"
         "Elle contient des données personnelles : conservez-la en lieu sûr et ne la transférez pas. Les photos et "
-        "justificatifs ne sont pas inclus : téléchargez l'export complet depuis Réglages du site.",
+        "justificatifs ne sont pas inclus : téléchargez l'export complet depuis Réglages du site.\n\n"
+        f"Sceau du journal à cette date : {seal}\n"
+        "Gardez ce message : il permet de prouver plus tard qu'aucune action enregistrée avant cette date n'a été "
+        "modifiée ni effacée (Tableau de bord → Journal → Vérifier l'intégrité).",
     )
     message.add_attachment(content, maintype="application", subtype="zip", filename=f"senjapo-sauvegarde-{stamp}.zip")
     if not await asyncio.to_thread(mail.deliver, message, "weekly backup"):

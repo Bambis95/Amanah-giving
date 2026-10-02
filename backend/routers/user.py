@@ -28,6 +28,7 @@ class AdminUserResponse(BaseModel):
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
     suspended_at: Optional[datetime] = None
+    is_technical_owner: bool = False
 
     class Config:
         from_attributes = True
@@ -44,6 +45,11 @@ class UpdateRoleRequest(BaseModel):
 ROLE_LABELS = {"user": "utilisateur", "member": "membre du club", "treasurer": "trésorier", "president": "président", "admin": "administrateur"}
 # What a president may grant or take away: membership only
 PRESIDENT_MANAGED = ("user", "member")
+
+OWNER_PROTECTED = (
+    "Ce compte est celui du propriétaire technique de la plateforme (contrat de prestation) : "
+    "son rôle ne peut être changé ni suspendu par un autre compte. Lui seul peut transférer ce statut."
+)
 
 
 @router.get("", response_model=List[AdminUserResponse])
@@ -74,6 +80,8 @@ async def update_user_role(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur introuvable.")
+    if user.is_technical_owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=OWNER_PROTECTED)
     if manager.role != "admin" and (user.role not in PRESIDENT_MANAGED or payload.role not in PRESIDENT_MANAGED):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -108,6 +116,8 @@ async def set_suspension(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur introuvable.")
+    if user.is_technical_owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=OWNER_PROTECTED)
     if manager.role != "admin" and user.role not in PRESIDENT_MANAGED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -131,6 +141,46 @@ async def set_suspension(
         target_type="user", target_id=user.id,
     )
     return user
+
+
+class OwnerTransferRequest(BaseModel):
+    # None: give the status up (handover at the end of the contract), without naming anyone
+    to_user_id: Optional[str] = None
+
+
+@router.post("/technical-owner/transfer", response_model=List[AdminUserResponse])
+async def transfer_technical_owner(
+    payload: OwnerTransferRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current: UserResponse = Depends(get_current_user),
+):
+    """The technical owner hands the status to another administrator, or gives it up. Nobody else can."""
+    me = await db.get(User, current.id)
+    if not me or not me.is_technical_owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Réservé au propriétaire technique.")
+    target = None
+    if payload.to_user_id:
+        target = await db.get(User, payload.to_user_id)
+        if not target or target.id == me.id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur introuvable.")
+        if target.role != "admin" or target.suspended_at is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Le statut ne peut être transféré qu'à un administrateur actif.",
+            )
+        target.is_technical_owner = True
+    me.is_technical_owner = False
+    await db.commit()
+    summary = (
+        f"Statut de propriétaire technique transféré de {me.email} à {target.email}"
+        if target else f"{me.email} a renoncé au statut de propriétaire technique"
+    )
+    await audit.record(
+        db, Actor(id=me.id, email=me.email, ip=client_ip(request)), "security.owner_transfer", summary,
+        target_type="user", target_id=target.id if target else me.id,
+    )
+    return [me, target] if target else [me]
 
 
 @router.get("/profile", response_model=UserResponse)

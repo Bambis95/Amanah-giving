@@ -56,6 +56,19 @@ parle qu'à l'adresse du site, donc la connexion fonctionne **même sans nom de 
    ```
 3. Reconnectez-vous : vous arrivez sur le tableau de bord. Les présidents et membres du club
    se nomment ensuite depuis **Membres & comptes**.
+4. **Propriétaire technique** (le prestataire, si le contrat le prévoit), une seule fois :
+   ```bash
+   python -m scripts.make_owner votre@email.com
+   ```
+   Le compte (déjà administrateur) est alors affiché à toute l'équipe comme propriétaire technique ;
+   aucun autre compte ne peut changer son rôle ni le suspendre. Lui seul transfère ou abandonne ce
+   statut (*Membres & comptes*), par exemple à la passation de fin de contrat. Le script refuse s'il
+   y a déjà un propriétaire.
+
+**Journal scellé** : chaque action du Journal est liée à la précédente par une empreinte SHA-256.
+*Journal → Vérifier l'intégrité* recalcule la chaîne et signale toute entrée modifiée ou supprimée,
+même directement dans la base. Le dernier sceau figure dans chaque export et chaque sauvegarde par
+email : conservez ces emails, ils datent l'état du journal.
 
 Le site démarre **sans campagne** (les campagnes de démonstration, aux montants inventés, ne
 sont pas chargées en production). Ajoutez les vraies campagnes depuis le tableau de bord.

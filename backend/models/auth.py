@@ -1,5 +1,5 @@
 from models.base import Base
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 
@@ -17,3 +17,6 @@ class User(Base):
     token_version = Column(Integer, nullable=False, server_default="0", default=0)
     # Set while the account is suspended: no sign-in, every session refused
     suspended_at = Column(DateTime(timezone=True), nullable=True)
+    # Technical owner (the service provider, per the contract): visible to the whole team, cannot be
+    # demoted or suspended by other admins, hands the role over himself (Utilisateurs tab)
+    is_technical_owner = Column(Boolean, nullable=False, server_default="false", default=False)

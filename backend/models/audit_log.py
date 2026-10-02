@@ -18,3 +18,5 @@ class AuditLog(Base):
     details = Column(JSON, nullable=True)
     ip_address = Column(String(64), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    # SHA-256 of the previous seal and of this entry: any later change or deletion breaks the chain
+    seal = Column(String(64), nullable=True)

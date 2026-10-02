@@ -10,6 +10,7 @@ class UserResponse(BaseModel):
     name: Optional[str] = None
     role: str = "user"  # user/admin
     last_login: Optional[datetime] = None
+    is_technical_owner: bool = False
 
     class Config:
         from_attributes = True

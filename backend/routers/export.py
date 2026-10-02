@@ -93,11 +93,14 @@ async def build_archive(db: AsyncSession, with_files: bool = True) -> Tuple[byte
             if with_files
             else "Les photos et justificatifs ne sont pas inclus : téléchargez l'export complet depuis le tableau de bord.\n"
         )
+        chain = await audit.verify_chain(db)
         archive.writestr(
             "LISEZMOI.txt",
             "Export des données de la plateforme SENJAPO du " + stamp + ".\n\n"
             "Chaque fichier .csv s'ouvre dans Excel (séparateur « ; »).\n" + files_note +
-            "Les mots de passe, codes et jetons de sécurité ne sont jamais exportés.\n",
+            "Les mots de passe, codes et jetons de sécurité ne sont jamais exportés.\n\n"
+            "Sceau du journal à cette date (preuve qu'aucune entrée antérieure n'a été modifiée ni supprimée) :\n"
+            + (chain["last_seal"] or "aucun") + "\n",
         )
     return buffer.getvalue(), counts
 

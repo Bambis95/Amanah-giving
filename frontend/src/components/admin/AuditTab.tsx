@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, FolderOpen, HandCoins, Landmark, Loader2, Mail, Settings, ShieldAlert, Users } from "lucide-react";
-import { adminApi, AuditCategory, AuditLogEntry } from "@/api";
+import { ChevronDown, FolderOpen, HandCoins, Landmark, Loader2, Mail, Settings, ShieldAlert, ShieldCheck, ShieldX, Users } from "lucide-react";
+import { toast } from "sonner";
+import { adminApi, AuditCategory, AuditChainCheck, AuditLogEntry } from "@/api";
 import { formatDate } from "./format";
 
 const categories: { value: AuditCategory | "all"; label: string }[] = [
@@ -134,6 +135,64 @@ function Entry({ entry }: { entry: AuditLogEntry }) {
   );
 }
 
+/**
+ * Each entry is sealed with the previous one (SHA-256): changing or deleting an entry afterwards,
+ * even directly in the database, is detected here. The last seal also goes out with every backup.
+ */
+function IntegrityCheck() {
+  const [result, setResult] = useState<AuditChainCheck | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const check = async () => {
+    setBusy(true);
+    try {
+      setResult(await adminApi.verifyAuditChain());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Vérification impossible");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mb-4 rounded-xl border border-border bg-muted/40 p-4 text-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-muted-foreground">
+          Chaque action est scellée à la précédente : personne, même avec un accès direct à la base, ne peut modifier
+          ou effacer une entrée sans que cela se voie ici.
+        </p>
+        <Button size="sm" variant="outline" onClick={check} disabled={busy} className="shrink-0">
+          {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+          Vérifier l'intégrité
+        </Button>
+      </div>
+      {result && (
+        <div className={`mt-3 rounded-lg p-3 ${result.intact ? "bg-success/10 text-foreground" : "bg-destructive/10 text-destructive"}`} role="status">
+          <p className="flex items-center gap-2 font-semibold">
+            {result.intact ? <ShieldCheck className="h-4 w-4 text-success" /> : <ShieldX className="h-4 w-4" />}
+            {result.intact
+              ? `Journal intact : ${result.checked} entrée${result.checked > 1 ? "s" : ""} vérifiée${result.checked > 1 ? "s" : ""}.`
+              : `Journal altéré à partir de l'entrée n° ${result.first_broken_id} : une entrée a été modifiée ou supprimée.`}
+          </p>
+          {result.unsealed_before > 0 && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {result.unsealed_before} entrée{result.unsealed_before > 1 ? "s" : ""} antérieure{result.unsealed_before > 1 ? "s" : ""} au scellement (non vérifiable{result.unsealed_before > 1 ? "s" : ""}).
+            </p>
+          )}
+          {result.last_seal && (
+            <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+              Dernier sceau : {result.last_seal}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            Pour prouver qu'aucune entrée récente n'a disparu, comparez ce sceau avec celui reçu dans la dernière sauvegarde par email.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AuditTab() {
   const [category, setCategory] = useState<AuditCategory | "all">("all");
   const [entries, setEntries] = useState<AuditLogEntry[]>([]);
@@ -165,6 +224,7 @@ export default function AuditTab() {
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
+        <IntegrityCheck />
         <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
           {categories.map((c) => (
             <button

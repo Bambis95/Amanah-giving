@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from schemas.auth import UserResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from services import audit
 
 # Read-only on purpose: the audit log has no update or delete endpoint
 router = APIRouter(prefix="/api/v1/admin/audit-logs", tags=["audit"])
@@ -34,6 +35,20 @@ class AuditLogPage(BaseModel):
     items: List[AuditLogResponse]
     # Pass as `before_id` to load the next (older) page; None when there is nothing older
     next_before_id: Optional[int] = None
+
+
+class ChainCheck(BaseModel):
+    intact: bool
+    checked: int
+    unsealed_before: int
+    first_broken_id: Optional[int] = None
+    last_seal: Optional[str] = None
+
+
+@router.get("/verify", response_model=ChainCheck)
+async def verify_audit_chain(db: AsyncSession = Depends(get_db), _admin: UserResponse = Depends(get_manager_user)):
+    """Recompute the seals: proves that no entry was changed or removed (compare last_seal with a saved copy)."""
+    return await audit.verify_chain(db)
 
 
 @router.get("", response_model=AuditLogPage)
