@@ -253,7 +253,8 @@ def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/health/full")
+# GET and HEAD: uptime monitors (UptimeRobot) often check with HEAD
+@app.api_route("/health/full", methods=["GET", "HEAD"])
 async def full_health_check():
     """For an uptime monitor: 503 when the database does not answer, so the alert fires."""
     from fastapi.responses import JSONResponse

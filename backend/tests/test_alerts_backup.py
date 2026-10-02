@@ -78,3 +78,4 @@ def test_backup_is_emailed_every_week_without_secrets(client, admin, sent_emails
 def test_full_health_check(client):
     r = client.get("/health/full")
     assert r.status_code == 200 and r.json()["status"] == "healthy"
+    assert client.head("/health/full").status_code == 200  # monitors often use HEAD
