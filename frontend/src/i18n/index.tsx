@@ -18,12 +18,9 @@ function initialLang(): Lang {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && (LANGS as string[]).includes(saved)) return saved as Lang;
   } catch {
-    // storage blocked: fall through to the browser language
+    // storage blocked: French
   }
-  // French unless the browser asks for English (diaspora) or Arabic; Wolof is always an explicit choice
-  const browser = navigator.language?.toLowerCase() ?? "";
-  if (browser.startsWith("en")) return "en";
-  if (browser.startsWith("ar")) return "ar";
+  // Always French at first, whatever the browser's language: the other languages are an explicit choice
   return "fr";
 }
 
