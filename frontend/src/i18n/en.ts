@@ -186,6 +186,7 @@ const en: Dictionary = {
     newsletter: "I would like to receive campaign news by email (a few emails a year, one-click unsubscribe).",
     pickTitle: "Choose the amount of your donation",
     pickText: "Tap an amount: you go straight to paying with Wave or Orange Money.",
+    fee: (p) => `${p}% of each donation funds the running of the platform (development, hosting, maintenance); the rest goes to the chosen campaign.`,
     customGo: "Continue",
     cardSoonTitle: "Card payment: coming soon",
     cardSoonText:

@@ -126,7 +126,7 @@ export default function DonatePage() {
       : 0;
   // Optional: a signed-in donor gets the donation linked to their account
   const { user } = useAuth();
-  const { donationsEnabled } = useSiteStatus();
+  const { donationsEnabled, platformFee } = useSiteStatus();
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
@@ -273,6 +273,7 @@ export default function DonatePage() {
                   <div className="text-center">
                     <h2 className="text-2xl font-bold text-foreground">{t.pickTitle}</h2>
                     <p className="mt-1 text-muted-foreground">{t.pickText}</p>
+                    {platformFee && <p className="mt-2 text-xs text-muted-foreground">{t.fee(platformFee)}</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label={t.presets}>
                     {presetAmounts.map((amount) => (
@@ -639,6 +640,7 @@ export default function DonatePage() {
                 <Shield className="w-4 h-4" />
                 <span>{t.secure}</span>
               </div>
+              {platformFee && <p className="mt-3 text-center text-xs text-white/70">{t.fee(platformFee)}</p>}
               <p className="mt-3 text-center text-xs text-white/60">
                 {t.acceptPrefix}{" "}
                 <Link to="/conditions" className="underline hover:text-white">{t.terms}</Link> {t.and}{" "}

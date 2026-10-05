@@ -239,3 +239,107 @@ def build_finance_report(
 
     doc.build(story, onFirstPage=page_frame, onLaterPages=page_frame)
     return buffer.getvalue()
+
+
+MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+
+
+def month_label(key: str) -> str:
+    year, month = key.split("-")
+    return f"{MONTHS[int(month) - 1].capitalize()} {year}"
+
+
+def build_commission_statement(*, data: dict, year: Optional[int], author: str) -> bytes:
+    """Statement of the platform commission: owed month by month, paid, balance; signed by both sides."""
+    buffer = io.BytesIO()
+    width, height = A4
+    period = f"Année {year}" if year else "Depuis le lancement"
+    generated = datetime.now(timezone.utc).strftime("%d/%m/%Y")
+
+    def page_frame(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColor(BLUE)
+        canvas.rect(0, height - BAND, width, BAND, stroke=0, fill=1)
+        if LOGO.exists():
+            tile = 20 * mm
+            canvas.setFillColor(white)
+            canvas.roundRect(MARGIN, height - BAND + 5 * mm, tile, tile, 2.5 * mm, stroke=0, fill=1)
+            canvas.drawImage(ImageReader(str(LOGO)), MARGIN + 1 * mm, height - BAND + 6 * mm, tile - 2 * mm, tile - 2 * mm,
+                             preserveAspectRatio=True, mask="auto")
+        canvas.setFillColor(white)
+        canvas.setFont("Helvetica-Bold", 16)
+        canvas.drawRightString(width - MARGIN, height - 13 * mm, "RELEVÉ DE COMMISSION")
+        canvas.setFont("Helvetica", 9)
+        canvas.drawRightString(width - MARGIN, height - 19 * mm, "Commission de la plateforme")
+        canvas.drawRightString(width - MARGIN, height - 24 * mm, period)
+        canvas.setFillColor(MUTED)
+        canvas.setFont("Helvetica", 7.5)
+        canvas.drawString(MARGIN, 12 * mm, f"{settings.site_short_name} · {settings.carrier_name} · {settings.carrier_receipt}")
+        canvas.drawString(MARGIN, 8.5 * mm, f"Généré le {generated} par {author[:40]}")
+        canvas.drawRightString(width - MARGIN, 8.5 * mm, f"Page {doc.page}")
+        canvas.restoreState()
+
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=MARGIN, rightMargin=MARGIN, topMargin=BAND + 8 * mm, bottomMargin=18 * mm,
+        title="Relevé de commission", author=settings.site_short_name,
+    )
+    usable = width - 2 * MARGIN
+    story = []
+
+    payee = data.get("payee") or "le prestataire de la plateforme"
+    rates = " ; ".join(f"{h['percent']} % à partir du {datetime.fromisoformat(h['since']).strftime('%d/%m/%Y')}" for h in data["history"])
+    story.append(Paragraph(
+        f"Commission due à <b>{_esc(payee)}</b> sur les dons payés (en ligne et dépôts Wave / Orange Money confirmés), "
+        f"hors cotisations au club. Taux convenu : {_esc(rates) or 'aucun'}. Chaque don est compté au taux en vigueur le jour du don.",
+        BODY,
+    ))
+
+    story.append(Paragraph("1. Synthèse", H2))
+    balance = data["balance"]
+    rows = [[Paragraph("Poste", HEAD), Paragraph("Montant", HEAD_RIGHT)]]
+    rows.append([Paragraph("Commission due", CELL), Paragraph(fcfa(data["owed"]), CELL_RIGHT)])
+    rows.append([Paragraph("Déjà réglé (enregistré dans Finances)", CELL), Paragraph(fcfa(data["paid"]), CELL_RIGHT)])
+    balance_style = ParagraphStyle("bal", parent=CELL_RIGHT, fontName="Helvetica-Bold", textColor=RED if balance < 0 else INK)
+    rows.append([Paragraph("<b>Reste à régler</b>", CELL), Paragraph(fcfa(balance), balance_style)])
+    story.append(_table(rows, [usable * 0.7, usable * 0.3], total_row=True))
+
+    story.append(Paragraph("2. Détail par mois", H2))
+    if not data["months"]:
+        story.append(Paragraph("Aucun don payé sur la période.", SMALL))
+    else:
+        rows = [[Paragraph(h, HEAD if h == "Mois" else HEAD_RIGHT) for h in ["Mois", "Dons", "Montant collecté", "Commission"]]]
+        for m in data["months"]:
+            rows.append([
+                Paragraph(month_label(m["month"]), CELL), Paragraph(str(m["donations"]), CELL_RIGHT),
+                Paragraph(fcfa(m["collected"]), CELL_RIGHT), Paragraph(fcfa(m["owed"]), CELL_RIGHT),
+            ])
+        rows.append([
+            Paragraph("<b>Total</b>", CELL), Paragraph(f"<b>{sum(m['donations'] for m in data['months'])}</b>", CELL_RIGHT),
+            Paragraph(f"<b>{fcfa(sum(m['collected'] for m in data['months']))}</b>", CELL_RIGHT),
+            Paragraph(f"<b>{fcfa(data['owed'])}</b>", CELL_RIGHT),
+        ])
+        story.append(_table(rows, [usable * w for w in (0.34, 0.14, 0.27, 0.25)], total_row=True))
+
+    signatures = Table(
+        [
+            [Paragraph("Le prestataire", BODY), "", Paragraph("Le Président", BODY)],
+            ["", "", ""],
+            [Paragraph("Signature et date", SMALL), "", Paragraph("Signature et date", SMALL)],
+        ],
+        colWidths=[usable * 0.42, usable * 0.16, usable * 0.42],
+        rowHeights=[None, 16 * mm, None],
+    )
+    signatures.setStyle(TableStyle([("LINEBELOW", (0, 1), (0, 1), 0.6, MUTED), ("LINEBELOW", (2, 1), (2, 1), 0.6, MUTED)]))
+    story.append(Spacer(1, 8 * mm))
+    story.append(KeepTogether([
+        Paragraph(
+            "Montants en francs CFA, arrondis au franc inférieur pour chaque don. Les dons sont ceux confirmés par les "
+            "opérateurs ou vérifiés par l'équipe ; les règlements sont les dépenses « Commission de la plateforme » de Finances.",
+            SMALL,
+        ),
+        Spacer(1, 6 * mm),
+        signatures,
+    ]))
+
+    doc.build(story, onFirstPage=page_frame, onLaterPages=page_frame)
+    return buffer.getvalue()

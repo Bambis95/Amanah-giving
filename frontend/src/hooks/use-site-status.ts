@@ -12,5 +12,5 @@ export function useSiteStatus() {
     staleTime: 5 * 60_000,
     retry: 1,
   });
-  return { donationsEnabled: data?.donations_enabled ?? true, loaded: data !== undefined };
+  return { donationsEnabled: data?.donations_enabled ?? true, loaded: data !== undefined, platformFee: data?.platform_fee_percent ?? null };
 }

@@ -17,12 +17,17 @@ router = APIRouter(prefix="/api/v1/site", tags=["site"])
 
 class SiteStatus(BaseModel):
     donations_enabled: bool
+    # Share of the donations that pays the platform (announced on the donation page), when there is one
+    platform_fee_percent: Optional[str] = None
 
 
 @router.get("", response_model=SiteStatus)
-async def get_site_status():
+async def get_site_status(db: AsyncSession = Depends(get_db)):
     """Public site switches read by the website (e.g. donations closed before launch)."""
-    return SiteStatus(donations_enabled=settings.donations_enabled)
+    from services import commission
+
+    rate = commission.public_rate(await commission.load(db))
+    return SiteStatus(donations_enabled=settings.donations_enabled, platform_fee_percent=rate)
 
 
 # ---------- editable settings (contacts, social links, home texts) ----------

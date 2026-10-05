@@ -189,6 +189,8 @@ const fr = {
       "Je souhaite recevoir par email les nouvelles des campagnes (quelques emails par an, désabonnement en un clic).",
     pickTitle: "Choisissez le montant de votre don",
     pickText: "Touchez un montant : vous passez directement au paiement par Wave ou Orange Money.",
+    fee: (p: string) =>
+      `${p} % de chaque don finance le fonctionnement de la plateforme (développement, hébergement, maintenance) ; le reste va à la campagne choisie.`,
     customGo: "Continuer",
     cardSoonTitle: "Paiement par carte bancaire : bientôt",
     cardSoonText:

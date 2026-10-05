@@ -47,6 +47,7 @@ EXPENSE_CATEGORIES = {
     "staff": "Personnel et indemnités",
     "communication": "Communication",
     "fees": "Frais bancaires et opérateurs",
+    "platform": "Commission de la plateforme (prestataire)",
     "operations": "Fonctionnement",
     "other_expense": "Autre dépense",
 }

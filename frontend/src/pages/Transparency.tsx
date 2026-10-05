@@ -10,12 +10,14 @@ import { categoryLabel } from "@/lib/categories";
 import { BRAND_NAME } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
+import { useSiteStatus } from "@/hooks/use-site-status";
 
 const statusLabels: Record<string, string> = { active: "En cours", completed: "Terminé" };
 
 // Public accountability page: platform totals and, for each public project, collected vs goal
 export default function TransparencyPage() {
   const { stats, failed } = usePublicStats();
+  const { platformFee } = useSiteStatus();
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [spending, setSpending] = useState<PublicSpending | null>(null);
 
@@ -55,6 +57,12 @@ export default function TransparencyPage() {
             La confiance se mérite. Voici, en temps réel, les montants collectés sur la plateforme et l'avancement de
             chaque campagne publiée sur {BRAND_NAME}.
           </p>
+          {platformFee && (
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/70">
+              Frais de plateforme : {platformFee} % de chaque don finance le développement, l'hébergement et la maintenance
+              de {BRAND_NAME} ; le reste va à la campagne choisie.
+            </p>
+          )}
         </div>
       </section>
 

@@ -667,7 +667,42 @@ export interface PublicStats {
 
 export interface SiteStatus {
   donations_enabled: boolean;
+  /** Share of the donations that pays the platform, announced to donors (e.g. "5"); null when none */
+  platform_fee_percent?: string | null;
 }
+
+export interface CommissionStatement {
+  percent: string;
+  payee: string;
+  history: { since: string; percent: string }[];
+  months: { month: string; donations: number; collected: number; owed: number }[];
+  owed: number;
+  paid: number;
+  balance: number;
+}
+
+export const commissionApi = {
+  get(year: number | null): Promise<CommissionStatement> {
+    return adminRequest(`/admin/commission${year ? `?year=${year}` : ""}`);
+  },
+
+  /** Admins: the rate applies from today on */
+  setRate(percent: string, payee: string): Promise<CommissionStatement> {
+    return adminRequest("/admin/commission", { method: "PUT", body: JSON.stringify({ percent, payee }) });
+  },
+
+  async downloadStatement(year: number | null): Promise<void> {
+    const response = await apiFetch(`${getAPIBase()}/admin/commission/statement.pdf${year ? `?year=${year}` : ""}`);
+    if (!response.ok) throw new Error(await errorDetail(response, "Relevé indisponible"));
+    const name = response.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1] ?? "releve-commission.pdf";
+    const url = URL.createObjectURL(await response.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+};
 
 export const api = {
   // Public site switches (donations closed before the official launch)

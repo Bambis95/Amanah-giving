@@ -9,19 +9,22 @@ import EntriesPanel from "./EntriesPanel";
 import BudgetsPanel from "./BudgetsPanel";
 import ReconciliationPanel from "./ReconciliationPanel";
 import ReportCard from "./ReportCard";
+import CommissionPanel from "./CommissionPanel";
 
 interface FinanceTabProps {
   projects: Project[];
   /** Treasurer and admins keep the accounts; the president reads them */
   canEdit: boolean;
+  /** Admins set the platform commission rate; the rest of the finance team reads the statement */
+  canSetCommission: boolean;
 }
 
 const THIS_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: THIS_YEAR - 2025 + 1 }, (_, i) => THIS_YEAR - i);
 
-export type FinanceView = "summary" | "entries" | "budgets" | "reconciliation";
+export type FinanceView = "summary" | "entries" | "budgets" | "reconciliation" | "commission";
 
-export default function FinanceTab({ projects, canEdit }: FinanceTabProps) {
+export default function FinanceTab({ projects, canEdit, canSetCommission }: FinanceTabProps) {
   const [meta, setMeta] = useState<FinanceMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [year, setYear] = useState<number | null>(THIS_YEAR);
@@ -57,6 +60,7 @@ export default function FinanceTab({ projects, canEdit }: FinanceTabProps) {
           <TabsTrigger value="entries">Recettes & dépenses</TabsTrigger>
           <TabsTrigger value="budgets">Budgets</TabsTrigger>
           <TabsTrigger value="reconciliation">Pointage des dons</TabsTrigger>
+          <TabsTrigger value="commission">Commission</TabsTrigger>
         </TabsList>
         {view !== "budgets" && (
           <Select value={year ? String(year) : "all"} onValueChange={(v) => setYear(v === "all" ? null : Number(v))}>
@@ -93,6 +97,9 @@ export default function FinanceTab({ projects, canEdit }: FinanceTabProps) {
       </TabsContent>
       <TabsContent value="reconciliation" className="mt-0">
         <ReconciliationPanel year={year} canEdit={canEdit} />
+      </TabsContent>
+      <TabsContent value="commission" className="mt-0">
+        <CommissionPanel year={year} canSet={canSetCommission} />
       </TabsContent>
     </Tabs>
   );

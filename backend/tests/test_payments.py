@@ -221,7 +221,7 @@ def test_donations_closed_before_launch(client, paydunya, monkeypatch):
     started = checkout(client).json()  # started before the switch
 
     monkeypatch.setattr(settings, "donations_enabled", False)
-    assert client.get("/api/v1/site").json() == {"donations_enabled": False}
+    assert client.get("/api/v1/site").json()["donations_enabled"] is False
     r = checkout(client)
     assert r.status_code == 503
     assert "bientôt" in r.json()["detail"]
@@ -231,7 +231,7 @@ def test_donations_closed_before_launch(client, paydunya, monkeypatch):
     assert ipn(client, started["session_id"]).json()["payment_status"] == "paid"
 
     monkeypatch.setattr(settings, "donations_enabled", True)
-    assert client.get("/api/v1/site").json() == {"donations_enabled": True}
+    assert client.get("/api/v1/site").json()["donations_enabled"] is True
     assert checkout(client).status_code == 200
 
 

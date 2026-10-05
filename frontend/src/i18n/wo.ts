@@ -187,6 +187,7 @@ const wo: Dictionary = {
     newsletter: "Bëgg naa jot xibaari kàmpaañ yi ci email (ay bataaxal yu néew ci at mi, mën naa bàyyi saa su ma neexee).",
     pickTitle: "Tànnal xaalisu sa ndimbal",
     pickText: "Bësal benn xaalis : dinga dem ci fey ak Wave walla Orange Money.",
+    fee: (p) => `${p} % ci ndimbal bu nekk dafay fey liggéeyu bérab bi (sos ko, denc ko, topp ko) ; li ci des dem ci kàmpaañ bi nga tànn.`,
     customGo: "Kontine",
     cardSoonTitle: "Fey ak kaart banka : ci kanam",
     cardSoonText:

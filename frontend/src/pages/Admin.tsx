@@ -319,7 +319,7 @@ export default function AdminPage() {
                   {current.id === "donations" && <DonationsTab donations={donations} onChange={setDonations} canManage={manager} />}
                   {current.id === "messages" && <MessagesTab messages={messages} onChange={setMessages} initialKind={messageKind} />}
                   {current.id === "projects" && <ProjectsTab projects={projects} onChange={setProjects} readOnly={!manager} />}
-                  {current.id === "finances" && <FinanceTab projects={projects} canEdit={canEditFinance(user.role)} />}
+                  {current.id === "finances" && <FinanceTab projects={projects} canEdit={canEditFinance(user.role)} canSetCommission={isAdminRole(user.role)} />}
                   {current.id === "users" && (
                     <UsersTab users={users} currentUserId={user.id} currentRole={user.role} onChange={setUsers} />
                   )}
