@@ -1,4 +1,4 @@
-"""Full data export for administrators: one ZIP with a CSV per table, the photos and the finance documents.
+"""Full data export for administrators and the president: one ZIP with a CSV per table, the photos and the finance documents.
 
 Used as a backup and for the hand-over foreseen by the contract. Secrets are never exported:
 password hashes, session versions, sign-in codes, authenticator secrets and recovery codes, invitation and reset
@@ -13,7 +13,7 @@ from datetime import date, datetime, timezone
 from typing import Dict, Tuple
 
 from core.database import get_db
-from dependencies.auth import get_admin_actor
+from dependencies.auth import get_manager_actor
 from fastapi import APIRouter, Depends, Response
 from models.audit_log import AuditLog
 from models.auth import User
@@ -107,7 +107,8 @@ async def build_archive(db: AsyncSession, with_files: bool = True) -> Tuple[byte
 
 
 @router.get("")
-async def export_all(db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_admin_actor)):
+async def export_all(db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_manager_actor)):
+    """Admins and the president (the client's legal representative), behind the authenticator app."""
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     content, counts = await build_archive(db)
     await audit.record(

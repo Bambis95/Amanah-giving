@@ -16,12 +16,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowDownRight, ArrowUpRight, Ban, Download, Loader2, Paperclip, Pencil, Plus } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Ban, CheckCheck, Download, Loader2, MessageSquare, Paperclip, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { financeApi, FinanceEntry, FinanceMeta, Project } from "@/api";
 import { formatCFA } from "../format";
 import { cn } from "@/lib/utils";
 import EntryDialog from "./EntryDialog";
+import CommentsDialog from "./CommentsDialog";
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" });
 const formatDay = (iso: string) => dateFormat.format(new Date(`${iso}T12:00:00`));
@@ -31,6 +32,8 @@ interface EntriesPanelProps {
   meta: FinanceMeta;
   projects: Project[];
   canEdit: boolean;
+  /** Who is looking: nobody validates their own entries */
+  currentUserId: string;
 }
 
 // CSV for Excel (French locale): ";" separator, UTF-8 with BOM so accents display correctly
@@ -48,7 +51,7 @@ function exportCsv(rows: FinanceEntry[], meta: FinanceMeta, projectTitle: (id: n
       e.reference,
       e.kind === "income" ? e.amount : "",
       e.kind === "expense" ? e.amount : "",
-      e.cancelled_at ? `Annulée : ${e.cancel_reason ?? ""}` : "Valide",
+      e.cancelled_at ? `Annulée : ${e.cancel_reason ?? ""}` : e.validated_at ? `Validée (${e.validated_by_name ?? ""})` : "À valider",
       e.created_by_name,
     ].map(cell).join(";")
   );
@@ -61,7 +64,7 @@ function exportCsv(rows: FinanceEntry[], meta: FinanceMeta, projectTitle: (id: n
   URL.revokeObjectURL(url);
 }
 
-export default function EntriesPanel({ year, meta, projects, canEdit }: EntriesPanelProps) {
+export default function EntriesPanel({ year, meta, projects, canEdit, currentUserId }: EntriesPanelProps) {
   const [entries, setEntries] = useState<FinanceEntry[] | null>(null);
   const [kind, setKind] = useState("all");
   const [showCancelled, setShowCancelled] = useState(false);
@@ -69,6 +72,20 @@ export default function EntriesPanel({ year, meta, projects, canEdit }: EntriesP
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancelling, setCancelling] = useState<FinanceEntry | null>(null);
   const [reason, setReason] = useState("");
+  const [discussing, setDiscussing] = useState<FinanceEntry | null>(null);
+  const [validating, setValidating] = useState<number | null>(null);
+
+  const validate = async (e: FinanceEntry) => {
+    setValidating(e.id);
+    try {
+      saved(await financeApi.validateEntry(e.id));
+      toast.success("Écriture validée : elle compte maintenant dans les totaux");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Validation impossible");
+    } finally {
+      setValidating(null);
+    }
+  };
 
   useEffect(() => {
     setEntries(null);
@@ -88,8 +105,9 @@ export default function EntriesPanel({ year, meta, projects, canEdit }: EntriesP
     () => (entries ?? []).filter((e) => (kind === "all" || e.kind === kind) && (showCancelled || !e.cancelled_at)),
     [entries, kind, showCancelled]
   );
+  // Totals as the reports count them: validated, not cancelled
   const totals = visible.reduce(
-    (t, e) => (e.cancelled_at ? t : { ...t, [e.kind]: t[e.kind] + e.amount }),
+    (t, e) => (e.cancelled_at || !e.validated_at ? t : { ...t, [e.kind]: t[e.kind] + e.amount }),
     { income: 0, expense: 0 } as Record<string, number>
   );
 
@@ -114,6 +132,16 @@ export default function EntriesPanel({ year, meta, projects, canEdit }: EntriesP
 
   const actions = (e: FinanceEntry) => (
     <div className="flex items-center justify-end gap-1">
+      {canEdit && !e.cancelled_at && !e.validated_at && e.created_by !== currentUserId && (
+        <Button size="sm" variant="outline" className="h-8" disabled={validating === e.id} onClick={() => validate(e)}>
+          {validating === e.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-1 h-4 w-4" />}
+          Valider
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" onClick={() => setDiscussing(e)} aria-label={`Commentaires sur ${e.label}`} title="Commentaires">
+        <MessageSquare className="h-4 w-4" />
+        {!!e.comments && <span className="ml-1 text-xs tabular-nums">{e.comments}</span>}
+      </Button>
       {e.document_id && (
         <Button variant="ghost" size="sm" onClick={() => openDocument(e.document_id!)} aria-label={`Voir le justificatif de ${e.label}`}>
           <Paperclip className="h-4 w-4" />
@@ -168,7 +196,7 @@ export default function EntriesPanel({ year, meta, projects, canEdit }: EntriesP
         </div>
 
         <p className="mb-3 text-sm text-muted-foreground">
-          {visible.length} écriture{visible.length > 1 ? "s" : ""} · recettes {formatCFA(totals.income)} · dépenses {formatCFA(totals.expense)}
+          {visible.length} écriture{visible.length > 1 ? "s" : ""} · validées : recettes {formatCFA(totals.income)} · dépenses {formatCFA(totals.expense)}
           <span className="block text-xs">Les dons en ligne n'apparaissent pas ici : ils sont comptés automatiquement dans la synthèse.</span>
         </p>
 
@@ -190,8 +218,16 @@ export default function EntriesPanel({ year, meta, projects, canEdit }: EntriesP
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
-                  {e.cancelled_at && (
+                  {e.cancelled_at ? (
                     <Badge variant="outline" className="mt-1 border-destructive/40 text-destructive">Annulée : {e.cancel_reason}</Badge>
+                  ) : e.validated_at ? (
+                    <Badge variant="outline" className="mt-1 border-success/40 text-success">
+                      Validée{e.validated_by_name ? ` par ${e.validated_by_name}` : ""}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="mt-1 border-warning/50 text-warning">
+                      À valider{e.created_by_name ? ` · saisie par ${e.created_by_name}` : ""}
+                    </Badge>
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
@@ -202,6 +238,13 @@ export default function EntriesPanel({ year, meta, projects, canEdit }: EntriesP
             ))}
           </ul>
         )}
+
+        <CommentsDialog
+          entry={discussing}
+          canWrite={canEdit}
+          onOpenChange={(open) => !open && setDiscussing(null)}
+          onCommented={(id) => setEntries((list) => (list ?? []).map((x) => (x.id === id ? { ...x, comments: (x.comments ?? 0) + 1 } : x)))}
+        />
 
         <EntryDialog open={dialogOpen} entry={editing} meta={meta} projects={projects} onOpenChange={setDialogOpen} onSaved={saved} />
 

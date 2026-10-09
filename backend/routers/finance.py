@@ -1,10 +1,13 @@
-"""Finances: the accounts of the platform, kept by the treasurer (and admins), read by the president.
+"""Finances: the accounts of the platform, kept by the treasurer and the accountant (and admins), read by the president.
 
 - Entries: every income and expense outside online donations, with its supporting document.
   Never deleted: a wrong entry is cancelled with a reason, so the history stays complete.
 - Budgets: planned spending of each campaign, compared with what is actually spent.
 - Reconciliation: each paid online donation is ticked once found on the operator's statement.
 - Summary: donations + other income - expenses, by month and by campaign.
+- Four eyes: an entry counts only once validated by another member of the finance team; the
+  accountant closes a month when all its entries are validated, after which it can no longer change.
+- Comments on each entry and a shared to-do list (entries to validate, missing receipts, deposits to tick).
 Every change is written to the audit log (category "finance").
 """
 
@@ -16,17 +19,19 @@ from typing import List, Literal, Optional
 
 from core.database import get_db
 from dependencies.auth import get_finance_actor, get_finance_reader
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Response, UploadFile, status
 from models.auth import User
 from models.donations import Donations
-from models.finance import FinanceDocument, FinanceEntry, ProjectBudgetLine
+from models.finance import FinanceClosure, FinanceComment, FinanceDocument, FinanceEntry, ProjectBudgetLine
 from models.projects import Projects
 from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel, Field, field_validator
 from schemas.auth import UserResponse
 from services import audit
+from services import email as mail
+from services.alerts import build_alert
 from services.audit import Actor
-from sqlalchemy import delete, extract, func, select
+from sqlalchemy import and_, delete, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/finance", tags=["finance"])
@@ -120,6 +125,10 @@ class EntryOut(BaseModel):
     updated_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     cancel_reason: Optional[str] = None
+    created_by: Optional[str] = None
+    validated_at: Optional[datetime] = None
+    validated_by_name: Optional[str] = None
+    comments: int = 0
 
 
 class CancelIn(BaseModel):
@@ -162,12 +171,53 @@ async def _check_links(db: AsyncSession, data: EntryIn) -> None:
         raise HTTPException(status_code=400, detail="Justificatif introuvable : envoyez-le à nouveau.")
 
 
+COMPUTED = ("created_by_name", "validated_by_name", "comments")
+
+
+def _name(user: Optional[User]) -> Optional[str]:
+    return (user.name or user.email) if user else None
+
+
 async def _entry_out(db: AsyncSession, entry: FinanceEntry) -> EntryOut:
     author = await db.get(User, entry.created_by) if entry.created_by else None
+    validator = await db.get(User, entry.validated_by) if entry.validated_by else None
+    comments = (await db.execute(select(func.count(FinanceComment.id)).where(FinanceComment.entry_id == entry.id))).scalar_one()
     return EntryOut(
-        **{c: getattr(entry, c) for c in EntryOut.model_fields if c != "created_by_name"},
-        created_by_name=(author.name or author.email) if author else None,
+        **{c: getattr(entry, c) for c in EntryOut.model_fields if c not in COMPUTED},
+        created_by_name=_name(author), validated_by_name=_name(validator), comments=comments,
     )
+
+
+def counted():
+    """Entries that count in totals and reports: not cancelled, and validated by a second person."""
+    return [FinanceEntry.cancelled_at.is_(None), FinanceEntry.validated_at.is_not(None)]
+
+
+def _month(day: date) -> str:
+    return day.strftime("%Y-%m")
+
+
+async def _check_open(db: AsyncSession, *days: date) -> None:
+    for day in days:
+        if day and await db.get(FinanceClosure, _month(day)):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Le mois {_month(day)} est clôturé : enregistrez une écriture de correction dans un mois ouvert.",
+            )
+
+
+async def _finance_team(db: AsyncSession, except_id: Optional[str]) -> List[str]:
+    """The other members of the finance team who keep the accounts day to day (not admins)."""
+    rows = await db.execute(
+        select(User.email).where(User.role.in_(("treasurer", "accountant")), User.suspended_at.is_(None), User.id != (except_id or ""))
+    )
+    return [email for (email,) in rows if email]
+
+
+def _notify(recipients: List[str], subject: str, body: str) -> None:
+    """Background task: an email to the rest of the finance team (skipped when email is not set up)."""
+    if recipients and mail.email_enabled():
+        mail.deliver(build_alert(recipients, subject, body), "finance notification")
 
 
 def _year_filter(column, year: Optional[int]):
@@ -200,18 +250,29 @@ async def list_entries(
     if project_id is not None:
         conditions.append(FinanceEntry.project_id == project_id)
     rows = (await db.execute(query.where(*conditions).order_by(FinanceEntry.entry_date.desc(), FinanceEntry.id.desc()))).all()
+    ids = [entry.id for entry, _ in rows]
+    comment_counts = dict((await db.execute(
+        select(FinanceComment.entry_id, func.count(FinanceComment.id)).where(FinanceComment.entry_id.in_(ids)).group_by(FinanceComment.entry_id)
+    )).all()) if ids else {}
+    validators = {u.id: u for u in (await db.execute(
+        select(User).where(User.id.in_({e.validated_by for e, _ in rows if e.validated_by}))
+    )).scalars()}
     return [
         EntryOut(
-            **{c: getattr(entry, c) for c in EntryOut.model_fields if c != "created_by_name"},
-            created_by_name=(author.name or author.email) if author else None,
+            **{c: getattr(entry, c) for c in EntryOut.model_fields if c not in COMPUTED},
+            created_by_name=_name(author), validated_by_name=_name(validators.get(entry.validated_by)),
+            comments=comment_counts.get(entry.id, 0),
         )
         for entry, author in rows
     ]
 
 
 @router.post("/entries", response_model=EntryOut, status_code=status.HTTP_201_CREATED)
-async def create_entry(data: EntryIn, db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_finance_actor)):
+async def create_entry(
+    data: EntryIn, background: BackgroundTasks, db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_finance_actor)
+):
     await _check_links(db, data)
+    await _check_open(db, data.entry_date)
     entry = FinanceEntry(**{**data.model_dump(), "label": data.label.strip()}, created_by=actor.id)
     db.add(entry)
     await db.commit()
@@ -220,6 +281,12 @@ async def create_entry(data: EntryIn, db: AsyncSession = Depends(get_db), actor:
     await audit.record(
         db, actor, "finance.entry_create", f"{kind} enregistrée : {entry.label} ({entry.amount:,} FCFA)".replace(",", " "),
         target_type="finance_entry", target_id=entry.id, details=_entry_fields(entry),
+    )
+    background.add_task(
+        _notify, await _finance_team(db, actor.id), "Une écriture attend votre validation",
+        f"{actor.email} a enregistré : {kind.lower()} « {entry.label} », {format(entry.amount, ',').replace(',', ' ')} FCFA, "
+        f"du {entry.entry_date.strftime('%d/%m/%Y')}."
+        +"\n\nElle ne compte dans les totaux qu'après votre validation : Tableau de bord → Finances → À faire.",
     )
     return await _entry_out(db, entry)
 
@@ -234,10 +301,14 @@ async def update_entry(
     if entry.cancelled_at:
         raise HTTPException(status_code=409, detail="Une écriture annulée ne peut plus être modifiée.")
     await _check_links(db, data)
+    await _check_open(db, entry.entry_date, data.entry_date)
     before = _entry_fields(entry)
     for key, value in {**data.model_dump(), "label": data.label.strip()}.items():
         setattr(entry, key, value)
     entry.updated_at = datetime.now(timezone.utc)
+    if audit.diff(before, _entry_fields(entry)):
+        # A changed entry is checked again by the other person
+        entry.validated_at = entry.validated_by = None
     await db.commit()
     await db.refresh(entry)
     changes = audit.diff(before, _entry_fields(entry))
@@ -258,6 +329,7 @@ async def cancel_entry(
         raise HTTPException(status_code=404, detail="Écriture introuvable")
     if entry.cancelled_at:
         raise HTTPException(status_code=409, detail="Cette écriture est déjà annulée.")
+    await _check_open(db, entry.entry_date)
     entry.cancelled_at = datetime.now(timezone.utc)
     entry.cancelled_by = actor.id
     entry.cancel_reason = data.reason.strip()
@@ -441,7 +513,7 @@ async def public_spending(db: AsyncSession = Depends(get_db)):
 
     Only aggregates are published: never entry labels, payees, references or documents.
     """
-    active = FinanceEntry.cancelled_at.is_(None)
+    active = and_(*counted())
     visible = select(Projects.id).where((Projects.status.is_(None)) | (Projects.status != "paused"))
     spent = (await db.execute(
         select(FinanceEntry.project_id, FinanceEntry.category, func.sum(FinanceEntry.amount))
@@ -506,7 +578,7 @@ async def report_pdf(
 
     paid_all = [Donations.payment_status == "paid", *_year_filter(Donations.created_at, year)]
     paid = [*paid_all, Donations.cause != MEMBERSHIP_CAUSE]
-    entry_filter = [FinanceEntry.cancelled_at.is_(None), *_year_filter(FinanceEntry.entry_date, year)]
+    entry_filter = [*counted(), *_year_filter(FinanceEntry.entry_date, year)]
     if project:
         paid.append(Donations.project_id == project.id)
         entry_filter.append(FinanceEntry.project_id == project.id)
@@ -569,7 +641,7 @@ async def summary(
     """
     paid_all = [Donations.payment_status == "paid", *_year_filter(Donations.created_at, year)]
     paid = [*paid_all, Donations.cause != MEMBERSHIP_CAUSE]
-    active = [FinanceEntry.cancelled_at.is_(None), *_year_filter(FinanceEntry.entry_date, year)]
+    active = [*counted(), *_year_filter(FinanceEntry.entry_date, year)]
     total = func.coalesce(func.sum(Donations.amount), 0)
     entry_total = func.coalesce(func.sum(FinanceEntry.amount), 0)
 
@@ -638,8 +710,16 @@ async def summary(
             "budget": int(budgets.get(project.id) or 0),
         })
 
+    waiting_count, waiting_total = (await db.execute(
+        select(func.count(FinanceEntry.id), entry_total).where(
+            FinanceEntry.cancelled_at.is_(None), FinanceEntry.validated_at.is_(None), *_year_filter(FinanceEntry.entry_date, year)
+        )
+    )).one()
+
     return {
         "year": year,
+        # Recorded but not validated yet by a second person: not in the totals below
+        "awaiting_validation": {"count": waiting_count, "total": int(waiting_total)},
         "donations": {"total": int(donations_total), "count": donations_count, "by_method": {k: int(v) for k, v in by_method.items()}},
         "reconciliation": {
             "reconciled_total": int(reconciled_total),
@@ -653,4 +733,132 @@ async def summary(
         "by_category": by_category,
         "months": list(months.values()) if year else [],
         "projects": projects,
+    }
+
+
+# ---------- four eyes: validation, monthly close, comments, to-do ----------
+
+@router.post("/entries/{entry_id}/validate", response_model=EntryOut)
+async def validate_entry(entry_id: int, db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_finance_actor)):
+    """Another member of the finance team confirms the entry (amount, receipt): it then counts."""
+    entry = await db.get(FinanceEntry, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Écriture introuvable")
+    if entry.cancelled_at:
+        raise HTTPException(status_code=409, detail="Une écriture annulée ne se valide pas.")
+    if entry.validated_at:
+        return await _entry_out(db, entry)
+    if entry.created_by == actor.id:
+        raise HTTPException(status_code=403, detail="Une écriture est validée par une autre personne que celle qui l'a saisie.")
+    entry.validated_at = datetime.now(timezone.utc)
+    entry.validated_by = actor.id
+    await db.commit()
+    await db.refresh(entry)
+    await audit.record(
+        db, actor, "finance.entry_validate", f"Écriture validée : {entry.label} ({entry.amount:,} FCFA)".replace(",", " "),
+        target_type="finance_entry", target_id=entry.id,
+    )
+    return await _entry_out(db, entry)
+
+
+class ClosureIn(BaseModel):
+    month: str = Field(pattern=r"^20[0-9]{2}-(0[1-9]|1[0-2])$")
+
+
+@router.get("/closures")
+async def list_closures(db: AsyncSession = Depends(get_db), _reader: UserResponse = Depends(get_finance_reader)):
+    rows = (await db.execute(select(FinanceClosure, User).outerjoin(User, User.id == FinanceClosure.closed_by).order_by(FinanceClosure.month.desc()))).all()
+    return [{"month": c.month, "closed_at": c.closed_at, "closed_by_name": _name(u)} for c, u in rows]
+
+
+@router.post("/closures")
+async def close_month(
+    data: ClosureIn, db: AsyncSession = Depends(get_db), reader: UserResponse = Depends(get_finance_reader),
+    actor: Actor = Depends(get_finance_actor),
+):
+    """The accountant (or an admin) closes a finished month whose entries are all validated."""
+    if reader.role not in ("accountant", "admin"):
+        raise HTTPException(status_code=403, detail="La clôture d'un mois est faite par le comptable.")
+    if data.month >= date.today().strftime("%Y-%m"):
+        raise HTTPException(status_code=400, detail="Seul un mois terminé peut être clôturé.")
+    if await db.get(FinanceClosure, data.month):
+        raise HTTPException(status_code=409, detail="Ce mois est déjà clôturé.")
+    year, month = (int(x) for x in data.month.split("-"))
+    waiting = (await db.execute(select(func.count(FinanceEntry.id)).where(
+        FinanceEntry.cancelled_at.is_(None), FinanceEntry.validated_at.is_(None),
+        extract("year", FinanceEntry.entry_date) == year, extract("month", FinanceEntry.entry_date) == month,
+    ))).scalar_one()
+    if waiting:
+        raise HTTPException(status_code=409, detail=f"{waiting} écriture(s) de ce mois attendent encore une validation.")
+    db.add(FinanceClosure(month=data.month, closed_by=actor.id))
+    await db.commit()
+    await audit.record(db, actor, "finance.month_close", f"Mois clôturé : {data.month}", target_type="finance_closure", target_id=data.month)
+    return {"month": data.month}
+
+
+@router.delete("/closures/{month}")
+async def reopen_month(month: str, db: AsyncSession = Depends(get_db), reader: UserResponse = Depends(get_finance_reader),
+                       actor: Actor = Depends(get_finance_actor)):
+    """Admins only, exceptionally: the reopening stays in the journal."""
+    if reader.role != "admin":
+        raise HTTPException(status_code=403, detail="Seul un administrateur peut rouvrir un mois clôturé.")
+    closure = await db.get(FinanceClosure, month)
+    if not closure:
+        raise HTTPException(status_code=404, detail="Ce mois n'est pas clôturé.")
+    await db.delete(closure)
+    await db.commit()
+    await audit.record(db, actor, "finance.month_reopen", f"Mois rouvert : {month}", target_type="finance_closure", target_id=month)
+    return {"month": month, "reopened": True}
+
+
+class CommentIn(BaseModel):
+    body: str = Field(min_length=1, max_length=2000)
+
+
+@router.get("/entries/{entry_id}/comments")
+async def list_comments(entry_id: int, db: AsyncSession = Depends(get_db), _reader: UserResponse = Depends(get_finance_reader)):
+    rows = (await db.execute(select(FinanceComment).where(FinanceComment.entry_id == entry_id).order_by(FinanceComment.id))).scalars()
+    return [{"id": c.id, "author_name": c.author_name, "body": c.body, "created_at": c.created_at} for c in rows]
+
+
+@router.post("/entries/{entry_id}/comments", status_code=status.HTTP_201_CREATED)
+async def add_comment(
+    entry_id: int, data: CommentIn, background: BackgroundTasks, db: AsyncSession = Depends(get_db),
+    reader: UserResponse = Depends(get_finance_reader), actor: Actor = Depends(get_finance_actor),
+):
+    entry = await db.get(FinanceEntry, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Écriture introuvable")
+    comment = FinanceComment(entry_id=entry.id, author_id=actor.id, author_name=reader.name or reader.email, body=data.body.strip())
+    db.add(comment)
+    await db.commit()
+    await db.refresh(comment)
+    background.add_task(
+        _notify, await _finance_team(db, actor.id), f"Commentaire sur « {entry.label} »",
+        f"{reader.name or reader.email} : {comment.body}\n\nTableau de bord → Finances → Recettes & dépenses.",
+    )
+    return {"id": comment.id, "author_name": comment.author_name, "body": comment.body, "created_at": comment.created_at}
+
+
+@router.get("/todo")
+async def todo(db: AsyncSession = Depends(get_db), reader: UserResponse = Depends(get_finance_reader)):
+    """What waits for the finance team, and what waits for this person in particular."""
+    open_entries = [FinanceEntry.cancelled_at.is_(None)]
+    waiting = list((await db.execute(
+        select(FinanceEntry).where(*open_entries, FinanceEntry.validated_at.is_(None)).order_by(FinanceEntry.entry_date, FinanceEntry.id)
+    )).scalars())
+    no_receipt = list((await db.execute(
+        select(FinanceEntry).where(*open_entries, FinanceEntry.kind == "expense", FinanceEntry.document_id.is_(None))
+        .order_by(FinanceEntry.entry_date.desc()).limit(50)
+    )).scalars())
+    to_tick = (await db.execute(
+        select(func.count(Donations.id), func.coalesce(func.sum(Donations.amount), 0))
+        .where(Donations.payment_status == "paid", Donations.reconciled_at.is_(None))
+    )).one()
+    brief = lambda e: {"id": e.id, "label": e.label, "amount": e.amount, "kind": e.kind, "entry_date": e.entry_date}  # noqa: E731
+    return {
+        "to_validate": [brief(e) for e in waiting if e.created_by != reader.id],
+        "waiting_for_others": [brief(e) for e in waiting if e.created_by == reader.id],
+        "missing_receipts": [brief(e) for e in no_receipt],
+        "donations_to_tick": {"count": to_tick[0], "total": int(to_tick[1])},
     }

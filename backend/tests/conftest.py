@@ -39,6 +39,8 @@ os.environ.update(
         "SESSION_MAX_HOURS": "12",
         # Most tests sign admins in directly; tests/test_login_code.py turns the email code on
         "LOGIN_CODE_REQUIRED": "false",
+        # Most tests use staff accounts without an authenticator app; tests/test_team_2fa.py turns this on
+        "REQUIRE_2FA_FOR_TEAM": "false",
         "STRIPE_SECRET_KEY": "",
         # Whatever the local .env says (PayTech there): tests that need PayTech use the paytech_on fixture
         "PAYMENT_PROVIDER": "paydunya",
@@ -68,6 +70,8 @@ TABLES = [
     "images",
     "login_codes",
     "finance_entries",
+    "finance_closures",
+    "finance_comments",
     "finance_documents",
     "project_budget_lines",
     "project_updates",

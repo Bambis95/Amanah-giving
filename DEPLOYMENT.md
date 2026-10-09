@@ -156,6 +156,18 @@ Quand le compte marchand est validé :
   email à chaque connexion. Si aucun email ne peut partir (SMTP absent ou en panne), la connexion
   se fait sans code et le **Journal** le signale (« Connexion sans code ») : vérifiez alors les
   réglages `SMTP_*`. `LOGIN_CODE_REQUIRED=false` désactive le code (déconseillé).
+- **Double authentification obligatoire pour l'équipe** (`REQUIRE_2FA_FOR_TEAM`, activée par
+  défaut) : trésorier, comptable, président et administrateurs n'ouvrent le tableau de bord qu'avec
+  Google Authenticator. Sans elle, le tableau de bord affiche « Activez la double authentification »
+  et renvoie vers *Mon espace*, qui reste accessible. Les membres du club ne sont pas concernés.
+  En cas d'urgence (téléphone perdu de l'unique administrateur), mettre `REQUIRE_2FA_FOR_TEAM=false`
+  dans Render le temps de se reconnecter, puis remettre `true`.
+- **Trésorier et comptable** : chaque écriture saisie par l'un est **validée par l'autre** (jamais par
+  soi-même) avant de compter dans les totaux, rapports et la page Transparence. Le comptable clôture
+  les mois terminés (plus aucune modification ensuite) ; seul un administrateur rouvre un mois.
+  Onglet *Finances → À faire* : écritures à valider, justificatifs manquants, dons à pointer.
+- **Présidente** : voit tout le tableau de bord, *Réglages du site* en lecture seule, et peut
+  télécharger l'export des données.
 - **Double authentification par application** : chacun peut l'activer dans *Mon espace* en scannant
   un QR code avec Google Authenticator (ou Microsoft Authenticator, Authy). Elle remplace alors le code
   par email à la connexion. 8 codes de secours sont donnés une seule fois ; sans téléphone ni code,

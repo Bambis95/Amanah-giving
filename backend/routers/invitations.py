@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/v1/invitations", tags=["invitations"])
 logger = logging.getLogger(__name__)
 
 INVITE_HOURS = 48
-ROLE_LABELS = {"member": "membre du club", "treasurer": "trésorier", "president": "président", "admin": "administrateur"}
+ROLE_LABELS = {"member": "membre du club", "treasurer": "trésorier", "accountant": "comptable", "president": "président", "admin": "administrateur"}
 # What a president may invite (and revoke): members only, as for role changes
 PRESIDENT_INVITES = ("member",)
 INVALID_LINK = "Cette invitation est invalide, a expiré ou a déjà été utilisée. Demandez-en une nouvelle."
@@ -62,7 +62,7 @@ async def _actor_role(db: AsyncSession, actor: Actor) -> str:
 class InvitationCreate(BaseModel):
     email: EmailStr
     name: Optional[str] = None
-    role: Literal["member", "treasurer", "president", "admin"]
+    role: Literal["member", "treasurer", "accountant", "president", "admin"]
 
 
 class InvitationResponse(BaseModel):

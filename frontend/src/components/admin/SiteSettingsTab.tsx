@@ -21,7 +21,8 @@ function Field({ id, label, hint, children }: { id: string; label: string; hint?
 }
 
 /** Contacts, social links and home texts of the public site, changed without a developer (admins) */
-export default function SiteSettingsTab() {
+/** `readOnly`: the president sees every setting, only admins change them */
+export default function SiteSettingsTab({ readOnly = false }: { readOnly?: boolean }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<SiteSettings | null>(null);
   const [saving, setSaving] = useState(false);
@@ -56,6 +57,12 @@ export default function SiteSettingsTab() {
 
   return (
     <form onSubmit={save} className="space-y-4">
+      {readOnly && (
+        <p className="rounded-lg border border-border bg-muted/60 p-3 text-sm text-muted-foreground">
+          Lecture seule : seuls les administrateurs modifient les réglages du site.
+        </p>
+      )}
+      <fieldset disabled={readOnly} className="space-y-4">
       <Card className="shadow-sm">
         <CardContent className="space-y-5 p-4 md:p-6">
           <h3 className="font-semibold text-foreground">Coordonnées</h3>
@@ -147,12 +154,15 @@ export default function SiteSettingsTab() {
         </CardContent>
       </Card>
 
+      </fieldset>
+      {!readOnly && (
       <div className="flex justify-end">
         <Button type="submit" disabled={saving} className="h-11">
           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Enregistrer les réglages
         </Button>
       </div>
+      )}
     </form>
   );
 }

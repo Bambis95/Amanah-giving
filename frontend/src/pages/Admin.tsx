@@ -18,6 +18,7 @@ import {
   Send,
   ShieldAlert,
   SlidersHorizontal,
+  Smartphone,
   Users,
   Wallet,
 } from "lucide-react";
@@ -30,7 +31,7 @@ import UsersTab from "@/components/admin/UsersTab";
 import AuditTab from "@/components/admin/AuditTab";
 import OverviewTab, { OverviewTarget } from "@/components/admin/OverviewTab";
 import { formatCFA } from "@/components/admin/format";
-import { canEditFinance, canManage as roleCanManage, canReadFinance, isAdminRole, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
+import { canCloseMonth, canEditFinance, canManage as roleCanManage, canReadFinance, isAdminRole, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
 import SiteSettingsTab from "@/components/admin/SiteSettingsTab";
 import DataExportCard from "@/components/admin/DataExportCard";
 import NewsletterTab from "@/components/admin/NewsletterTab";
@@ -101,9 +102,12 @@ export default function AdminPage() {
     }
   }, [manager]);
 
+  // Team accounts need their authenticator app first: nothing is loaded before (the server refuses anyway)
+  const needs2fa = !!user?.two_factor_required;
+
   useEffect(() => {
-    if (staff) load();
-  }, [staff, load]);
+    if (staff && !needs2fa) load();
+  }, [staff, needs2fa, load]);
 
   if (authLoading) {
     return (
@@ -139,6 +143,31 @@ export default function AdminPage() {
     );
   }
 
+  if (needs2fa) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex justify-center px-4 pt-32">
+          <Card className="w-full max-w-md text-center shadow-sm">
+            <CardContent className="p-8">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent">
+                <Smartphone className="h-7 w-7 text-primary" aria-hidden="true" />
+              </div>
+              <h1 className="mb-2 text-xl font-bold text-foreground">Activez la double authentification</h1>
+              <p className="mb-6 text-muted-foreground">
+                Votre compte ({ROLE_LABELS[(user.role as Role)] ?? user.role}) donne accès aux coordonnées des donateurs et à
+                l'argent du club : le tableau de bord s'ouvre seulement avec Google Authenticator. Cela prend deux minutes.
+              </p>
+              <Button asChild>
+                <Link to="/mon-espace">Activer dans Mon espace</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const paid = donations.filter((d) => d.payment_status === "paid");
   const pending = donations.filter((d) => d.payment_status === "pending");
   const unread = messages.filter((m) => !m.is_read).length;
@@ -156,7 +185,8 @@ export default function AdminPage() {
       ? [
           { id: "users" as Section, label: "Membres & comptes", icon: Users, count: users.length },
           { id: "audit" as Section, label: "Journal", icon: History },
-          ...(isAdminRole(user.role) ? [{ id: "settings" as Section, label: "Réglages du site", icon: SlidersHorizontal }] : []),
+          // The president sees them too (read-only) and can download the data export
+          { id: "settings" as Section, label: "Réglages du site", icon: SlidersHorizontal },
         ]
       : []),
   ];
@@ -319,14 +349,21 @@ export default function AdminPage() {
                   {current.id === "donations" && <DonationsTab donations={donations} onChange={setDonations} canManage={manager} />}
                   {current.id === "messages" && <MessagesTab messages={messages} onChange={setMessages} initialKind={messageKind} />}
                   {current.id === "projects" && <ProjectsTab projects={projects} onChange={setProjects} readOnly={!manager} />}
-                  {current.id === "finances" && <FinanceTab projects={projects} canEdit={canEditFinance(user.role)} canSetCommission={isAdminRole(user.role)} />}
+                  {current.id === "finances" && <FinanceTab
+                      projects={projects}
+                      canEdit={canEditFinance(user.role)}
+                      canSetCommission={isAdminRole(user.role)}
+                      currentUserId={user.id}
+                      canClose={canCloseMonth(user.role)}
+                      canReopen={isAdminRole(user.role)}
+                    />}
                   {current.id === "users" && (
                     <UsersTab users={users} currentUserId={user.id} currentRole={user.role} onChange={setUsers} />
                   )}
                   {current.id === "audit" && <AuditTab />}
                   {current.id === "settings" && (
                     <div className="space-y-4">
-                      <SiteSettingsTab />
+                      <SiteSettingsTab readOnly={!isAdminRole(user.role)} />
                       <DataExportCard />
                     </div>
                   )}

@@ -65,8 +65,20 @@ export default function SummaryPanel({ year, meta, onGo }: { year: number | null
   const projects = data.projects.filter((p) => p.received || p.spent || p.budget);
   const period = year ? `en ${year}` : "depuis le début";
 
+  const waiting = data.awaiting_validation;
+
   return (
     <div className="space-y-4">
+      {waiting && waiting.count > 0 && (
+        <button
+          type="button"
+          onClick={() => onGo("todo")}
+          className="w-full rounded-lg border border-warning/40 bg-warning/10 p-3 text-left text-sm text-foreground hover:bg-warning/15"
+        >
+          {waiting.count} écriture{waiting.count > 1 ? "s" : ""} ({formatCFA(waiting.total)}) attend{waiting.count > 1 ? "ent" : ""} une
+          validation : elle{waiting.count > 1 ? "s" : ""} ne compte{waiting.count > 1 ? "nt" : ""} pas encore dans ces totaux. Voir « À faire ».
+        </button>
+      )}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Tile icon={Heart} label="Dons en ligne" value={formatCFA(data.donations.total)} detail={`${data.donations.count} don${data.donations.count > 1 ? "s" : ""} payé${data.donations.count > 1 ? "s" : ""} ${period}`} />
         <Tile icon={ArrowUpRight} label="Autres recettes" value={formatCFA(data.other_income)} detail="subventions, cotisations, espèces…" />

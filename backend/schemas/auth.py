@@ -11,6 +11,7 @@ class UserResponse(BaseModel):
     role: str = "user"  # user/admin
     last_login: Optional[datetime] = None
     is_technical_owner: bool = False
+    two_factor: bool = False
 
     class Config:
         from_attributes = True

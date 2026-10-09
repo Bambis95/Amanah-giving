@@ -12,7 +12,7 @@ from core.database import get_db
 from services.donations import DonationsService
 from services.email import donation_destination
 from services.receipt import build_receipt_pdf, receipt_number
-from dependencies.auth import ROLE_LEVELS, get_admin_user, get_current_user, get_staff_user, role_level
+from dependencies.auth import ROLE_LEVELS, get_admin_user, get_current_user, get_staff_user, requires_2fa, role_level
 from schemas.auth import UserResponse
 
 # Set up logging
@@ -224,7 +224,8 @@ async def download_receipt(
 ):
     """PDF receipt of a paid donation: for its donor (signed-in account) and for presidents and admins."""
     donation = await DonationsService(db).get_by_id(id)
-    manager = role_level(current_user.role) >= ROLE_LEVELS["president"]
+    # A manager without the required authenticator app only gets the receipts of their own donations
+    manager = role_level(current_user.role) >= ROLE_LEVELS["president"] and not requires_2fa(current_user)
     if not donation or not (manager or donation.user_id == str(current_user.id)):
         raise HTTPException(status_code=404, detail="Don introuvable")
     if donation.payment_status != "paid":

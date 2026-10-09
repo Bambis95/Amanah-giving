@@ -30,9 +30,13 @@ def test_admin_downloads_everything_without_secrets(client, admin):
     assert db_fetch("SELECT action FROM audit_logs WHERE action = 'security.data_export'")
 
 
-def test_only_administrators_can_export(client):
+def test_only_administrators_and_the_president_can_export(client):
     assert client.get("/api/v1/admin/export").status_code == 401
-    for role in ("user", "treasurer", "president"):
+    register(client, "pres@example.com")
+    set_role("pres@example.com", "president")
+    login(client, "pres@example.com")
+    assert client.get("/api/v1/admin/export").status_code == 200  # the client's legal representative
+    for role in ("user", "treasurer", "accountant"):
         email = f"{role}@example.com"
         register(client, email)
         set_role(email, role)

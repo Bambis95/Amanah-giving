@@ -83,6 +83,7 @@ async def _load_user(token: str, db: AsyncSession, response: Optional[Response] 
     return UserResponse(
         id=user.id, email=user.email, name=user.name, role=user.role, last_login=user.last_login,
         is_technical_owner=bool(user.is_technical_owner),
+        two_factor=bool(user.totp_secret),
     )
 
 
@@ -128,22 +129,42 @@ async def get_optional_user(
 #   president : runs the club day to day (campaigns, deposits, messages, audit log, members)
 #   admin     : everything, including technical settings and president/admin accounts
 #   treasurer : a member who also keeps the accounts (Finances section)
-ROLE_LEVELS = {"user": 0, "member": 1, "treasurer": 1, "president": 2, "admin": 3}
-# Finances: the treasurer and admins keep the accounts; the president reads them
-FINANCE_EDITORS = ("treasurer", "admin")
-FINANCE_READERS = ("treasurer", "president", "admin")
-STAFF_ROLES = ("member", "treasurer", "president", "admin")
+#   accountant: a member who keeps the accounts with the treasurer and closes the months
+ROLE_LEVELS = {"user": 0, "member": 1, "treasurer": 1, "accountant": 1, "president": 2, "admin": 3}
+# Finances: the treasurer, the accountant and admins keep the accounts (each validates the other's
+# entries); the president reads them
+FINANCE_EDITORS = ("treasurer", "accountant", "admin")
+FINANCE_READERS = ("treasurer", "accountant", "president", "admin")
+STAFF_ROLES = ("member", "treasurer", "accountant", "president", "admin")
 
 
 def role_level(role: Optional[str]) -> int:
     return ROLE_LEVELS.get(role or "user", 0)
 
 
+# Accounts that see donors' details or money: their dashboard needs an authenticator app
+TEAM_2FA_ROLES = ("treasurer", "accountant", "president", "admin")
+TWO_FACTOR_REQUIRED = (
+    "Activez la double authentification (Google Authenticator) dans « Mon espace » pour accéder au tableau de bord."
+)
+
+
+def requires_2fa(user: UserResponse) -> bool:
+    """True when this account must turn on its authenticator app before any dashboard access."""
+    return settings.require_2fa_for_team and user.role in TEAM_2FA_ROLES and not user.two_factor
+
+
+def _gate(user: UserResponse) -> UserResponse:
+    if requires_2fa(user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=TWO_FACTOR_REQUIRED)
+    return user
+
+
 def _require(min_role: str, detail: str):
     async def dependency(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
         if role_level(current_user.role) < ROLE_LEVELS[min_role]:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
-        return current_user
+        return _gate(current_user)
 
     return dependency
 
@@ -155,14 +176,15 @@ get_admin_user = _require("admin", "Admin access required")
 
 async def get_finance_reader(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
     if current_user.role not in FINANCE_READERS:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé au trésorier, au président et aux administrateurs")
-    return current_user
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé à l'équipe des finances, au président et aux administrateurs")
+    return _gate(current_user)
 
 
 async def get_finance_actor(request: Request, current_user: UserResponse = Depends(get_current_user)) -> Actor:
     """Treasurer or admin (writes to the accounts), with who/where for the audit log."""
     if current_user.role not in FINANCE_EDITORS:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Seuls le trésorier et les administrateurs modifient les comptes")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Seuls le trésorier, le comptable et les administrateurs modifient les comptes")
+    _gate(current_user)
     return Actor(id=current_user.id, email=current_user.email, ip=client_ip(request))
 
 

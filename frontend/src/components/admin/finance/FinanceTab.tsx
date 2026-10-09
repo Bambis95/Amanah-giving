@@ -10,6 +10,7 @@ import BudgetsPanel from "./BudgetsPanel";
 import ReconciliationPanel from "./ReconciliationPanel";
 import ReportCard from "./ReportCard";
 import CommissionPanel from "./CommissionPanel";
+import TodoPanel from "./TodoPanel";
 
 interface FinanceTabProps {
   projects: Project[];
@@ -17,18 +18,23 @@ interface FinanceTabProps {
   canEdit: boolean;
   /** Admins set the platform commission rate; the rest of the finance team reads the statement */
   canSetCommission: boolean;
+  currentUserId: string;
+  /** Accountant and admins close months; only admins reopen one */
+  canClose: boolean;
+  canReopen: boolean;
 }
 
 const THIS_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: THIS_YEAR - 2025 + 1 }, (_, i) => THIS_YEAR - i);
 
-export type FinanceView = "summary" | "entries" | "budgets" | "reconciliation" | "commission";
+export type FinanceView = "todo" | "summary" | "entries" | "budgets" | "reconciliation" | "commission";
 
-export default function FinanceTab({ projects, canEdit, canSetCommission }: FinanceTabProps) {
+export default function FinanceTab({ projects, canEdit, canSetCommission, currentUserId, canClose, canReopen }: FinanceTabProps) {
   const [meta, setMeta] = useState<FinanceMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [year, setYear] = useState<number | null>(THIS_YEAR);
-  const [view, setView] = useState<FinanceView>("summary");
+  // Those who keep the accounts start on their to-do list; the president on the summary
+  const [view, setView] = useState<FinanceView>(canEdit ? "todo" : "summary");
 
   useEffect(() => {
     financeApi
@@ -56,6 +62,7 @@ export default function FinanceTab({ projects, canEdit, canSetCommission }: Fina
     <Tabs value={view} onValueChange={(v) => setView(v as FinanceView)} className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <TabsList className="scrollbar-hide h-auto w-full justify-start overflow-x-auto sm:w-auto">
+          <TabsTrigger value="todo">À faire</TabsTrigger>
           <TabsTrigger value="summary">Synthèse</TabsTrigger>
           <TabsTrigger value="entries">Recettes & dépenses</TabsTrigger>
           <TabsTrigger value="budgets">Budgets</TabsTrigger>
@@ -85,12 +92,15 @@ export default function FinanceTab({ projects, canEdit, canSetCommission }: Fina
         </p>
       )}
 
+      <TabsContent value="todo" className="mt-0">
+        <TodoPanel canEdit={canEdit} canClose={canClose} canReopen={canReopen} onGo={setView} />
+      </TabsContent>
       <TabsContent value="summary" className="mt-0 space-y-4">
         <ReportCard year={year} projects={projects} />
         <SummaryPanel year={year} meta={meta} onGo={setView} />
       </TabsContent>
       <TabsContent value="entries" className="mt-0">
-        <EntriesPanel year={year} meta={meta} projects={projects} canEdit={canEdit} />
+        <EntriesPanel year={year} meta={meta} projects={projects} canEdit={canEdit} currentUserId={currentUserId} />
       </TabsContent>
       <TabsContent value="budgets" className="mt-0">
         <BudgetsPanel meta={meta} projects={projects} canEdit={canEdit} />

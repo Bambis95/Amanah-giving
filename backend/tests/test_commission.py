@@ -58,6 +58,11 @@ def test_statement_counts_each_donation_at_the_rate_of_its_day(client, admin):
         "label": "Commission février", "payment_method": "wave",
     })
     assert r.status_code in (200, 201), r.text
+    assert client.get(URL, params={"year": 2026}).json()["paid"] == 0  # not validated yet
+    register(client, "compta@example.com")
+    set_role("compta@example.com", "accountant")
+    login(client, "compta@example.com")
+    assert client.post(f"/api/v1/finance/entries/{r.json()['id']}/validate").status_code == 200
     data = client.get(URL, params={"year": 2026}).json()
     assert (data["paid"], data["balance"]) == (1000, 466)
 

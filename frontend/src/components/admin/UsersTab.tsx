@@ -35,6 +35,7 @@ const roleBadgeClass: Record<string, string> = {
   admin: "bg-primary text-primary-foreground hover:bg-primary",
   president: "bg-highlight text-highlight-foreground hover:bg-highlight",
   treasurer: "bg-success text-success-foreground hover:bg-success",
+  accountant: "bg-success text-success-foreground hover:bg-success",
   member: "bg-accent text-accent-foreground hover:bg-accent",
 };
 
@@ -218,6 +219,7 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
   const plurals: Record<string, [string, string]> = {
     member: ["membre", "membres"],
     treasurer: ["trésorier", "trésoriers"],
+    accountant: ["comptable", "comptables"],
     president: ["président", "présidents"],
     admin: ["administrateur", "administrateurs"],
   };
@@ -251,8 +253,8 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4 md:p-6">
-        <div className="mb-4 grid gap-2 rounded-xl bg-muted/60 p-4 text-sm sm:grid-cols-2 xl:grid-cols-4">
-          {(["member", "treasurer", "president", "admin"] as Role[]).map((r) => (
+        <div className="mb-4 grid gap-2 rounded-xl bg-muted/60 p-4 text-sm sm:grid-cols-2 xl:grid-cols-3">
+          {(["member", "treasurer", "accountant", "president", "admin"] as Role[]).map((r) => (
             <p key={r}>
               <span className="font-semibold text-foreground">{ROLE_LABELS[r]} : </span>
               <span className="text-muted-foreground">{ROLE_DESCRIPTIONS[r]}</span>

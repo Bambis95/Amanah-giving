@@ -122,7 +122,8 @@ async def statement(db: AsyncSession, year: Optional[int] = None) -> Dict[str, A
         total_owed += owed
 
     paid_query = select(func.coalesce(func.sum(FinanceEntry.amount), 0)).where(
-        FinanceEntry.kind == "expense", FinanceEntry.category == FINANCE_CATEGORY, FinanceEntry.cancelled_at.is_(None)
+        FinanceEntry.kind == "expense", FinanceEntry.category == FINANCE_CATEGORY, FinanceEntry.cancelled_at.is_(None),
+        FinanceEntry.validated_at.is_not(None),
     )
     if year:
         paid_query = paid_query.where(func.extract("year", FinanceEntry.entry_date) == year)

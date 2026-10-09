@@ -25,6 +25,9 @@ export interface AuthUser {
   /** Inactivity before automatic logout (set by the server: shorter for admins) */
   idle_minutes?: number;
   is_technical_owner?: boolean;
+  two_factor?: boolean;
+  /** Team account without its authenticator app: the dashboard asks to turn it on first */
+  two_factor_required?: boolean;
 }
 
 export interface LoginResponse {
@@ -144,7 +147,7 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string | null;
-  role: "user" | "member" | "treasurer" | "president" | "admin";
+  role: "user" | "member" | "treasurer" | "accountant" | "president" | "admin";
   created_at: string | null;
   last_login: string | null;
   /** Set while the account is suspended */
@@ -192,6 +195,39 @@ export interface FinanceEntry extends FinanceEntryInput {
   updated_at: string | null;
   cancelled_at: string | null;
   cancel_reason: string | null;
+  created_by?: string | null;
+  /** null: waiting for another member of the finance team to validate it (not counted yet) */
+  validated_at?: string | null;
+  validated_by_name?: string | null;
+  comments?: number;
+}
+
+export interface FinanceComment {
+  id: number;
+  author_name: string | null;
+  body: string;
+  created_at: string;
+}
+
+export interface FinanceTodoItem {
+  id: number;
+  label: string;
+  amount: number;
+  kind: EntryKind;
+  entry_date: string;
+}
+
+export interface FinanceTodo {
+  to_validate: FinanceTodoItem[];
+  waiting_for_others: FinanceTodoItem[];
+  missing_receipts: FinanceTodoItem[];
+  donations_to_tick: { count: number; total: number };
+}
+
+export interface FinanceClosure {
+  month: string; // YYYY-MM
+  closed_at: string;
+  closed_by_name: string | null;
 }
 
 export interface BudgetLine {
@@ -216,6 +252,8 @@ export interface ReconciliationRow {
 
 export interface FinanceSummary {
   year: number | null;
+  /** Recorded but not validated yet: not in the totals */
+  awaiting_validation?: { count: number; total: number };
   donations: { total: number; count: number; by_method: Record<string, number> };
   reconciliation: { reconciled_total: number; reconciled_count: number; pending_total: number; pending_count: number };
   other_income: number;
@@ -406,6 +444,35 @@ export const financeApi = {
     return adminRequest(`/finance/entries/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) });
   },
 
+  /** Four eyes: validated by someone else than the person who recorded it */
+  validateEntry(id: number): Promise<FinanceEntry> {
+    return adminRequest(`/finance/entries/${id}/validate`, { method: "POST" });
+  },
+
+  comments(id: number): Promise<FinanceComment[]> {
+    return adminRequest(`/finance/entries/${id}/comments`);
+  },
+
+  addComment(id: number, body: string): Promise<FinanceComment> {
+    return adminRequest(`/finance/entries/${id}/comments`, { method: "POST", body: JSON.stringify({ body }) });
+  },
+
+  todo(): Promise<FinanceTodo> {
+    return adminRequest("/finance/todo");
+  },
+
+  closures(): Promise<FinanceClosure[]> {
+    return adminRequest("/finance/closures");
+  },
+
+  closeMonth(month: string): Promise<{ month: string }> {
+    return adminRequest("/finance/closures", { method: "POST", body: JSON.stringify({ month }) });
+  },
+
+  reopenMonth(month: string): Promise<{ month: string }> {
+    return adminRequest(`/finance/closures/${month}`, { method: "DELETE" });
+  },
+
   async uploadDocument(file: File): Promise<{ id: string; filename: string; content_type: string; size: number }> {
     const body = new FormData();
     body.append("file", file);
@@ -469,7 +536,7 @@ export interface UploadedImage {
   size: number;
 }
 
-export type StaffRole = "member" | "treasurer" | "president" | "admin";
+export type StaffRole = "member" | "treasurer" | "accountant" | "president" | "admin";
 
 export interface Invitation {
   id: number;

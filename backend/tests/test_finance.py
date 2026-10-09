@@ -163,6 +163,14 @@ def test_budget_reconciliation_and_summary(client, admin):
     done = client.get("/api/v1/finance/reconciliation", params={"state": "done"}).json()
     assert [d["id"] for d in done] == [d1] and done[0]["reconciled_by_name"] == "Test"
 
+    # Four eyes: nothing counts until someone else than the treasurer validates
+    s = client.get("/api/v1/finance/summary", params={"year": date.today().year}).json()
+    assert s["expenses"] == 0 and s["awaiting_validation"]["count"] == 2
+    waiting = [e["id"] for e in client.get("/api/v1/finance/entries").json() if not e["cancelled_at"]]
+    login(client, "admin@example.com")
+    for entry_id in waiting:
+        assert client.post(f"/api/v1/finance/entries/{entry_id}/validate").status_code == 200
+
     s = client.get("/api/v1/finance/summary", params={"year": date.today().year}).json()
     assert s["donations"]["total"] == 35_000 and s["donations"]["by_method"] == {"wave": 25_000, "orange_money": 10_000}
     assert s["other_income"] == 500_000

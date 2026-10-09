@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     # Presidents and admins confirm each sign-in with a code sent by email. Skipped (and logged)
     # when no email can be sent, so a mail outage never locks the team out.
     login_code_required: bool = True
+    # Treasurer, accountant, president and admins reach the dashboard only with an authenticator app
+    require_2fa_for_team: bool = True
     # Days between the automatic backups emailed to the administrators (0 turns them off)
     backup_email_days: int = 7
     # Extra origins allowed by CORS, comma-separated; FRONTEND_URL is always allowed

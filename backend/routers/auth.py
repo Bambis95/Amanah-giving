@@ -347,9 +347,16 @@ async def change_password(
 class MeResponse(UserResponse):
     # Inactivity before automatic logout, so the website's timer matches the server
     idle_minutes: int
+    # Team account without its authenticator app: the dashboard asks to turn it on first
+    two_factor_required: bool = False
 
 
 @router.get("/me", response_model=MeResponse)
 async def get_current_user_info(current_user: UserResponse = Depends(get_current_user)):
     """Get current user info (also extends the session: see core.session)."""
-    return MeResponse(**current_user.model_dump(), idle_minutes=idle_minutes_for(current_user.role))
+    from dependencies.auth import requires_2fa
+
+    return MeResponse(
+        **current_user.model_dump(), idle_minutes=idle_minutes_for(current_user.role),
+        two_factor_required=requires_2fa(current_user),
+    )
