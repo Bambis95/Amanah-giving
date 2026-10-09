@@ -156,6 +156,12 @@ Quand le compte marchand est validé :
   email à chaque connexion. Si aucun email ne peut partir (SMTP absent ou en panne), la connexion
   se fait sans code et le **Journal** le signale (« Connexion sans code ») : vérifiez alors les
   réglages `SMTP_*`. `LOGIN_CODE_REQUIRED=false` désactive le code (déconseillé).
+- **Double authentification par application** : chacun peut l'activer dans *Mon espace* en scannant
+  un QR code avec Google Authenticator (ou Microsoft Authenticator, Authy). Elle remplace alors le code
+  par email à la connexion. 8 codes de secours sont donnés une seule fois ; sans téléphone ni code,
+  un administrateur la retire (*Membres & comptes*), jamais celle du propriétaire technique. Les
+  secrets sont chiffrés avec une clé tirée de `JWT_SECRET_KEY` : **changer cette clé désactive toutes
+  les doubles authentifications** (chacun devra la réactiver).
 - **Emails** : Gmail limite l'envoi à quelques centaines par jour ; au-delà, passez à un
   service d'envoi (Brevo, Mailjet…) avec une adresse à votre nom de domaine.
 

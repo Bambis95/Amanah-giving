@@ -40,6 +40,10 @@ os.environ.update(
         # Most tests sign admins in directly; tests/test_login_code.py turns the email code on
         "LOGIN_CODE_REQUIRED": "false",
         "STRIPE_SECRET_KEY": "",
+        # Whatever the local .env says (PayTech there): tests that need PayTech use the paytech_on fixture
+        "PAYMENT_PROVIDER": "paydunya",
+        "PAYTECH_API_KEY": "",
+        "PAYTECH_API_SECRET": "",
         "PAYDUNYA_MODE": "test",
         "PAYDUNYA_MASTER_KEY": "test-master-key",
         "PAYDUNYA_PRIVATE_KEY": "test-private-key",

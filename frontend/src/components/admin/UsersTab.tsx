@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Ban, Clock, KeyRound, RotateCcw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
+import { Ban, Clock, KeyRound, RotateCcw, Search, ShieldCheck, Smartphone, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
-import { adminApi, AdminUser, Invitation } from "@/api";
+import { adminApi, AdminUser, Invitation, twoFactorApi } from "@/api";
 import InviteDialog from "./InviteDialog";
 import { assignableRoles, isStaff, Role, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,12 @@ function RoleBadge({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
         <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
           <KeyRound className="h-3 w-3" aria-hidden="true" />
           Propriétaire technique
+        </Badge>
+      )}
+      {user.two_factor && (
+        <Badge variant="outline" className="gap-1 border-success/40 text-success" title="Double authentification activée">
+          <Smartphone className="h-3 w-3" aria-hidden="true" />
+          2FA
         </Badge>
       )}
       {isSelf && (
@@ -133,6 +139,21 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [revoking, setRevoking] = useState<Invitation | null>(null);
   const [suspension, setSuspension] = useState<{ user: AdminUser; suspend: boolean } | null>(null);
+  // Admins: remove the authenticator of someone who lost their phone and recovery codes
+  const [tfaReset, setTfaReset] = useState<AdminUser | null>(null);
+  const canResetTfa = (u: AdminUser) => currentRole === "admin" && !!u.two_factor && !u.is_technical_owner && u.id !== currentUserId;
+  const applyTfaReset = async () => {
+    if (!tfaReset) return;
+    const target = tfaReset;
+    setTfaReset(null);
+    try {
+      await twoFactorApi.resetFor(target.id);
+      onChange(users.map((u) => (u.id === target.id ? { ...u, two_factor: false } : u)));
+      toast.success(`Double authentification retirée : ${target.name || target.email}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Action impossible");
+    }
+  };
   // Technical owner: handing over to an admin ("" = giving the status up)
   const [transferTo, setTransferTo] = useState<string | null>(null);
   const owner = users.find((u) => u.is_technical_owner) ?? null;
@@ -348,6 +369,11 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
                     </div>
                     <SuspendToggle user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onAsk={(user, suspend) => setSuspension({ user, suspend })} />
                   </div>
+                  {canResetTfa(u) && (
+                    <Button variant="ghost" size="sm" className="mt-2 h-8 px-2 text-xs text-muted-foreground" onClick={() => setTfaReset(u)}>
+                      Retirer la 2FA (téléphone perdu)
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -381,6 +407,11 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
                         <div className="flex items-center justify-end gap-2">
                           <RoleControl user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onChoose={choose} />
                           <SuspendToggle user={u} isSelf={u.id === currentUserId} currentRole={currentRole} busy={busyId === u.id} onAsk={(user, suspend) => setSuspension({ user, suspend })} />
+                          {canResetTfa(u) && (
+                            <Button variant="ghost" size="sm" className="h-9 px-2 text-muted-foreground" title="Retirer la double authentification (téléphone perdu)" aria-label={`Retirer la double authentification de ${u.name || u.email}`} onClick={() => setTfaReset(u)}>
+                              <Smartphone className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -461,6 +492,23 @@ export default function UsersTab({ users, currentUserId, currentRole, onChange }
             <AlertDialogFooter>
               <AlertDialogCancel>Annuler</AlertDialogCancel>
               <AlertDialogAction onClick={applyTransfer}>{transferTo ? "Transférer" : "Renoncer"}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={tfaReset !== null} onOpenChange={(open) => !open && setTfaReset(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Retirer la double authentification de {tfaReset?.name || tfaReset?.email} ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                À faire seulement si la personne a perdu son téléphone et ses codes de secours, et après avoir vérifié son
+                identité (par téléphone ou en personne). Elle est déconnectée, se reconnecte avec son mot de passe et pourra
+                réactiver la protection. L'action est inscrite au Journal.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={applyTfaReset}>Retirer</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

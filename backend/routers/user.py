@@ -29,6 +29,8 @@ class AdminUserResponse(BaseModel):
     last_login: Optional[datetime] = None
     suspended_at: Optional[datetime] = None
     is_technical_owner: bool = False
+    # Authenticator app turned on (shown as a badge to the managers)
+    two_factor: bool = False
 
     class Config:
         from_attributes = True

@@ -31,11 +31,13 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
-/** Presidents and admins: the password was right, a code was emailed */
+/** The password was right, a second step is needed: a code by email, or from the authenticator app */
 export interface LoginCodeChallenge {
   code_required: true;
+  /** "totp": code from Google Authenticator (or a recovery code); "email": code just sent */
+  method?: "email" | "totp";
   challenge: string;
-  email_hint: string;
+  email_hint?: string;
   expires_in_minutes: number;
 }
 
@@ -149,6 +151,8 @@ export interface AdminUser {
   suspended_at?: string | null;
   /** Service provider named in the contract: protected, hands the status over himself */
   is_technical_owner?: boolean;
+  /** Authenticator app turned on */
+  two_factor?: boolean;
 }
 
 export interface AuditChainCheck {
@@ -670,6 +674,35 @@ export interface SiteStatus {
   /** Share of the donations that pays the platform, announced to donors (e.g. "5"); null when none */
   platform_fee_percent?: string | null;
 }
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  enabled_at: string | null;
+  recovery_left: number;
+}
+
+/** Authenticator app (Google Authenticator...) for one's own account */
+export const twoFactorApi = {
+  status(): Promise<TwoFactorStatus> {
+    return adminRequest("/auth/2fa");
+  },
+  setup(): Promise<{ secret: string; otpauth_uri: string }> {
+    return adminRequest("/auth/2fa/setup", { method: "POST" });
+  },
+  enable(code: string): Promise<{ recovery_codes: string[] }> {
+    return adminRequest("/auth/2fa/enable", { method: "POST", body: JSON.stringify({ code }) });
+  },
+  newRecoveryCodes(code: string): Promise<{ recovery_codes: string[] }> {
+    return adminRequest("/auth/2fa/recovery-codes", { method: "POST", body: JSON.stringify({ code }) });
+  },
+  disable(password: string, code: string): Promise<TwoFactorStatus> {
+    return adminRequest("/auth/2fa/disable", { method: "POST", body: JSON.stringify({ password, code }) });
+  },
+  /** Admins: someone lost their phone and their recovery codes */
+  resetFor(userId: string): Promise<{ enabled: boolean }> {
+    return adminRequest(`/users/${userId}/2fa/reset`, { method: "POST" });
+  },
+};
 
 export interface CommissionStatement {
   percent: string;

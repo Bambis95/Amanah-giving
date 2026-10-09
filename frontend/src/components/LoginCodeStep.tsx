@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { ArrowLeft, Loader2, MailCheck, RotateCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, KeyRound, Loader2, MailCheck, RotateCw, ShieldCheck, Smartphone } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { LoginCodeChallenge } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +17,7 @@ interface LoginCodeStepProps {
   onBack: () => void;
 }
 
-/** Second sign-in step of presidents and admins: the 6-digit code received by email */
+/** Second sign-in step: the 6-digit code received by email, or shown by the authenticator app */
 export default function LoginCodeStep({ step, onResend, onBack }: LoginCodeStepProps) {
   const { loginWithCode } = useAuth();
   const [code, setCode] = useState("");
@@ -24,6 +25,9 @@ export default function LoginCodeStep({ step, onResend, onBack }: LoginCodeStepP
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const app = step.method === "totp";
+  // Lost phone: one of the recovery codes given when the app was turned on (e.g. k7m2-p9xq)
+  const [recovery, setRecovery] = useState(false);
 
   // The field is disabled while checking, which drops the focus: give it back for the next try
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function LoginCodeStep({ step, onResend, onBack }: LoginCodeStepP
   }, [loading, resending]);
 
   const submit = async (value = code) => {
-    if (value.length !== LENGTH || loading) return;
+    if ((recovery ? value.trim().length < 8 : value.length !== LENGTH) || loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -66,14 +70,44 @@ export default function LoginCodeStep({ step, onResend, onBack }: LoginCodeStepP
       className="space-y-6"
     >
       <div className="flex gap-3 rounded-2xl bg-accent p-4 text-sm text-accent-foreground">
-        <MailCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-        <p>
-          Un code à 6 chiffres vient d'être envoyé à <span className="font-semibold">{step.email_hint}</span>. Il est
-          valable {step.expires_in_minutes} minutes.
-        </p>
+        {app ? (
+          <Smartphone className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+        ) : (
+          <MailCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+        )}
+        {app ? (
+          <p>
+            {recovery
+              ? "Saisissez l'un de vos codes de secours (chacun ne sert qu'une fois)."
+              : "Ouvrez Google Authenticator (ou votre application d'authentification) et saisissez le code à 6 chiffres affiché pour SENJAPO."}
+          </p>
+        ) : (
+          <p>
+            Un code à 6 chiffres vient d'être envoyé à <span className="font-semibold">{step.email_hint}</span>. Il est
+            valable {step.expires_in_minutes} minutes.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col items-center gap-3">
+        {recovery ? (
+          <Input
+            ref={input}
+            value={code}
+            onChange={(e) => {
+              setCode(e.target.value);
+              setError(null);
+            }}
+            placeholder="ex. k7m2-p9xq"
+            autoComplete="one-time-code"
+            autoCapitalize="none"
+            spellCheck={false}
+            aria-label="Code de secours"
+            aria-invalid={error ? true : undefined}
+            disabled={loading}
+            className="h-12 max-w-xs text-center font-mono text-lg tracking-widest"
+          />
+        ) : (
         <InputOTP
           ref={input}
           maxLength={LENGTH}
@@ -97,6 +131,7 @@ export default function LoginCodeStep({ step, onResend, onBack }: LoginCodeStepP
             ))}
           </InputOTPGroup>
         </InputOTP>
+        )}
         {error && (
           <p className="text-center text-sm text-destructive" role="alert">
             {error}
@@ -104,7 +139,11 @@ export default function LoginCodeStep({ step, onResend, onBack }: LoginCodeStepP
         )}
       </div>
 
-      <Button type="submit" disabled={loading || code.length !== LENGTH} className="h-12 w-full text-base font-semibold">
+      <Button
+        type="submit"
+        disabled={loading || (recovery ? code.trim().length < 8 : code.length !== LENGTH)}
+        className="h-12 w-full text-base font-semibold"
+      >
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
         Valider le code
       </Button>
@@ -114,18 +153,35 @@ export default function LoginCodeStep({ step, onResend, onBack }: LoginCodeStepP
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Changer de compte
         </button>
-        <button
-          type="button"
-          onClick={resend}
-          disabled={resending}
-          className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline disabled:opacity-60"
-        >
-          {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" aria-hidden="true" />}
-          Renvoyer un code
-        </button>
+        {app ? (
+          <button
+            type="button"
+            onClick={() => {
+              setRecovery((r) => !r);
+              setCode("");
+              setError(null);
+            }}
+            className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+          >
+            {recovery ? <Smartphone className="h-4 w-4" aria-hidden="true" /> : <KeyRound className="h-4 w-4" aria-hidden="true" />}
+            {recovery ? "Utiliser l'application" : "Téléphone perdu ? Code de secours"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={resend}
+            disabled={resending}
+            className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline disabled:opacity-60"
+          >
+            {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" aria-hidden="true" />}
+            Renvoyer un code
+          </button>
+        )}
       </div>
       <p className="text-center text-xs text-muted-foreground">
-        Rien reçu ? Regardez dans les courriers indésirables. Ce code protège l'accès aux données des donateurs.
+        {app
+          ? "Sans téléphone ni code de secours, un administrateur peut retirer la double authentification de votre compte."
+          : "Rien reçu ? Regardez dans les courriers indésirables. Ce code protège l'accès aux données des donateurs."}
       </p>
     </form>
   );

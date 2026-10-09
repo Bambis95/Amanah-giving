@@ -136,6 +136,8 @@ from routers.newsletter import router as newsletter_router
 from routers.export import router as export_router
 from routers.supporters import router as supporters_router
 from routers.commission import router as commission_router
+from routers.two_factor import admin_router as two_factor_admin_router
+from routers.two_factor import router as two_factor_router
 from services.backup import backup_loop
 
 
@@ -167,6 +169,8 @@ app.include_router(newsletter_router)
 app.include_router(export_router)
 app.include_router(supporters_router)
 app.include_router(commission_router)
+app.include_router(two_factor_router)
+app.include_router(two_factor_admin_router)
 
 
 # ============================================================

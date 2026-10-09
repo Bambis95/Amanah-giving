@@ -16,7 +16,7 @@ from models.password_reset import PasswordResetToken
 from pydantic import BaseModel, EmailStr
 from schemas.auth import UserResponse
 from services.auth import hash_password, register_user, verify_password
-from services import login_code
+from services import login_code, totp
 from services.email import build_password_reset_email, email_enabled, send_email
 from services.login_throttle import clear_failures, record_failure, seconds_until_allowed
 from sqlalchemy import func, select, update
@@ -133,12 +133,22 @@ async def login(
     if user.suspended_at is not None:
         raise HTTPException(status_code=403, detail=ACCOUNT_SUSPENDED)
 
+    # An authenticator app turned on: its code is the second step, for any account
+    if totp.enabled(user):
+        return {
+            "code_required": True,
+            "method": "totp",
+            "challenge": await login_code.start_totp(db, user),
+            "expires_in_minutes": login_code.CODE_MINUTES,
+        }
+
     # Presidents and admins: the password alone opens no session, a code sent by email does
     if login_code.required_for(user):
         challenge = await login_code.start(db, user)
         if challenge:
             return {
                 "code_required": True,
+                "method": "email",
                 "challenge": challenge,
                 "email_hint": login_code.mask_email(user.email),
                 "expires_in_minutes": login_code.CODE_MINUTES,
@@ -188,6 +198,12 @@ async def login_with_code(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if user.suspended_at is not None:
         raise HTTPException(status_code=403, detail=ACCOUNT_SUSPENDED)
+    if getattr(user, "used_recovery_code", False):
+        await audit.record(
+            db, Actor(id=user.id, email=user.email, ip=client_ip(http_request)), "security.2fa_recovery_used",
+            f"Connexion avec un code de secours : {user.email} ({len(user.totp_recovery or [])} restant(s))",
+            target_type="user", target_id=user.id,
+        )
     return await _signed_in(response, user, db)
 
 

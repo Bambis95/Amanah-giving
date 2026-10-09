@@ -1,7 +1,8 @@
 """Full data export for administrators: one ZIP with a CSV per table, the photos and the finance documents.
 
 Used as a backup and for the hand-over foreseen by the contract. Secrets are never exported:
-password hashes, session versions, sign-in codes, invitation and reset tokens, unsubscribe tokens.
+password hashes, session versions, sign-in codes, authenticator secrets and recovery codes, invitation and reset
+tokens, unsubscribe tokens.
 """
 
 import csv
@@ -36,7 +37,7 @@ TABLES = {
     "campagnes": (Projects, set()),
     "actualites": (ProjectUpdate, set()),
     "dons": (Donations, set()),
-    "comptes": (User, {"password_hash", "token_version"}),
+    "comptes": (User, {"password_hash", "token_version", "totp_secret", "totp_pending", "totp_last_step", "totp_recovery"}),
     "messages": (Contact_messages, set()),
     "finances_ecritures": (FinanceEntry, set()),
     "finances_budgets": (ProjectBudgetLine, set()),

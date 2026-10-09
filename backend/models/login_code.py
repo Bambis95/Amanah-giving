@@ -14,7 +14,9 @@ class LoginCode(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String(255), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     challenge_hash = Column(String(64), nullable=False, unique=True, index=True)
-    code_hash = Column(String(64), nullable=False)
+    code_hash = Column(String(64), nullable=False)  # empty for an authenticator-app challenge
+    # "email" (code sent by email) or "totp" (code from the person's authenticator app)
+    method = Column(String(10), nullable=False, default="email", server_default="email")
     attempts = Column(Integer, nullable=False, default=0, server_default="0")
     expires_at = Column(DateTime(timezone=True), nullable=False)
     used_at = Column(DateTime(timezone=True), nullable=True)

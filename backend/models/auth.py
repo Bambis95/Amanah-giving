@@ -1,5 +1,5 @@
 from models.base import Base
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 
@@ -20,3 +20,13 @@ class User(Base):
     # Technical owner (the service provider, per the contract): visible to the whole team, cannot be
     # demoted or suspended by other admins, hands the role over himself (Utilisateurs tab)
     is_technical_owner = Column(Boolean, nullable=False, server_default="false", default=False)
+    # Two-step sign-in with an authenticator app (Google Authenticator...): secrets stored encrypted
+    totp_secret = Column(String(255), nullable=True)
+    totp_pending = Column(String(255), nullable=True)  # scanned but not confirmed yet
+    totp_enabled_at = Column(DateTime(timezone=True), nullable=True)
+    totp_last_step = Column(Integer, nullable=True)  # a code is accepted once only
+    totp_recovery = Column(JSON, nullable=True)  # hashes of the unused recovery codes
+
+    @property
+    def two_factor(self) -> bool:
+        return bool(self.totp_secret)

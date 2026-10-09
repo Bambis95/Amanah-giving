@@ -1,5 +1,6 @@
-"""Email code, second sign-in step for presidents and admins (they see donors' contact details
-and confirm deposits: a stolen password alone must not be enough)."""
+"""Second sign-in step: a code from the person's authenticator app when they turned it on (any
+account), otherwise a code sent by email for the treasurer, presidents and admins (they see donors'
+contact details and confirm deposits: a stolen password alone must not be enough)."""
 
 import hashlib
 import hmac
@@ -12,6 +13,7 @@ from core.config import settings
 from models.auth import User
 from models.login_code import LoginCode
 from services import email as mail
+from services import totp
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
@@ -25,6 +27,21 @@ MAX_ATTEMPTS = 5
 
 def required_for(user: User) -> bool:
     return settings.login_code_required and user.role in ROLES_WITH_CODE
+
+
+async def start_totp(db: AsyncSession, user: User) -> str:
+    """A challenge answered with the authenticator app (nothing is sent)."""
+    now = datetime.now(timezone.utc)
+    await db.execute(
+        update(LoginCode).where(LoginCode.user_id == user.id, LoginCode.used_at.is_(None)).values(used_at=now)
+    )
+    challenge = secrets.token_urlsafe(32)
+    db.add(LoginCode(
+        user_id=user.id, challenge_hash=_challenge_hash(challenge), code_hash="", method="totp",
+        expires_at=now + timedelta(minutes=CODE_MINUTES),
+    ))
+    await db.commit()
+    return challenge
 
 
 def _challenge_hash(challenge: str) -> str:
@@ -83,7 +100,15 @@ async def verify(db: AsyncSession, challenge: str, code: str) -> User:
     if not entry or entry.used_at is not None or entry.expires_at <= now:
         raise CodeError("Ce code a expiré. Reconnectez-vous pour en recevoir un nouveau.")
 
-    if not hmac.compare_digest(entry.code_hash, _code_hash(challenge, code.strip())):
+    user = await db.get(User, entry.user_id) if entry.method == "totp" else None
+    if entry.method == "totp":
+        kind = totp.check_code(user, code.strip()) if user else ""
+        matched = bool(kind)
+        if kind == "recovery" and user:
+            user.used_recovery_code = True  # read by the router to log it (not stored)
+    else:
+        matched = hmac.compare_digest(entry.code_hash, _code_hash(challenge, code.strip()))
+    if not matched:
         entry.attempts = (entry.attempts or 0) + 1
         left = MAX_ATTEMPTS - entry.attempts
         if left <= 0:
@@ -95,7 +120,7 @@ async def verify(db: AsyncSession, challenge: str, code: str) -> User:
 
     entry.used_at = now
     await db.commit()
-    user = await db.get(User, entry.user_id)
+    user = user or await db.get(User, entry.user_id)
     if not user:
         raise CodeError("Ce code a expiré. Reconnectez-vous pour en recevoir un nouveau.")
     return user

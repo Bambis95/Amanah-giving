@@ -133,7 +133,10 @@ export default function LoginPage() {
 
   if (codeStep) {
     return (
-      <AuthLayout title="Vérifiez votre email" subtitle="Une étape de plus pour protéger le tableau de bord.">
+      <AuthLayout
+        title={codeStep.method === "totp" ? "Code de votre application" : "Vérifiez votre email"}
+        subtitle="Une étape de plus pour protéger votre compte."
+      >
         <LoginCodeStep
           key={codeStep.challenge}
           step={codeStep}

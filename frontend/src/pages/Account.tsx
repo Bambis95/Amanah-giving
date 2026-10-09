@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PasswordField from "@/components/PasswordField";
+import TwoFactorCard from "@/components/TwoFactorCard";
 import PaymentStatusBadge from "@/components/admin/PaymentStatusBadge";
 import { FileText, FolderOpen, Heart, KeyRound, Loader2, Save, UserRound } from "lucide-react";
 import { toast } from "sonner";
@@ -208,6 +209,8 @@ export default function AccountPage() {
             </CardContent>
           </Card>
         </div>
+
+        <TwoFactorCard email={user.email} />
       </main>
       <Footer />
     </div>
