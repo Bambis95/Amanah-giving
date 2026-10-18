@@ -16,7 +16,7 @@ from models.auth import User
 from models.system_incident import SystemIncident
 from pydantic import BaseModel, Field
 from schemas.auth import UserResponse
-from services import alerts, audit, monitoring
+from services import alerts, audit, donation_switch, monitoring
 from services import email as mail
 from services.audit import Actor
 from sqlalchemy import func, select, update
@@ -97,7 +97,7 @@ async def _checks(db: AsyncSession, database: Dict[str, Any]) -> List[Dict[str, 
     else:
         keys = bool(settings.paydunya_master_key and settings.paydunya_private_key and settings.paydunya_token)
         name, mode = "PayDunya", settings.paydunya_mode
-    if not settings.donations_enabled:
+    if not await donation_switch.donations_open(db):
         checks.append(_check("payment", "Paiements en ligne", "info",
                              f"Dons fermés (mode « bientôt disponible »). Prestataire : {name}, clés {'présentes' if keys else 'absentes'}, mode {mode}."))
     elif not keys:

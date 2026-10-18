@@ -1,13 +1,15 @@
 import re
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from core.config import settings
 from core.database import get_db
-from dependencies.auth import get_admin_actor
-from fastapi import APIRouter, Depends
+from dependencies.auth import get_admin_actor, get_manager_user
+from fastapi import APIRouter, Depends, HTTPException
 from models.site_setting import SiteSetting
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from services import audit
+from schemas.auth import UserResponse
+from services import alerts, audit, donation_switch
 from services.audit import Actor
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,7 +29,45 @@ async def get_site_status(db: AsyncSession = Depends(get_db)):
     from services import commission
 
     rate = commission.public_rate(await commission.load(db))
-    return SiteStatus(donations_enabled=settings.donations_enabled, platform_fee_percent=rate)
+    return SiteStatus(donations_enabled=await donation_switch.donations_open(db), platform_fee_percent=rate)
+
+
+# ---------- online donations switch (admins; the president sees it) ----------
+
+
+class DonationSwitch(BaseModel):
+    open: bool
+    reason: str = Field("", max_length=300)
+
+
+@router.get("/donations-switch")
+async def get_donation_switch(db: AsyncSession = Depends(get_db), _reader: UserResponse = Depends(get_manager_user)):
+    return await donation_switch.state(db)
+
+
+@router.put("/donations-switch")
+async def set_donation_switch(data: DonationSwitch, db: AsyncSession = Depends(get_db), actor: Actor = Depends(get_admin_actor)):
+    """Open or close online donations at once. Closing always works; opening needs real payments."""
+    if data.open and donation_switch.blockers():
+        raise HTTPException(status_code=409, detail=" ".join(donation_switch.blockers()))
+    was_open = await donation_switch.donations_open(db)
+    reason = data.reason.strip()
+    await donation_switch.set_open(db, data.open, actor.email, actor.id, reason)
+    word = "ouverts" if data.open else "fermés"
+    await audit.record(
+        db, actor, "setting.donations_open" if data.open else "setting.donations_closed",
+        f"Dons en ligne {word}" + (f" : {reason}" if reason else ""), target_type="site",
+        details={"avant": was_open, "apres": data.open, "motif": reason or None},
+    )
+    # Every admin hears about it, whoever did it
+    await alerts.alert_admins(
+        db, f"donations-switch-{datetime.now(timezone.utc).isoformat()}", f"Dons en ligne {word}",
+        f"{actor.email} a {'ouvert' if data.open else 'fermé'} les dons en ligne le "
+        f"{datetime.now(timezone.utc):%d/%m/%Y à %H:%M} (UTC)."
+        + (f"\n\nMotif : {reason}" if reason else "")
+        + "\n\nTableau de bord → Réglages du site → Dons en ligne pour changer à nouveau.",
+    )
+    return await donation_switch.state(db)
 
 
 # ---------- editable settings (contacts, social links, home texts) ----------

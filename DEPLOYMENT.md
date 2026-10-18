@@ -121,8 +121,12 @@ registre de commerce, statuts, justificatif de domicile, téléphone et descript
 Quand le compte marchand est validé :
 
 1. Render → **senjapo-api** → **Environment** : clés de paiement de production
-   (`PAYTECH_ENV` = `prod`), `DONATIONS_ENABLED` = `true`.
-2. **Save changes** : l'API redémarre avec les nouvelles valeurs.
+   (`PAYTECH_ENV` = `prod`), puis **Save changes** (l'API redémarre).
+2. *Tableau de bord → Réglages du site → Dons en ligne* → **Ouvrir les dons**. Le bouton reste
+   grisé tant que les clés manquent ou que PayTech est en mode test. **Fermer les dons** marche
+   toujours (panne chez PayTech, problème à corriger) ; chaque changement est inscrit au Journal et
+   envoyé par email à tous les administrateurs. Une fois ce bouton utilisé, il remplace
+   `DONATIONS_ENABLED`.
 3. Faites un vrai petit don (500 FCFA) et vérifiez paiement, email, montant de la campagne,
    don visible dans le tableau de bord.
 

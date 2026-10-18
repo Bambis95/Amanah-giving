@@ -16,6 +16,7 @@ from core.config import settings
 from core.database import get_db
 from services.payment import PaymentService, CheckoutSessionRequest, CheckoutError
 from services.donations import DonationsService
+from services import donation_switch
 from services.paydunya import create_checkout, fetch_invoice_status, PayDunyaError
 from services import alerts, newsletter, paytech
 from routers.site import load_site_settings
@@ -212,7 +213,7 @@ async def create_donation_checkout(
     # ---------------------------------------------------------
 
     # Pre-launch: no new donation (payments already started can still be confirmed)
-    if not settings.donations_enabled:
+    if not await donation_switch.donations_open(db):
         raise HTTPException(
             status_code=503,
             detail="Les dons en ligne seront bientôt disponibles. Merci de votre patience !",

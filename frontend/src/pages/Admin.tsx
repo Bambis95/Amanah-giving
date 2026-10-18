@@ -36,6 +36,7 @@ import { formatCFA } from "@/components/admin/format";
 import { canCloseMonth, canEditFinance, canManage as roleCanManage, canReadFinance, isAdminRole, isStaff, Role, ROLE_LABELS } from "@/lib/roles";
 import SiteSettingsTab from "@/components/admin/SiteSettingsTab";
 import DataExportCard from "@/components/admin/DataExportCard";
+import DonationSwitchCard from "@/components/admin/DonationSwitchCard";
 import NewsletterTab from "@/components/admin/NewsletterTab";
 import FinanceTab from "@/components/admin/finance/FinanceTab";
 import SystemTab from "@/components/admin/SystemTab";
@@ -391,6 +392,7 @@ export default function AdminPage() {
                   {current.id === "audit" && <AuditTab />}
                   {current.id === "settings" && (
                     <div className="space-y-4">
+                      <DonationSwitchCard canSwitch={isAdminRole(user.role)} />
                       <SiteSettingsTab readOnly={!isAdminRole(user.role)} />
                       <DataExportCard />
                     </div>

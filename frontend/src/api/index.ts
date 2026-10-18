@@ -804,6 +804,32 @@ export const commissionApi = {
   },
 };
 
+// ---------- Online donations switch ----------
+
+export interface DonationSwitchState {
+  open: boolean;
+  source: "admin" | "render";
+  changed_by: string | null;
+  changed_at: string | null;
+  reason: string | null;
+  can_open: boolean;
+  blockers: string[];
+  provider: string;
+  keys: boolean;
+  mode: string;
+  live: boolean;
+}
+
+export const donationSwitchApi = {
+  get(): Promise<DonationSwitchState> {
+    return adminRequest("/site/donations-switch");
+  },
+
+  set(open: boolean, reason: string): Promise<DonationSwitchState> {
+    return adminRequest("/site/donations-switch", { method: "PUT", body: JSON.stringify({ open, reason }) });
+  },
+};
+
 // ---------- Santé du système ----------
 
 export type HealthStatus = "ok" | "warning" | "critical" | "info";
