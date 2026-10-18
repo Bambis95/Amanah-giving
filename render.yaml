@@ -40,6 +40,12 @@ services:
         value: prod
       - key: LOG_LEVEL
         value: INFO
+      # Size of the plan, for the capacity shown in Santé du système (Starter: half a processor, 512 MB).
+      # Change both if you move to another plan (Standard: 1 and 2048).
+      - key: SERVER_CPU_LIMIT
+        value: "0.5"
+      - key: SERVER_MEMORY_MB
+        value: "512"
       # Pre-launch: site online, donations closed. Set to true on launch day.
       - key: DONATIONS_ENABLED
         value: "false"

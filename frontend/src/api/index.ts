@@ -804,6 +804,106 @@ export const commissionApi = {
   },
 };
 
+// ---------- Santé du système ----------
+
+export type HealthStatus = "ok" | "warning" | "critical" | "info";
+
+export interface TrafficWindow {
+  minutes: number;
+  requests: number;
+  per_minute: number;
+  server_errors: number;
+  client_errors: number;
+  error_rate: number;
+  avg_ms: number | null;
+  p95_ms: number | null;
+  max_ms: number | null;
+  slow: number;
+  busiest_minute: number;
+}
+
+export interface RouteFigure {
+  route: string;
+  count: number;
+  server_errors: number;
+  avg_ms: number;
+  max_ms: number;
+}
+
+export interface SystemStatus {
+  status: "ok" | "warning" | "critical";
+  checked_at: string;
+  server: { started_at: string; uptime_seconds: number; version: string; environment: string; watchdog_seconds: number };
+  resources: {
+    cpu_limit: number;
+    cpu_percent_5m: number | null;
+    cpu_percent_1h: number | null;
+    memory: { used_mb: number | null; limit_mb: number | null; percent: number | null };
+    active_requests: number;
+    peak_active_requests: number;
+  };
+  traffic: { last_5m: TrafficWindow; last_1h: TrafficWindow; last_24h: TrafficWindow };
+  hourly: { hour: string; requests: number; server_errors: number }[];
+  slow_routes: RouteFigure[];
+  error_routes: RouteFigure[];
+  database: { ok: boolean; latency_ms: number | null; size_mb?: number; connections?: number; max_connections?: number; error?: string };
+  capacity: {
+    cpu_limit: number;
+    cpu_per_request_ms: number;
+    measured: boolean;
+    max_requests_per_second: number;
+    visitors_at_once: number;
+    donations_per_minute: number;
+    current_requests_per_second: number;
+    load_percent: number | null;
+    peak_requests_per_second_24h: number;
+    peak_load_percent_24h: number | null;
+    db_pool: number;
+    assumptions: { seconds_between_visitor_calls: number; requests_per_donation: number; usable_cpu_share: number };
+  };
+  checks: { id: string; label: string; status: HealthStatus; detail: string }[];
+  incidents: { open: number; critical: number; warning: number };
+}
+
+export interface SystemIncident {
+  id: number;
+  kind: string;
+  kind_label: string;
+  severity: "critical" | "warning" | "info";
+  title: string;
+  detail: string | null;
+  path: string | null;
+  count: number;
+  first_seen: string;
+  last_seen: string;
+  emailed_at: string | null;
+  resolved_at: string | null;
+  resolved_by_name: string | null;
+  resolution_note: string | null;
+}
+
+export const systemApi = {
+  status(): Promise<SystemStatus> {
+    return adminRequest("/admin/system");
+  },
+
+  incidents(status: "open" | "resolved" | "all" = "open"): Promise<{ items: SystemIncident[]; open_count: number }> {
+    return adminRequest(`/admin/system/incidents?status=${status}`);
+  },
+
+  resolve(id: number, note: string): Promise<SystemIncident> {
+    return adminRequest(`/admin/system/incidents/${id}/resolve`, { method: "POST", body: JSON.stringify({ note }) });
+  },
+
+  resolveAll(note: string): Promise<{ resolved: number }> {
+    return adminRequest("/admin/system/incidents/resolve-all", { method: "POST", body: JSON.stringify({ note }) });
+  },
+
+  testAlert(): Promise<{ sent_to: string[] }> {
+    return adminRequest("/admin/system/test-alert", { method: "POST" });
+  },
+};
+
 export const api = {
   // Public site switches (donations closed before the official launch)
   async getSiteStatus(): Promise<SiteStatus> {

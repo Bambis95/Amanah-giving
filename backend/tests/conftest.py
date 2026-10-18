@@ -54,6 +54,10 @@ os.environ.update(
         "SMTP_USERNAME": "",
         "SMTP_PASSWORD": "",
         "EMAIL_FROM": "dons@example.com",
+        # No watchdog in the background: tests/test_system_health.py runs its rounds by hand
+        "MONITOR_EVERY_SECONDS": "0",
+        "SERVER_CPU_LIMIT": "0.5",
+        "SERVER_MEMORY_MB": "512",
     }
 )
 
@@ -63,6 +67,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from main import app  # noqa: E402
 
 TABLES = [
+    "system_incidents",
     "audit_logs",
     "login_attempts",
     "password_reset_tokens",

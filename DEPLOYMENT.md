@@ -148,6 +148,17 @@ Quand le compte marchand est validé :
      une erreur 503 si la base ne répond plus).
   Vous êtes prévenu par email (ou SMS/application) dès qu'un des deux tombe, puis quand il revient.
   Remplacez les adresses quand le nom de domaine sera branché.
+- **Santé du système** (*Tableau de bord → Santé du système*, administrateurs ; la présidente la consulte) :
+  état du serveur, temps de réponse, erreurs, mémoire, processeur, base de données, et **capacité**
+  (nombre de visiteurs simultanés que l'offre Render supporte, d'après le calcul réellement mesuré).
+  Chaque panne y devient un **incident** : erreur du serveur (avec son détail technique), paiements
+  indisponibles, emails qui ne partent plus, base de données injoignable, mémoire presque pleine, serveur
+  surchargé ou lent, sauvegarde en retard, arrêt brusque du serveur, erreur dans le navigateur d'un
+  visiteur. Les nouvelles pannes sont envoyées par email aux administrateurs (puis un rappel après 24 h si
+  elles continuent) ; les problèmes passagers se ferment seuls. Un administrateur marque les autres
+  « résolus » avec une note (inscrite au Journal). *Envoyer une alerte test* vérifie que les emails
+  arrivent. Une vérification tourne chaque minute (`MONITOR_EVERY_SECONDS`, `0` pour l'arrêter).
+  `SERVER_CPU_LIMIT` et `SERVER_MEMORY_MB` décrivent l'offre Render : à changer avec l'offre.
 - **Finances** : le **trésorier** (rôle nommé par un administrateur) et les administrateurs tiennent
   les comptes dans *Tableau de bord → Finances* ; le président les consulte. Les dons en ligne y sont
   comptés automatiquement ; tout le reste (subventions, cotisations, espèces, dépenses) se saisit avec

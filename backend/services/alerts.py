@@ -76,3 +76,9 @@ async def payment_unavailable(db: AsyncSession, provider: str, error: str) -> No
         )
     except Exception:
         logger.exception("Payment alert failed")
+    from services import monitoring  # here: monitoring itself sends its alerts through this module
+
+    await monitoring.record_incident(
+        "payment", "critical", f"Paiements {provider} indisponibles", f"Erreur : {error[:1000]}",
+        key=f"payment:{provider}", email=False,  # emailed just above
+    )

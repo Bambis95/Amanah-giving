@@ -2,6 +2,10 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { loadRuntimeConfig } from './lib/config.ts';
+import { startErrorReporting } from './lib/errorReport.ts';
+
+// Visitors' JavaScript errors reach the admins (Santé du système)
+startErrorReporting();
 
 // After a new deployment, a tab opened earlier asks for page files that no longer exist:
 // reload once to get the new version instead of showing a blank page

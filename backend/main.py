@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from services.database import initialize_database, close_database
 from services.mock_data import initialize_mock_data
 from services.auth import initialize_admin_user
+from services import monitoring
 # MODULE_IMPORTS_END
 
 
@@ -73,11 +74,16 @@ async def lifespan(app: FastAPI):
 
     # Emails the data to the administrators every BACKUP_EMAIL_DAYS days (services/backup.py)
     backup_task = asyncio.create_task(backup_loop())
+    # Santé du système: checks the database, memory, CPU and errors every minute (services/monitoring.py)
+    await monitoring.on_startup()
+    watch_task = asyncio.create_task(monitoring.watch_loop())
 
     logger.info("=== Application startup completed successfully ===")
     yield
 
     backup_task.cancel()
+    watch_task.cancel()
+    await monitoring.on_shutdown()
     # MODULE_SHUTDOWN_START
     await close_database()
     # MODULE_SHUTDOWN_END
@@ -106,6 +112,8 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+# Counts and times every request for Santé du système (in memory, last 24 hours)
+app.add_middleware(monitoring.RequestMetricsMiddleware)
 # MODULE_MIDDLEWARE_END
 
 
@@ -138,6 +146,7 @@ from routers.supporters import router as supporters_router
 from routers.commission import router as commission_router
 from routers.two_factor import admin_router as two_factor_admin_router
 from routers.two_factor import router as two_factor_router
+from routers.system import public_router as monitoring_public_router, router as system_router
 from services.backup import backup_loop
 
 
@@ -171,6 +180,8 @@ app.include_router(supporters_router)
 app.include_router(commission_router)
 app.include_router(two_factor_router)
 app.include_router(two_factor_admin_router)
+app.include_router(system_router)
+app.include_router(monitoring_public_router)
 
 
 # ============================================================
@@ -224,6 +235,9 @@ async def general_exception_handler(request: Request, exc: Exception):
         f"Exception: {error_type}: {error_message}\n"
         f"{traceback.format_exc()}"
     )
+    # Shown to the admins in Santé du système, and emailed when it is new
+    route = getattr(request.scope.get("route"), "path", None) or "(adresse inconnue)"
+    await monitoring.report_crash(request.method, route, exc)
 
     # Determine if we're in dev environment
     is_dev = os.getenv("ENVIRONMENT", "prod").lower() == "dev"

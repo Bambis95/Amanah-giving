@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import {
+  Activity,
+  AlertTriangle,
   Clock,
   FolderOpen,
   Heart,
@@ -23,7 +25,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { adminApi, AdminUser, ContactMessage, Donation, Project } from "@/api";
+import { adminApi, AdminUser, ContactMessage, Donation, Project, systemApi } from "@/api";
 import DonationsTab from "@/components/admin/DonationsTab";
 import MessagesTab from "@/components/admin/MessagesTab";
 import ProjectsTab from "@/components/admin/ProjectsTab";
@@ -36,10 +38,11 @@ import SiteSettingsTab from "@/components/admin/SiteSettingsTab";
 import DataExportCard from "@/components/admin/DataExportCard";
 import NewsletterTab from "@/components/admin/NewsletterTab";
 import FinanceTab from "@/components/admin/finance/FinanceTab";
+import SystemTab from "@/components/admin/SystemTab";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
 
-type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit" | "settings" | "newsletter";
+type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit" | "settings" | "newsletter" | "system";
 
 interface StatTileProps {
   icon: React.ElementType;
@@ -76,6 +79,10 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [section, setSection] = useState<Section>("overview");
   const [messageKind, setMessageKind] = useState("all");
+  // Santé du système: incidents still open, and how many are outages
+  const [incidents, setIncidents] = useState({ open: 0, critical: 0 });
+
+  const onIncidents = useCallback((open: number, critical: number) => setIncidents({ open, critical }), []);
 
   const staff = isStaff(user?.role);
   // President and admins run the club; members read the dashboard only
@@ -95,6 +102,12 @@ export default function AdminPage() {
       setProjects(p);
       setMessages(m);
       setUsers(u);
+      if (manager) {
+        systemApi
+          .status()
+          .then((s) => setIncidents({ open: s.incidents.open, critical: s.incidents.critical }))
+          .catch(() => setIncidents({ open: 0, critical: 0 }));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chargement impossible");
     } finally {
@@ -187,6 +200,7 @@ export default function AdminPage() {
           { id: "audit" as Section, label: "Journal", icon: History },
           // The president sees them too (read-only) and can download the data export
           { id: "settings" as Section, label: "Réglages du site", icon: SlidersHorizontal },
+          { id: "system" as Section, label: "Santé du système", icon: Activity, count: incidents.open || undefined, alert: incidents.open > 0 },
         ]
       : []),
   ];
@@ -333,6 +347,20 @@ export default function AdminPage() {
                 {sections.map((s) => navButton(s, "bar"))}
               </nav>
 
+              {manager && incidents.critical > 0 && current.id !== "system" && (
+                <button
+                  type="button"
+                  onClick={() => setSection("system")}
+                  className="mb-4 flex w-full items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-left text-sm text-foreground"
+                >
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
+                  <span className="flex-1">
+                    <strong>{incidents.critical} panne{incidents.critical > 1 ? "s" : ""} en cours</strong> sur la plateforme.
+                  </span>
+                  <span className="font-medium text-primary underline-offset-4 hover:underline">Voir Santé du système</span>
+                </button>
+              )}
+
               <h2 className="sr-only">{current.label}</h2>
               {!initialLoading && (
                 <div key={`${current.id}-${messageKind}`} className="animate-in fade-in-0 duration-200">
@@ -368,6 +396,7 @@ export default function AdminPage() {
                     </div>
                   )}
                   {current.id === "newsletter" && <NewsletterTab projects={projects} />}
+                  {current.id === "system" && <SystemTab canResolve={isAdminRole(user.role)} onIncidents={onIncidents} />}
                 </div>
               )}
             </>

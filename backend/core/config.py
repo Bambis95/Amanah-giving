@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     require_2fa_for_team: bool = True
     # Days between the automatic backups emailed to the administrators (0 turns them off)
     backup_email_days: int = 7
+    # Health page (Tableau de bord → Santé du système): seconds between two checks of the server (0 turns them off)
+    monitor_every_seconds: int = 60
+    # Processors and memory of the hosting plan (Render Starter: 0.5 and 512); 0 = read from the server
+    server_cpu_limit: float = 0
+    server_memory_mb: int = 0
     # Extra origins allowed by CORS, comma-separated; FRONTEND_URL is always allowed
     cors_origins: str = ""
 

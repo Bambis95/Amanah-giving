@@ -2,10 +2,11 @@ import html
 import logging
 import smtplib
 import ssl
+from collections import deque
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import formataddr
-from typing import Optional
+from typing import Deque, Optional, Tuple
 
 from core.config import settings
 from models.auth import User
@@ -15,6 +16,21 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
+
+# Seen by the admins' health page (services/monitoring.py): (number, when, what, error)
+recent_failures: Deque[Tuple[int, datetime, str, str]] = deque(maxlen=50)
+last_success: Optional[datetime] = None
+_failure_count = 0
+
+
+def _note(context: str, exc: Optional[BaseException] = None) -> None:
+    global last_success, _failure_count
+    now = datetime.now(timezone.utc)
+    if exc is None:
+        last_success = now
+    else:
+        _failure_count += 1
+        recent_failures.append((_failure_count, now, context, f"{type(exc).__name__}: {exc}"[:300]))
 
 # Same categories as the website (frontend/src/lib/categories.ts)
 CAUSE_LABELS = {
@@ -197,8 +213,10 @@ def send_email(message: EmailMessage, context: str) -> None:
     try:
         _send(message)
         logger.info("Email sent (%s)", context)
-    except Exception:
+        _note(context)
+    except Exception as exc:
         logger.exception("Failed to send email (%s)", context)
+        _note(context, exc)
 
 
 def deliver(message: EmailMessage, context: str) -> bool:
@@ -206,9 +224,11 @@ def deliver(message: EmailMessage, context: str) -> bool:
     try:
         _send(message)
         logger.info("Email sent (%s)", context)
+        _note(context)
         return True
-    except Exception:
+    except Exception as exc:
         logger.exception("Failed to send email (%s)", context)
+        _note(context, exc)
         return False
 
 
