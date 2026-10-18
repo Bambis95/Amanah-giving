@@ -187,3 +187,14 @@ def test_resolve_all_and_test_alert(client, admin, sent_emails, email_on, fresh)
     r = client.post(f"{URL}/test-alert")
     assert r.status_code == 200 and r.json()["sent_to"] == ["admin@example.com"]
     assert any("Alerte de test" in m["Subject"] for m in sent_emails)
+
+
+def test_failed_test_alert_says_what_to_fix(client, admin, email_on, monkeypatch):
+    def refuse(message, context):
+        services.email._note(context, OSError("(535, b'5.7.8 Username and Password not accepted. BadCredentials')"))
+        return False
+
+    monkeypatch.setattr(services.email, "deliver", refuse)
+    r = client.post(f"{URL}/test-alert")
+    assert r.status_code == 502
+    assert "mot de passe d'application" in r.json()["detail"] and "535" in r.json()["detail"]

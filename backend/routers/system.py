@@ -271,8 +271,23 @@ async def test_alert(db: AsyncSession = Depends(get_db), actor: Actor = Depends(
     delivered = await asyncio.to_thread(mail.deliver, message, "test alert")
     await audit.record(db, actor, "system.test_alert", "Alerte de test envoyée" if delivered else "Alerte de test : échec de l'envoi")
     if not delivered:
-        raise HTTPException(status_code=502, detail="L'email n'a pas pu partir : vérifiez SMTP_USERNAME et SMTP_PASSWORD")
+        error = mail.recent_failures[-1][3] if mail.recent_failures else ""
+        raise HTTPException(status_code=502, detail=f"L'email n'a pas pu partir. {smtp_advice(error)} (Réponse du serveur : {error[:200]})")
     return {"sent_to": recipients}
+
+
+def smtp_advice(error: str) -> str:
+    """What to change in Render for the usual Gmail refusals (the error never contains the password)."""
+    if "535" in error or "Username and Password not accepted" in error or "BadCredentials" in error:
+        return ("Gmail refuse l'identifiant ou le mot de passe : SMTP_USERNAME doit être l'adresse Gmail complète et "
+                "SMTP_PASSWORD un mot de passe d'application de 16 lettres (pas le mot de passe du compte).")
+    if "534" in error or "Application-specific password" in error:
+        return "Gmail exige un mot de passe d'application : activez la validation en deux étapes du compte Google, puis créez-en un."
+    if "timed out" in error or "Timeout" in error or "Connection refused" in error or "getaddrinfo" in error:
+        return f"Le serveur d'envoi ne répond pas : vérifiez SMTP_HOST (smtp.gmail.com) et SMTP_PORT (587). Actuel : {settings.smtp_host}:{settings.smtp_port}."
+    if "550" in error or "553" in error or "sender" in error.lower():
+        return "L'adresse d'expédition est refusée : EMAIL_FROM doit être la même adresse que SMTP_USERNAME."
+    return "Vérifiez SMTP_USERNAME, SMTP_PASSWORD et EMAIL_FROM dans Render."
 
 
 class ClientError(BaseModel):
