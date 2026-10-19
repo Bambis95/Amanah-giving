@@ -29,12 +29,16 @@ async def admin_emails(db: AsyncSession) -> List[str]:
     return [email for (email,) in rows if email]
 
 
-def build_alert(recipients: List[str], subject: str, body: str) -> EmailMessage:
+THROTTLED_FOOTER = "Ce message est envoyé automatiquement aux administrateurs (au plus une fois par heure)."
+DEFAULT_FOOTER = "Ce message est envoyé automatiquement par la plateforme."
+
+
+def build_alert(recipients: List[str], subject: str, body: str, footer: str = DEFAULT_FOOTER) -> EmailMessage:
     message = EmailMessage()
     message["Subject"] = f"[{settings.site_short_name}] {subject}"
     message["From"] = formataddr((settings.email_from_name, settings.email_from))
     message["To"] = ", ".join(recipients)
-    message.set_content(f"{body}\n\nCe message est envoyé automatiquement aux administrateurs (au plus une fois par heure).")
+    message.set_content(f"{body}\n\n{footer}")
     return message
 
 
@@ -55,7 +59,7 @@ async def alert_admins(db: AsyncSession, key: str, subject: str, body: str) -> b
     if not recipients:
         return False
     _last_sent[key] = now
-    message = build_alert(recipients, subject, body)
+    message = build_alert(recipients, subject, body, THROTTLED_FOOTER)
     task = asyncio.create_task(asyncio.to_thread(mail.deliver, message, f"alert {key}"))
     _pending.add(task)  # keep a reference until it is done
     task.add_done_callback(_pending.discard)
