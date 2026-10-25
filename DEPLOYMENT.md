@@ -178,6 +178,14 @@ Quand le compte marchand est validé :
   trésorier reçoivent un email quand l'argent dort trop longtemps (au plus tous les 3 jours). **Relevé
   PDF** du mois à signer en réunion. Écrans en français, wolof, anglais et arabe (wolof et arabe à
   faire relire).
+  **Libre-service** : toute personne qui a un compte crée sa tontine ou son Mbootaay (après avoir
+  accepté la charte) et en devient la présidente. **Gratuit** : une association, membres illimités.
+  **Premium** (`TONTINE_PREMIUM_PRICE`, 10 000 F par mois) : plusieurs associations, reçus par email,
+  relevé PDF, alertes par email, badge « vérifiée » ; le président et le trésorier y activent la double
+  authentification. Le paiement se fait pour l'instant par Wave / Orange Money au numéro officiel :
+  *Tableau de bord → Associations* → « Premium + 1 mois » (ou 12). Le même onglet donne le badge
+  « vérifiée » (après avoir vu la pièce d'identité de la présidence) et suspend une association
+  douteuse. Les signalements des membres arrivent dans *Santé du système*.
 - **Finances** : le **trésorier** (rôle nommé par un administrateur) et les administrateurs tiennent
   les comptes dans *Tableau de bord → Finances* ; le président les consulte. Les dons en ligne y sont
   comptés automatiquement ; tout le reste (subventions, cotisations, espèces, dépenses) se saisit avec

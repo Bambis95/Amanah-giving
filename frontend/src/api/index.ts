@@ -824,8 +824,22 @@ export interface TontineGroup {
   cash_alert_amount: number;
   cash_alert_days: number;
   archived: boolean;
+  premium: boolean;
+  premium_until: string | null;
+  premium_price: number;
+  verified: boolean;
+  suspended: boolean;
+  suspended_reason: string | null;
   my_role?: TontineRole;
   members?: number;
+}
+
+export interface TontineAdminRow extends TontineGroup {
+  members: number;
+  created_at: string;
+  created_by_name: string | null;
+  president_name: string | null;
+  president_contact: string | null;
 }
 
 export interface TontineMemberRow {
@@ -953,10 +967,10 @@ export interface TontineOperationInput {
 const T = "/tontines";
 
 export const tontineApi = {
-  list(): Promise<{ can_create: boolean; groups: TontineGroup[] }> {
+  list(): Promise<{ can_create: boolean; is_manager: boolean; premium_price: number; groups: TontineGroup[] }> {
     return adminRequest(T);
   },
-  create(data: TontineGroupInput & { president_name: string; president_email?: string | null; president_phone?: string | null }): Promise<TontineGroup> {
+  create(data: TontineGroupInput & { president_name?: string | null; president_email?: string | null; president_phone?: string | null; accept_charter?: boolean }): Promise<TontineGroup> {
     return adminRequest(T, { method: "POST", body: JSON.stringify(data) });
   },
   update(id: number, data: TontineGroupInput): Promise<TontineGroup> {
@@ -992,6 +1006,22 @@ export const tontineApi = {
     const response = await apiFetch(`${getAPIBase()}${T}/${id}/documents`, { method: "POST", body });
     if (!response.ok) throw new Error(await errorDetail(response, "L'envoi du bordereau a échoué"));
     return response.json();
+  },
+  report(id: number, reason: string): Promise<{ ok: boolean }> {
+    return adminRequest(`${T}/${id}/report`, { method: "POST", body: JSON.stringify({ reason }) });
+  },
+  // The club's oversight (club president and admins)
+  all(): Promise<TontineAdminRow[]> {
+    return adminRequest(`${T}/admin/all`);
+  },
+  setPremium(id: number, months: number): Promise<TontineGroup> {
+    return adminRequest(`${T}/${id}/premium`, { method: "POST", body: JSON.stringify({ months }) });
+  },
+  verify(id: number, verified: boolean): Promise<TontineGroup> {
+    return adminRequest(`${T}/${id}/verify`, { method: "POST", body: JSON.stringify({ verified }) });
+  },
+  suspend(id: number, suspended: boolean, reason = ""): Promise<TontineGroup> {
+    return adminRequest(`${T}/${id}/suspend`, { method: "POST", body: JSON.stringify({ suspended, reason }) });
   },
   async downloadStatement(id: number, month: string): Promise<void> {
     const response = await apiFetch(`${getAPIBase()}${T}/${id}/statement.pdf?month=${month}`);

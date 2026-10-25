@@ -72,7 +72,10 @@ async def notify_dormant_cash(db: AsyncSession, today: date) -> int:
     sent: Dict[str, str] = dict(row.value) if row and isinstance(row.value, dict) else {}
     now = datetime.now(timezone.utc)
     count = 0
-    groups = (await db.execute(select(TontineGroup).where(TontineGroup.archived_at.is_(None)))).scalars().all()
+    # Premium groups only (the alert by email is part of Premium; every group sees it on screen)
+    groups = (await db.execute(select(TontineGroup).where(
+        TontineGroup.archived_at.is_(None), TontineGroup.suspended_at.is_(None), TontineGroup.premium_until >= today,
+    ))).scalars().all()
     for group in groups:
         members = list((await db.execute(select(TontineMember).where(TontineMember.group_id == group.id))).scalars())
         operations = list((await db.execute(select(TontineOperation).where(TontineOperation.group_id == group.id))).scalars())

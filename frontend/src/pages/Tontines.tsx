@@ -5,15 +5,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronRight, Loader2, Plus, ShieldCheck, Users } from "lucide-react";
+import { ChevronRight, Crown, Loader2, Plus, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { tontineApi, TontineGroup, TontineKind } from "@/api";
 import { formatCFA } from "@/components/admin/format";
 import { useTontineText } from "@/i18n/tontine";
+import { GroupBadges } from "@/components/tontine/GroupStatus";
 
 const EMPTY = {
   name: "", kind: "savings", amount: "500", frequency: "daily", bank_name: "", bank_account: "",
@@ -21,9 +23,12 @@ const EMPTY = {
 };
 type FormState = { [K in keyof typeof EMPTY]: string };
 
-function CreateDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: (g: TontineGroup) => void }) {
+function CreateDialog({ open, onOpenChange, onCreated, manager }: {
+  open: boolean; onOpenChange: (o: boolean) => void; onCreated: (g: TontineGroup) => void; manager: boolean;
+}) {
   const { tt } = useTontineText();
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [charter, setCharter] = useState(false);
   const [busy, setBusy] = useState(false);
   const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value });
 
@@ -35,8 +40,9 @@ function CreateDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpen
         name: form.name, kind: form.kind as TontineKind, amount: Number(form.amount),
         frequency: form.frequency as "daily" | "weekly" | "monthly", bank_name: form.bank_name || undefined,
         bank_account: form.bank_account || undefined, cash_alert_amount: Number(form.cash_alert_amount),
-        cash_alert_days: Number(form.cash_alert_days), president_name: form.president_name,
+        cash_alert_days: Number(form.cash_alert_days), president_name: form.president_name || null,
         president_email: form.president_email || null, president_phone: form.president_phone || null,
+        accept_charter: charter,
       });
       toast.success(tt.created(group.name));
       setForm(EMPTY);
@@ -98,23 +104,34 @@ function CreateDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpen
             <Label htmlFor="t-alert-days">{tt.alertDays}</Label>
             <Input id="t-alert-days" type="number" inputMode="numeric" min={1} max={90} value={form.cash_alert_days} onChange={set("cash_alert_days")} />
           </div>
-          <p className="text-sm font-medium text-foreground sm:col-span-2">{tt.presidentTitle}</p>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="t-pres">{tt.name}</Label>
-            <Input id="t-pres" required minLength={2} value={form.president_name} onChange={set("president_name")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="t-pres-email">{tt.presidentEmail}</Label>
-            <Input id="t-pres-email" type="email" value={form.president_email} onChange={set("president_email")} />
-          </div>
+          {manager && (
+            <>
+              <p className="text-sm font-medium text-foreground sm:col-span-2">{tt.presidentOther}</p>
+              <p className="-mt-3 text-xs text-muted-foreground sm:col-span-2">{tt.presidentOtherHelp}</p>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="t-pres">{tt.name}</Label>
+                <Input id="t-pres" minLength={2} value={form.president_name} onChange={set("president_name")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="t-pres-email">{tt.presidentEmail}</Label>
+                <Input id="t-pres-email" type="email" value={form.president_email} onChange={set("president_email")} />
+              </div>
+            </>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="t-pres-phone">{tt.phone}</Label>
             <Input id="t-pres-phone" type="tel" value={form.president_phone} onChange={set("president_phone")} />
           </div>
+          {!manager && (
+            <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-sm text-foreground sm:col-span-2">
+              <Checkbox checked={charter} onCheckedChange={(v) => setCharter(v === true)} className="mt-0.5" />
+              <span>{tt.charter}</span>
+            </label>
+          )}
         </form>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{tt.cancel}</Button>
-          <Button type="submit" form="create-tontine" disabled={busy}>
+          <Button type="submit" form="create-tontine" disabled={busy || (!manager && !charter)}>
             {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {tt.create}
           </Button>
@@ -128,7 +145,7 @@ function CreateDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpen
 export default function TontinesPage() {
   const { user, loading: authLoading } = useAuth();
   const { tt } = useTontineText();
-  const [data, setData] = useState<{ can_create: boolean; groups: TontineGroup[] } | null>(null);
+  const [data, setData] = useState<{ can_create: boolean; is_manager: boolean; premium_price: number; groups: TontineGroup[] } | null>(null);
   const [creating, setCreating] = useState(false);
 
   const load = useCallback(() => {
@@ -153,7 +170,7 @@ export default function TontinesPage() {
           {data?.can_create && (
             <Button onClick={() => setCreating(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              {tt.newGroup}
+              {tt.createMine}
             </Button>
           )}
         </div>
@@ -164,6 +181,16 @@ export default function TontinesPage() {
             <p>{tt.safety}</p>
           </CardContent>
         </Card>
+
+        {data && (
+          <Card className="mb-6 shadow-sm">
+            <CardContent className="space-y-1.5 p-4 text-sm text-muted-foreground">
+              <p className="flex items-center gap-2 font-semibold text-foreground"><Crown className="h-4 w-4 text-highlight" aria-hidden="true" />{tt.plansTitle}</p>
+              <p>{tt.planFree}</p>
+              <p>{tt.planPremium(formatCFA(data.premium_price))}</p>
+            </CardContent>
+          </Card>
+        )}
 
         {!data ? (
           <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
@@ -186,6 +213,7 @@ export default function TontinesPage() {
                         {tt.kinds[g.kind]} · {formatCFA(g.amount)} {tt.frequency[g.frequency]} · {tt.membersCount(g.members ?? 0)}
                       </p>
                     </div>
+                    <span className="hidden flex-wrap justify-end gap-1 sm:flex"><GroupBadges group={g} /></span>
                     {g.my_role && <Badge variant="outline">{tt.roles[g.my_role]}</Badge>}
                     <ChevronRight className="h-5 w-5 text-muted-foreground rtl:rotate-180" aria-hidden="true" />
                   </div>
@@ -195,7 +223,7 @@ export default function TontinesPage() {
           </ul>
         )}
       </main>
-      <CreateDialog open={creating} onOpenChange={setCreating} onCreated={() => { setCreating(false); load(); }} />
+      <CreateDialog open={creating} onOpenChange={setCreating} manager={!!data?.is_manager} onCreated={() => { setCreating(false); load(); }} />
     </div>
   );
 }

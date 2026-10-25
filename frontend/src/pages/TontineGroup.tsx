@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, ArrowLeft, Banknote, CheckCircle2, FileDown, HandHeart, Info, Landmark, Loader2, RotateCw, Wallet, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Banknote, CheckCircle2, Crown, FileDown, HandHeart, Info, Landmark, Loader2, Lock, RotateCw, Wallet, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ import DaySheet from "@/components/tontine/DaySheet";
 import MembersPanel from "@/components/tontine/MembersPanel";
 import OperationsPanel from "@/components/tontine/OperationsPanel";
 import { opLabel } from "@/components/tontine/labels";
+import { GroupBadges, PremiumDialog, ReportButton } from "@/components/tontine/GroupStatus";
 import { useTontineText } from "@/i18n/tontine";
 import { cn } from "@/lib/utils";
 
@@ -93,6 +94,7 @@ export default function TontineGroupPage() {
   const [view, setView] = useState<TontineView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [printing, setPrinting] = useState(false);
+  const [upsell, setUpsell] = useState(false);
 
   const load = useCallback(() => {
     tontineApi.view(groupId, month).then((v) => { setView(v); setError(null); })
@@ -111,6 +113,10 @@ export default function TontineGroupPage() {
 
   const downloadStatement = async () => {
     if (!view) return;
+    if (!view.group.premium) {
+      setUpsell(true);
+      return;
+    }
     setPrinting(true);
     try {
       await tontineApi.downloadStatement(groupId, view.month);
@@ -137,24 +143,41 @@ export default function TontineGroupPage() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">{g.name}</h1>
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-muted-foreground">
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-muted-foreground">
                   {tt.kinds[g.kind]} · {formatCFA(g.amount)} {tt.frequency[g.frequency]}
                   <Badge variant="outline" className="border-primary/40 text-primary">{tt.roles[view.role]}</Badge>
-                </p>
+                  <GroupBadges group={g} />
+                </div>
                 {g.bank_name && <p className="mt-1 text-xs text-muted-foreground">{tt.account} : {g.bank_name} {g.bank_account ?? ""}</p>}
               </div>
               <div className="flex flex-wrap gap-2">
+                {officer && !g.premium && (view.role === "president" || view.role === "admin") && (
+                  <Button onClick={() => setUpsell(true)}><Crown className="mr-2 h-4 w-4" />{tt.goPremium}</Button>
+                )}
                 {officer && (
-                  <Button variant="outline" onClick={downloadStatement} disabled={printing}>
-                    {printing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}{tt.statement}
+                  <Button variant="outline" onClick={downloadStatement} disabled={printing} title={g.premium ? undefined : tt.premiumFeature}>
+                    {printing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : g.premium ? <FileDown className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4" />}
+                    {tt.statement}
                   </Button>
                 )}
+                {view.role !== "admin" && <ReportButton group={g} />}
                 <Select value={view.month} onValueChange={setMonth}>
                   <SelectTrigger className="w-44" aria-label={tt.month}><SelectValue /></SelectTrigger>
                   <SelectContent>{view.months.map((m) => <SelectItem key={m} value={m} className="capitalize">{monthName(m)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
+
+            {g.suspended && (
+              <div className="flex items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-foreground" role="alert">
+                <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+                {tt.suspended(g.suspended_reason ?? "")}
+              </div>
+            )}
+            {!g.verified && view.role === "member" && (
+              <p className="text-xs text-muted-foreground">{tt.notVerifiedHelp}</p>
+            )}
+            <PremiumDialog group={g} open={upsell} onOpenChange={setUpsell} />
 
             {officer && s ? (
               <>

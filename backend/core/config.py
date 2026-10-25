@@ -69,6 +69,8 @@ class Settings(BaseSettings):
     # Processors and memory of the hosting plan (Render Starter: 0.5 and 512); 0 = read from the server
     server_cpu_limit: float = 0
     server_memory_mb: int = 0
+    # Tontines: monthly price of Premium (FCFA), shown to the groups
+    tontine_premium_price: int = 10_000
     # Extra origins allowed by CORS, comma-separated; FRONTEND_URL is always allowed
     cors_origins: str = ""
 

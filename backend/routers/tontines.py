@@ -14,6 +14,7 @@ import secrets
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Literal, Optional
 
+from core.config import settings
 from core.database import get_db
 from dependencies.auth import client_ip, get_current_user, role_level
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
@@ -69,9 +70,28 @@ class GroupIn(BaseModel):
 
 
 class GroupCreate(GroupIn):
-    president_name: str = Field(..., min_length=2, max_length=120)
+    # Self-service: the creator is the president. The club's president or admins may name someone else.
+    president_name: Optional[str] = Field(None, min_length=2, max_length=120)
     president_email: Optional[EmailStr] = None
     president_phone: Optional[str] = Field(None, max_length=30)
+    accept_charter: bool = False
+
+
+class PremiumIn(BaseModel):
+    months: int = Field(..., ge=-1, le=24)  # -1 ends the Premium today
+
+
+class VerifyIn(BaseModel):
+    verified: bool
+
+
+class SuspendIn(BaseModel):
+    suspended: bool
+    reason: str = Field("", max_length=255)
+
+
+class ReportIn(BaseModel):
+    reason: str = Field(..., min_length=5, max_length=1000)
 
 
 class MemberIn(BaseModel):
@@ -157,6 +177,26 @@ async def _access(db: AsyncSession, group_id: int, user: UserResponse) -> tuple[
     return group, me, me.role
 
 
+def is_premium(group: TontineGroup) -> bool:
+    return bool(group.premium_until and group.premium_until >= today())
+
+
+def _writable(group: TontineGroup, role: str, user: UserResponse) -> None:
+    """Nothing is recorded in a suspended group; Premium officers sign in with their authenticator app."""
+    if group.suspended_at:
+        raise HTTPException(status_code=423, detail="Association suspendue par SENJAPO : contactez la plateforme")
+    if is_premium(group) and role in ("president", "treasurer") and not user.two_factor:
+        raise HTTPException(status_code=403, detail=(
+            "En Premium, le président et le trésorier activent la double authentification (Google Authenticator) "
+            "dans « Mon espace » avant d'enregistrer des opérations."
+        ))
+
+
+def _premium_only(group: TontineGroup, feature: str) -> None:
+    if not is_premium(group):
+        raise HTTPException(status_code=402, detail=f"{feature} fait partie du Premium ({settings.tontine_premium_price} F par mois).")
+
+
 def _officer(role: str) -> None:
     if role not in ("admin", "president", "treasurer"):
         raise HTTPException(status_code=403, detail="Réservé au trésorier et au président de l'association")
@@ -191,6 +231,12 @@ def _group_out(group: TontineGroup) -> dict:
         "cash_alert_amount": group.cash_alert_amount,
         "cash_alert_days": group.cash_alert_days,
         "archived": bool(group.archived_at),
+        "premium": is_premium(group),
+        "premium_until": group.premium_until,
+        "premium_price": settings.tontine_premium_price,
+        "verified": bool(group.verified_at),
+        "suspended": bool(group.suspended_at),
+        "suspended_reason": group.suspended_reason,
     }
 
 
@@ -257,7 +303,9 @@ async def my_groups(db: AsyncSession = Depends(get_db), user: UserResponse = Dep
         select(TontineMember.group_id, func.count()).where(TontineMember.left_at.is_(None)).group_by(TontineMember.group_id)
     )).all())
     return {
-        "can_create": _platform_manager(user),
+        "can_create": True,
+        "is_manager": _platform_manager(user),
+        "premium_price": settings.tontine_premium_price,
         "groups": [
             {**_group_out(g), "my_role": roles.get(g.id) or "admin", "members": counts.get(g.id, 0)}
             for g in groups
@@ -267,13 +315,27 @@ async def my_groups(db: AsyncSession = Depends(get_db), user: UserResponse = Dep
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_group(data: GroupCreate, request: Request, db: AsyncSession = Depends(get_db), user: UserResponse = Depends(get_current_user)):
-    if not _platform_manager(user):
-        raise HTTPException(status_code=403, detail="Les associations sont créées par le président du club ou un administrateur")
-    group = TontineGroup(**data.model_dump(exclude={"president_name", "president_email", "president_phone"}), created_by=user.id)
+    """Anyone with an account creates their tontine and becomes its president; one free group per person."""
+    manager = _platform_manager(user)
+    if not manager:
+        if not data.accept_charter:
+            raise HTTPException(status_code=400, detail="Acceptez la charte des tontines pour créer votre association")
+        mine = (await db.execute(select(TontineGroup).where(TontineGroup.created_by == user.id, TontineGroup.archived_at.is_(None)))).scalars().all()
+        if any(not is_premium(g) for g in mine):
+            raise HTTPException(status_code=402, detail=(
+                f"Une association gratuite par personne. Passez votre association en Premium ({settings.tontine_premium_price} F par mois) "
+                "pour en créer d'autres."
+            ))
+    self_president = not manager or not data.president_name
+    group = TontineGroup(**data.model_dump(exclude={"president_name", "president_email", "president_phone", "accept_charter"}), created_by=user.id)
     db.add(group)
     await db.flush()
     db.add(TontineMember(
-        group_id=group.id, name=data.president_name, email=data.president_email, phone=data.president_phone,
+        group_id=group.id,
+        name=(user.name or user.email.split("@")[0]) if self_president else data.president_name,
+        email=user.email if self_president else data.president_email,
+        user_id=user.id if self_president else None,
+        phone=data.president_phone,
         role="president", rotation_order=1 if data.kind == "rotating" else None, joined_at=today(),
     ))
     await db.commit()
@@ -287,6 +349,7 @@ async def update_group(group_id: int, data: GroupIn, request: Request, db: Async
                        user: UserResponse = Depends(get_current_user)):
     group, _, role = await _access(db, group_id, user)
     _leader(role)
+    _writable(group, role, user)
     before = _group_out(group)
     if data.kind != group.kind and (await db.execute(
         select(func.count()).select_from(TontineOperation).where(TontineOperation.group_id == group_id)
@@ -343,6 +406,7 @@ async def add_member(group_id: int, data: MemberIn, request: Request, db: AsyncS
                      user: UserResponse = Depends(get_current_user)):
     group, _, role = await _access(db, group_id, user)
     _officer(role)
+    _writable(group, role, user)
     if data.role != "member":
         _leader(role)
     if data.email and (await db.execute(select(TontineMember).where(
@@ -365,6 +429,7 @@ async def update_member(group_id: int, member_id: int, data: MemberIn, request: 
                         user: UserResponse = Depends(get_current_user)):
     group, me, role = await _access(db, group_id, user)
     _officer(role)
+    _writable(group, role, user)
     member = await db.get(TontineMember, member_id)
     if not member or member.group_id != group_id:
         raise HTTPException(status_code=404, detail="Membre introuvable")
@@ -390,7 +455,9 @@ async def update_member(group_id: int, member_id: int, data: MemberIn, request: 
 
 async def _send_receipts(db: AsyncSession, group: TontineGroup, operations: List[TontineOperation], user: UserResponse,
                          background: BackgroundTasks) -> int:
-    """One email per member who has an email, for what was just recorded for them."""
+    """One email per member who has an email, for what was just recorded for them (Premium)."""
+    if not is_premium(group):
+        return 0
     by_member: dict = {}
     for o in operations:
         if o.member_id:
@@ -418,6 +485,7 @@ async def record_operation(group_id: int, data: OperationIn, request: Request, b
                            db: AsyncSession = Depends(get_db), user: UserResponse = Depends(get_current_user)):
     group, _, role = await _access(db, group_id, user)
     _officer(role)
+    _writable(group, role, user)
     _check_date(data.op_date)
     if group.archived_at:
         raise HTTPException(status_code=409, detail="Association archivée")
@@ -473,6 +541,7 @@ async def record_day(group_id: int, data: DayIn, request: Request, background: B
     """Ticks: one contribution of the group's amount for each member listed who has not paid that day yet."""
     group, _, role = await _access(db, group_id, user)
     _officer(role)
+    _writable(group, role, user)
     _check_date(data.op_date)
     book = await _ledger(db, group)
     members = {m.id: m for m in book.members if ledger_service.active(m, data.op_date)}
@@ -503,6 +572,7 @@ async def statement_pdf(group_id: int, month: Optional[str] = Query(None, patter
     """The month's statement of the association, to print or share at the meeting (officers)."""
     group, _, role = await _access(db, group_id, user)
     _officer(role)
+    _premium_only(group, "Le relevé PDF")
     month = month or today().strftime("%Y-%m")
     book = await _ledger(db, group)
     start, end = ledger_service.month_bounds(month)
@@ -520,6 +590,7 @@ async def validate_operation(group_id: int, operation_id: int, request: Request,
                              user: UserResponse = Depends(get_current_user)):
     group, _, role = await _access(db, group_id, user)
     _officer(role)
+    _writable(group, role, user)
     operation = await db.get(TontineOperation, operation_id)
     if not operation or operation.group_id != group_id:
         raise HTTPException(status_code=404, detail="Opération introuvable")
@@ -540,6 +611,7 @@ async def cancel_operation(group_id: int, operation_id: int, data: CancelIn, req
                            user: UserResponse = Depends(get_current_user)):
     group, _, role = await _access(db, group_id, user)
     _officer(role)
+    _writable(group, role, user)
     operation = await db.get(TontineOperation, operation_id)
     if not operation or operation.group_id != group_id:
         raise HTTPException(status_code=404, detail="Opération introuvable")
@@ -561,8 +633,9 @@ async def cancel_operation(group_id: int, operation_id: int, data: CancelIn, req
 @router.post("/{group_id}/documents", status_code=status.HTTP_201_CREATED)
 async def upload_document(group_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db),
                           user: UserResponse = Depends(get_current_user)):
-    _, _, role = await _access(db, group_id, user)
+    group, _, role = await _access(db, group_id, user)
     _officer(role)
+    _writable(group, role, user)
     raw = await file.read(MAX_DOCUMENT_BYTES + 1)
     if len(raw) > MAX_DOCUMENT_BYTES:
         raise HTTPException(status_code=413, detail="Fichier trop lourd (10 Mo au maximum).")
@@ -590,3 +663,110 @@ async def get_document(group_id: int, document_id: str, db: AsyncSession = Depen
         "Content-Disposition": f'inline; filename="{safe_name}"', "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
     })
+
+
+# ---------- reports (any member) ----------
+
+@router.post("/{group_id}/report", status_code=status.HTTP_201_CREATED)
+async def report_group(group_id: int, data: ReportIn, request: Request, db: AsyncSession = Depends(get_db),
+                       user: UserResponse = Depends(get_current_user)):
+    """A member warns SENJAPO about their association (money missing, a fake treasurer...)."""
+    group, _, _ = await _access(db, group_id, user)
+    from services import monitoring
+
+    await monitoring.record_incident(
+        "report", "warning", f"Signalement : {group.name}",
+        f"De {user.name or user.email} ({user.email}) :\n\n{data.reason.strip()}\n\nOuvrir : Tableau de bord → Associations.",
+        path=f"/tontines/{group.id}", key=f"report:{group.id}:{user.id}",
+    )
+    await audit.record(db, _actor(request, user), "tontine.report", f"Association signalée : {group.name}", "tontine_group", group.id)
+    return {"ok": True}
+
+
+# ---------- the club's oversight (club president and admins) ----------
+
+def _manager(user: UserResponse) -> None:
+    if not _platform_manager(user):
+        raise HTTPException(status_code=403, detail="Réservé au président du club et aux administrateurs")
+
+
+@router.get("/admin/all")
+async def all_groups(db: AsyncSession = Depends(get_db), user: UserResponse = Depends(get_current_user)):
+    _manager(user)
+    groups = (await db.execute(select(TontineGroup).order_by(TontineGroup.created_at.desc()))).scalars().all()
+    counts = dict((await db.execute(
+        select(TontineMember.group_id, func.count()).where(TontineMember.left_at.is_(None)).group_by(TontineMember.group_id)
+    )).all())
+    presidents = {}
+    for member in (await db.execute(select(TontineMember).where(TontineMember.role == "president"))).scalars():
+        presidents.setdefault(member.group_id, member)
+    creators = await _names(db, {g.created_by for g in groups})
+    return [
+        {
+            **_group_out(g),
+            "members": counts.get(g.id, 0),
+            "created_at": g.created_at,
+            "created_by_name": creators.get(g.created_by),
+            "president_name": presidents[g.id].name if g.id in presidents else None,
+            "president_contact": (presidents[g.id].phone or presidents[g.id].email) if g.id in presidents else None,
+        }
+        for g in groups
+    ]
+
+
+@router.post("/{group_id}/premium")
+async def set_premium(group_id: int, data: PremiumIn, request: Request, db: AsyncSession = Depends(get_db),
+                      user: UserResponse = Depends(get_current_user)):
+    """After the payment (Wave / Orange Money to the official number): adds months, or ends the Premium (-1)."""
+    _manager(user)
+    group = await db.get(TontineGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Association introuvable")
+    before = group.premium_until
+    if data.months < 0:
+        group.premium_until = today() - timedelta(days=1)
+    else:
+        start = max(today(), group.premium_until or today())
+        group.premium_until = start + timedelta(days=30 * data.months)
+    await db.commit()
+    await audit.record(db, _actor(request, user), "tontine.premium",
+                       f"Premium {group.name} : jusqu'au {group.premium_until:%d/%m/%Y}" if data.months >= 0 else f"Premium arrêté : {group.name}",
+                       "tontine_group", group.id, {"avant": str(before), "apres": str(group.premium_until), "mois": data.months})
+    return _group_out(group)
+
+
+@router.post("/{group_id}/verify")
+async def verify_group(group_id: int, data: VerifyIn, request: Request, db: AsyncSession = Depends(get_db),
+                       user: UserResponse = Depends(get_current_user)):
+    """The club checked the president's ID and the association's papers: the "verified" badge."""
+    _manager(user)
+    group = await db.get(TontineGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Association introuvable")
+    if data.verified and not is_premium(group):
+        raise HTTPException(status_code=402, detail="Le badge « vérifiée » est réservé aux associations Premium")
+    group.verified_at = datetime.now(timezone.utc) if data.verified else None
+    group.verified_by = user.id if data.verified else None
+    await db.commit()
+    await audit.record(db, _actor(request, user), "tontine.verify",
+                       f"{'Badge vérifiée accordé' if data.verified else 'Badge vérifiée retiré'} : {group.name}", "tontine_group", group.id)
+    return _group_out(group)
+
+
+@router.post("/{group_id}/suspend")
+async def suspend_group(group_id: int, data: SuspendIn, request: Request, db: AsyncSession = Depends(get_db),
+                        user: UserResponse = Depends(get_current_user)):
+    """Stops all recording in a doubtful group (members still see their account)."""
+    _manager(user)
+    group = await db.get(TontineGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Association introuvable")
+    if data.suspended and len(data.reason.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Indiquez le motif de la suspension")
+    group.suspended_at = datetime.now(timezone.utc) if data.suspended else None
+    group.suspended_reason = data.reason.strip() if data.suspended else None
+    await db.commit()
+    await audit.record(db, _actor(request, user), "tontine.suspend",
+                       f"{'Association suspendue' if data.suspended else 'Association rétablie'} : {group.name}", "tontine_group", group.id,
+                       {"motif": group.suspended_reason})
+    return _group_out(group)

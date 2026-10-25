@@ -31,6 +31,13 @@ class TontineGroup(Base):
     created_by = Column(String(255), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     archived_at = Column(DateTime(timezone=True), nullable=True)
+    # Self-service: anyone creates their group; Premium (paid) adds email receipts, the PDF statement,
+    # email alerts and more groups. The club checks the president's papers for the "verified" badge.
+    premium_until = Column(Date, nullable=True)  # last day of the paid period
+    verified_at = Column(DateTime(timezone=True), nullable=True)
+    verified_by = Column(String(255), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    suspended_at = Column(DateTime(timezone=True), nullable=True)  # set by the club: nothing can be recorded
+    suspended_reason = Column(String(255), nullable=True)
 
 
 class TontineMember(Base):

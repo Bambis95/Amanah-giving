@@ -37,6 +37,7 @@ KIND_LABELS = {
     "client": "Navigateur",
     "backup": "Sauvegarde",
     "server": "Serveur",
+    "report": "Signalement",
 }
 
 

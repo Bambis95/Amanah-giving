@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import {
   Activity,
+  PiggyBank,
   AlertTriangle,
   Clock,
   FolderOpen,
@@ -40,10 +41,11 @@ import DonationSwitchCard from "@/components/admin/DonationSwitchCard";
 import NewsletterTab from "@/components/admin/NewsletterTab";
 import FinanceTab from "@/components/admin/finance/FinanceTab";
 import SystemTab from "@/components/admin/SystemTab";
+import AssociationsTab from "@/components/admin/AssociationsTab";
 import { cn } from "@/lib/utils";
 import { softTone, Tone } from "@/lib/tones";
 
-type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit" | "settings" | "newsletter" | "system";
+type Section = "overview" | "donations" | "messages" | "projects" | "finances" | "users" | "audit" | "settings" | "newsletter" | "system" | "associations";
 
 interface StatTileProps {
   icon: React.ElementType;
@@ -201,6 +203,7 @@ export default function AdminPage() {
           { id: "audit" as Section, label: "Journal", icon: History },
           // The president sees them too (read-only) and can download the data export
           { id: "settings" as Section, label: "Réglages du site", icon: SlidersHorizontal },
+          { id: "associations" as Section, label: "Associations", icon: PiggyBank },
           { id: "system" as Section, label: "Santé du système", icon: Activity, count: incidents.open || undefined, alert: incidents.open > 0 },
         ]
       : []),
@@ -398,6 +401,7 @@ export default function AdminPage() {
                     </div>
                   )}
                   {current.id === "newsletter" && <NewsletterTab projects={projects} />}
+                  {current.id === "associations" && <AssociationsTab />}
                   {current.id === "system" && <SystemTab canResolve={isAdminRole(user.role)} onIncidents={onIncidents} />}
                 </div>
               )}
