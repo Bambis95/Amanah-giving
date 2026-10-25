@@ -67,6 +67,10 @@ from fastapi.testclient import TestClient  # noqa: E402
 from main import app  # noqa: E402
 
 TABLES = [
+    "tontine_operations",
+    "tontine_documents",
+    "tontine_members",
+    "tontine_groups",
     "system_incidents",
     "audit_logs",
     "login_attempts",

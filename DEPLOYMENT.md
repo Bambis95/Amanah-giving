@@ -163,6 +163,14 @@ Quand le compte marchand est validé :
   « résolus » avec une note (inscrite au Journal). *Envoyer une alerte test* vérifie que les emails
   arrivent. Une vérification tourne chaque minute (`MONITOR_EVERY_SECONDS`, `0` pour l'arrêter).
   `SERVER_CPU_LIMIT` et `SERVER_MEMORY_MB` décrivent l'offre Render : à changer avec l'offre.
+- **Tontines** (*Mes tontines*, `/tontines`) : le cahier numérique des natt et associations d'épargne.
+  **La plateforme ne garde jamais l'argent** : les membres paient leur trésorier, qui dépose sur le compte
+  bancaire de l'association. Le président du club ou un administrateur crée l'association et son
+  président ; le président et le trésorier ajoutent les membres (un membre ajouté avec son email voit
+  son compte en se connectant avec cette adresse). Le trésorier coche les cotisations du jour et saisit
+  les dépôts et versements avec la photo du bordereau ; une **autre personne** (président ou trésorier)
+  les valide avant qu'ils comptent à la banque. Alerte quand le trésorier garde trop d'argent trop
+  longtemps. Rien ne s'efface : une opération s'annule avec un motif, inscrit au Journal.
 - **Finances** : le **trésorier** (rôle nommé par un administrateur) et les administrateurs tiennent
   les comptes dans *Tableau de bord → Finances* ; le président les consulte. Les dons en ligne y sont
   comptés automatiquement ; tout le reste (subventions, cotisations, espèces, dépenses) se saisit avec

@@ -15,6 +15,7 @@ const fr = {
     partners: "Devenir Partenaire",
     transparency: "Transparence",
     mySpace: "Mon espace",
+    myTontines: "Mes tontines",
     dashboard: "Tableau de bord",
     login: "Se connecter",
     logout: "Se déconnecter",

@@ -16,6 +16,7 @@ const ar: Dictionary = {
     partners: "كن شريكًا",
     transparency: "الشفافية",
     mySpace: "حسابي",
+    myTontines: "جمعيات الادخار",
     dashboard: "لوحة التحكم",
     login: "تسجيل الدخول",
     logout: "تسجيل الخروج",

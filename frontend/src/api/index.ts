@@ -804,6 +804,195 @@ export const commissionApi = {
   },
 };
 
+// ---------- Tontines (natt, savings groups) ----------
+
+export type TontineRole = "admin" | "president" | "treasurer" | "member";
+export type TontineMethod = "cash" | "wave" | "orange_money" | "free_money" | "bank_transfer";
+
+export interface TontineGroup {
+  id: number;
+  name: string;
+  kind: "savings" | "rotating";
+  kind_label: string;
+  amount: number;
+  frequency: "daily" | "weekly" | "monthly";
+  frequency_label: string;
+  bank_name: string | null;
+  bank_account: string | null;
+  cash_alert_amount: number;
+  cash_alert_days: number;
+  archived: boolean;
+  my_role?: TontineRole;
+  members?: number;
+}
+
+export interface TontineMemberRow {
+  id: number;
+  name: string;
+  role: "member" | "treasurer" | "president";
+  phone: string | null;
+  email: string | null;
+  linked: boolean;
+  rotation_order: number | null;
+  joined_at: string;
+  left_at: string | null;
+  contributed: number;
+  expected: number;
+  paid_count: number;
+  expected_count: number;
+  late: number;
+  received: number;
+  to_receive: number | null;
+  total_contributed: number;
+  total_received: number;
+}
+
+export interface TontineOperation {
+  id: number;
+  kind: "contribution" | "deposit" | "payout";
+  member_id: number | null;
+  member_name: string | null;
+  op_date: string;
+  amount: number;
+  method: TontineMethod;
+  method_label: string;
+  source: "cash" | "bank" | null;
+  period: string | null;
+  reference: string | null;
+  document_id: string | null;
+  recorded_by: string | null;
+  recorded_by_name: string | null;
+  created_at: string;
+  validated_at: string | null;
+  validated_by_name: string | null;
+  needs_validation: boolean;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+}
+
+export interface TontineRotation {
+  rounds_done: number;
+  cycle?: number;
+  pot: number;
+  next: { id: number; name: string } | null;
+  order: { id: number; name: string; served: boolean }[];
+}
+
+export interface TontineSummary {
+  month: string;
+  cash_in_hand: number;
+  bank_balance: number;
+  days_since_deposit: number | null;
+  month_contributions: number;
+  month_deposits: number;
+  month_payouts: number;
+  total_contributions: number;
+  pending_validation: number;
+  alerts: { code: string; level: "info" | "warning" | "critical"; text: string }[];
+  rotation: TontineRotation | null;
+}
+
+export interface TontineView {
+  group: TontineGroup;
+  role: TontineRole;
+  month: string;
+  months: string[];
+  // Officers
+  summary?: TontineSummary;
+  members?: TontineMemberRow[];
+  operations?: TontineOperation[];
+  me_id?: number | null;
+  // A member
+  me?: TontineMemberRow | null;
+  my_operations?: TontineOperation[];
+  rotation?: TontineRotation | null;
+}
+
+export interface TontineGroupInput {
+  name: string;
+  kind: "savings" | "rotating";
+  amount: number;
+  frequency: "daily" | "weekly" | "monthly";
+  bank_name?: string;
+  bank_account?: string;
+  cash_alert_amount: number;
+  cash_alert_days: number;
+}
+
+export interface TontineMemberInput {
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  role: "member" | "treasurer" | "president";
+  rotation_order?: number | null;
+  joined_at?: string | null;
+  left_at?: string | null;
+}
+
+export interface TontineOperationInput {
+  kind: "contribution" | "deposit" | "payout";
+  member_id?: number | null;
+  op_date: string;
+  amount: number;
+  method: TontineMethod;
+  source?: "cash" | "bank" | null;
+  period?: string | null;
+  reference?: string | null;
+  document_id?: string | null;
+}
+
+const T = "/tontines";
+
+export const tontineApi = {
+  list(): Promise<{ can_create: boolean; groups: TontineGroup[] }> {
+    return adminRequest(T);
+  },
+  create(data: TontineGroupInput & { president_name: string; president_email?: string | null; president_phone?: string | null }): Promise<TontineGroup> {
+    return adminRequest(T, { method: "POST", body: JSON.stringify(data) });
+  },
+  update(id: number, data: TontineGroupInput): Promise<TontineGroup> {
+    return adminRequest(`${T}/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  view(id: number, month?: string): Promise<TontineView> {
+    return adminRequest(`${T}/${id}${month ? `?month=${month}` : ""}`);
+  },
+  daySheet(id: number, day: string): Promise<{ day: string; amount: number; members: { id: number; name: string; phone: string | null; paid: number }[] }> {
+    return adminRequest(`${T}/${id}/day?day=${day}`);
+  },
+  recordDay(id: number, op_date: string, method: TontineMethod, member_ids: number[]): Promise<{ added: number; skipped: number }> {
+    return adminRequest(`${T}/${id}/day`, { method: "POST", body: JSON.stringify({ op_date, method, member_ids }) });
+  },
+  addMember(id: number, data: TontineMemberInput): Promise<{ id: number }> {
+    return adminRequest(`${T}/${id}/members`, { method: "POST", body: JSON.stringify(data) });
+  },
+  updateMember(id: number, memberId: number, data: TontineMemberInput): Promise<{ id: number }> {
+    return adminRequest(`${T}/${id}/members/${memberId}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  record(id: number, data: TontineOperationInput): Promise<{ id: number }> {
+    return adminRequest(`${T}/${id}/operations`, { method: "POST", body: JSON.stringify(data) });
+  },
+  validate(id: number, opId: number): Promise<{ id: number }> {
+    return adminRequest(`${T}/${id}/operations/${opId}/validate`, { method: "POST" });
+  },
+  cancel(id: number, opId: number, reason: string): Promise<{ id: number }> {
+    return adminRequest(`${T}/${id}/operations/${opId}/cancel`, { method: "POST", body: JSON.stringify({ reason }) });
+  },
+  async uploadSlip(id: number, file: File): Promise<{ id: string; filename: string }> {
+    const body = new FormData();
+    body.append("file", file);
+    const response = await apiFetch(`${getAPIBase()}${T}/${id}/documents`, { method: "POST", body });
+    if (!response.ok) throw new Error(await errorDetail(response, "L'envoi du bordereau a échoué"));
+    return response.json();
+  },
+  async openSlip(id: number, documentId: string): Promise<void> {
+    const response = await apiFetch(`${getAPIBase()}${T}/${id}/documents/${documentId}`);
+    if (!response.ok) throw new Error(await errorDetail(response, "Bordereau indisponible"));
+    const url = URL.createObjectURL(await response.blob());
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
+};
+
 // ---------- Online donations switch ----------
 
 export interface DonationSwitchState {

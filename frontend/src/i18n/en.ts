@@ -15,6 +15,7 @@ const en: Dictionary = {
     partners: "Become a Partner",
     transparency: "Transparency",
     mySpace: "My account",
+    myTontines: "My savings groups",
     dashboard: "Dashboard",
     login: "Sign in",
     logout: "Sign out",

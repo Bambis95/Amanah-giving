@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Heart, LogIn, LogOut, User, UserRound, LayoutDashboard } from "lucide-react";
+import { Menu, Heart, LogIn, LogOut, User, UserRound, LayoutDashboard, PiggyBank } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -100,6 +100,12 @@ export default function Navbar() {
                         {t.mySpace}
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/tontines">
+                        <PiggyBank className="mr-2 h-4 w-4" />
+                        {t.myTontines}
+                      </Link>
+                    </DropdownMenuItem>
                     {isStaff(user.role) && (
                       <DropdownMenuItem asChild className="cursor-pointer">
                         <Link to="/admin">
@@ -171,6 +177,12 @@ export default function Navbar() {
                         <Link to="/mon-espace" onClick={() => setOpen(false)}>
                           <UserRound className="mr-2 h-4 w-4" />
                           {t.mySpace}
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="h-11 w-full">
+                        <Link to="/tontines" onClick={() => setOpen(false)}>
+                          <PiggyBank className="mr-2 h-4 w-4" />
+                          {t.myTontines}
                         </Link>
                       </Button>
                       {isStaff(user.role) && (

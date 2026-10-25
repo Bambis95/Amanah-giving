@@ -25,6 +25,7 @@ from models.newsletter import NewsletterIssue, Subscriber
 from models.project_update import ProjectUpdate
 from models.projects import Projects
 from models.site_setting import SiteSetting
+from models.tontine import TontineDocument, TontineGroup, TontineMember, TontineOperation
 from services import audit
 from services.audit import Actor
 from sqlalchemy import select
@@ -46,6 +47,10 @@ TABLES = {
     "newsletter_abonnes": (Subscriber, {"token"}),
     "newsletter_envois": (NewsletterIssue, set()),
     "reglages_site": (SiteSetting, set()),
+    "tontines_associations": (TontineGroup, set()),
+    "tontines_membres": (TontineMember, set()),
+    "tontines_operations": (TontineOperation, set()),
+    "tontines_bordereaux": (TontineDocument, {"data"}),
     "journal": (AuditLog, set()),
 }
 
@@ -88,6 +93,8 @@ async def build_archive(db: AsyncSession, with_files: bool = True) -> Tuple[byte
                 archive.writestr(f"fichiers/photos/{image.id}.{EXTENSIONS.get(image.content_type, 'bin')}", image.data)
             for doc in (await db.execute(select(FinanceDocument))).scalars():
                 archive.writestr(f"fichiers/justificatifs/{doc.id}.{EXTENSIONS.get(doc.content_type, 'bin')}", doc.data)
+            for doc in (await db.execute(select(TontineDocument))).scalars():
+                archive.writestr(f"fichiers/bordereaux/{doc.id}.{EXTENSIONS.get(doc.content_type, 'bin')}", doc.data)
         files_note = (
             "Les photos et les justificatifs financiers sont dans le dossier fichiers/, nommés par leur identifiant\n"
             "(colonnes image, gallery, document_id).\n"

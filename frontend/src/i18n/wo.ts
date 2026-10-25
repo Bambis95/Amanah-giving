@@ -16,6 +16,7 @@ const wo: Dictionary = {
     partners: "Nekk sunu Àndandoo",
     transparency: "Leeral",
     mySpace: "Sama bérab",
+    myTontines: "Samay natt",
     dashboard: "Tablo bi",
     login: "Duggu",
     logout: "Génn",

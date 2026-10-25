@@ -35,6 +35,8 @@ const Stand = lazy(() => import('./pages/Stand'));
 const Poster = lazy(() => import('./pages/Poster'));
 const CampaignPoster = lazy(() => import('./pages/CampaignPoster'));
 const Membership = lazy(() => import('./pages/Membership'));
+const Tontines = lazy(() => import('./pages/Tontines'));
+const TontineGroup = lazy(() => import('./pages/TontineGroup'));
 const MembershipPrint = lazy(() => import('./pages/MembershipPrint'));
 
 const queryClient = new QueryClient();
@@ -73,6 +75,8 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/invitation" element={<AcceptInvitation />} />
           <Route path="/mon-espace" element={<Account />} />
+          <Route path="/tontines" element={<Tontines />} />
+          <Route path="/tontines/:id" element={<TontineGroup />} />
           <Route path="/desabonnement" element={<Unsubscribe />} />
           <Route path="/" element={<Index />} />
           <Route path="/donate" element={<Donate />} />
