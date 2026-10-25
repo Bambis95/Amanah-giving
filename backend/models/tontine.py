@@ -4,8 +4,10 @@ The platform never holds the money: members pay their treasurer (cash, Wave, Ora
 treasurer deposits it on the association's own bank account. SENJAPO records every operation,
 checks them (four eyes on deposits and payouts) and warns when something looks wrong.
 
-- A group is "savings" (each member gets back what they paid for the period) or "rotating"
-  (each round, one member receives the whole pot, in the order of the rotation).
+- A group is "savings" (each member gets back what they paid for the period), "rotating" (each
+  round, one member receives the whole pot, in the order of the rotation) or "mbootaay" (a common
+  solidarity fund: the money stays in the fund and pays aids to members for a birth, a wedding,
+  a death, an illness).
 - Operations are never deleted: a wrong one is cancelled with a reason, visible in the journal.
 """
 
@@ -18,7 +20,7 @@ class TontineGroup(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(120), nullable=False)
-    kind = Column(String(10), nullable=False)  # "savings" or "rotating"
+    kind = Column(String(10), nullable=False)  # "savings", "rotating" or "mbootaay"
     amount = Column(Integer, nullable=False)  # FCFA expected from each member per period
     frequency = Column(String(10), nullable=False)  # "daily", "weekly" or "monthly"
     bank_name = Column(String(120), nullable=True)
@@ -61,6 +63,8 @@ class TontineOperation(Base):
     source = Column(String(10), nullable=True)  # payouts: paid from the treasurer's "cash" or the "bank"
     period = Column(String(10), nullable=True)  # payouts: "2026-10" (savings) or the round number (rotating)
     reference = Column(String(100), nullable=True)  # deposit slip or transaction number
+    category = Column(String(20), nullable=True)  # mbootaay aids: birth, wedding, death, illness, other
+    note = Column(String(255), nullable=True)  # what the aid or payout was for
     document_id = Column(String(32), ForeignKey("tontine_documents.id", ondelete="SET NULL"), nullable=True)
     recorded_by = Column(String(255), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

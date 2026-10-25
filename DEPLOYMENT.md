@@ -171,6 +171,13 @@ Quand le compte marchand est validé :
   les dépôts et versements avec la photo du bordereau ; une **autre personne** (président ou trésorier)
   les valide avant qu'ils comptent à la banque. Alerte quand le trésorier garde trop d'argent trop
   longtemps. Rien ne s'efface : une opération s'annule avec un motif, inscrit au Journal.
+  Trois formules : **Épargne** (chacun récupère sa mise), **Natt tournante** (la cagnotte à tour de
+  rôle) et **Mbootaay** (caisse de solidarité qui verse des aides : naissance, mariage, décès, maladie).
+  Chaque membre ayant un email reçoit un **reçu** à chaque cotisation ou aide ; le trésorier peut aussi
+  envoyer le reçu par **WhatsApp** en un toucher (gratuit, depuis son téléphone). Le président et le
+  trésorier reçoivent un email quand l'argent dort trop longtemps (au plus tous les 3 jours). **Relevé
+  PDF** du mois à signer en réunion. Écrans en français, wolof, anglais et arabe (wolof et arabe à
+  faire relire).
 - **Finances** : le **trésorier** (rôle nommé par un administrateur) et les administrateurs tiennent
   les comptes dans *Tableau de bord → Finances* ; le président les consulte. Les dons en ligne y sont
   comptés automatiquement ; tout le reste (subventions, cotisations, espèces, dépenses) se saisit avec

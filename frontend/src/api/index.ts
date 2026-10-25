@@ -807,12 +807,14 @@ export const commissionApi = {
 // ---------- Tontines (natt, savings groups) ----------
 
 export type TontineRole = "admin" | "president" | "treasurer" | "member";
+export type TontineKind = "savings" | "rotating" | "mbootaay";
+export type TontineAid = "birth" | "wedding" | "death" | "illness" | "other";
 export type TontineMethod = "cash" | "wave" | "orange_money" | "free_money" | "bank_transfer";
 
 export interface TontineGroup {
   id: number;
   name: string;
-  kind: "savings" | "rotating";
+  kind: TontineKind;
   kind_label: string;
   amount: number;
   frequency: "daily" | "weekly" | "monthly";
@@ -859,6 +861,9 @@ export interface TontineOperation {
   source: "cash" | "bank" | null;
   period: string | null;
   reference: string | null;
+  category: TontineAid | null;
+  category_label: string | null;
+  note: string | null;
   document_id: string | null;
   recorded_by: string | null;
   recorded_by_name: string | null;
@@ -886,6 +891,8 @@ export interface TontineSummary {
   month_contributions: number;
   month_deposits: number;
   month_payouts: number;
+  fund: number | null;
+  month_aids: Record<TontineAid, number> | null;
   total_contributions: number;
   pending_validation: number;
   alerts: { code: string; level: "info" | "warning" | "critical"; text: string }[];
@@ -910,7 +917,7 @@ export interface TontineView {
 
 export interface TontineGroupInput {
   name: string;
-  kind: "savings" | "rotating";
+  kind: TontineKind;
   amount: number;
   frequency: "daily" | "weekly" | "monthly";
   bank_name?: string;
@@ -939,6 +946,8 @@ export interface TontineOperationInput {
   period?: string | null;
   reference?: string | null;
   document_id?: string | null;
+  category?: TontineAid | null;
+  note?: string | null;
 }
 
 const T = "/tontines";
@@ -959,7 +968,7 @@ export const tontineApi = {
   daySheet(id: number, day: string): Promise<{ day: string; amount: number; members: { id: number; name: string; phone: string | null; paid: number }[] }> {
     return adminRequest(`${T}/${id}/day?day=${day}`);
   },
-  recordDay(id: number, op_date: string, method: TontineMethod, member_ids: number[]): Promise<{ added: number; skipped: number }> {
+  recordDay(id: number, op_date: string, method: TontineMethod, member_ids: number[]): Promise<{ added: number; skipped: number; receipts: number }> {
     return adminRequest(`${T}/${id}/day`, { method: "POST", body: JSON.stringify({ op_date, method, member_ids }) });
   },
   addMember(id: number, data: TontineMemberInput): Promise<{ id: number }> {
@@ -968,7 +977,7 @@ export const tontineApi = {
   updateMember(id: number, memberId: number, data: TontineMemberInput): Promise<{ id: number }> {
     return adminRequest(`${T}/${id}/members/${memberId}`, { method: "PUT", body: JSON.stringify(data) });
   },
-  record(id: number, data: TontineOperationInput): Promise<{ id: number }> {
+  record(id: number, data: TontineOperationInput): Promise<{ id: number; receipts: number }> {
     return adminRequest(`${T}/${id}/operations`, { method: "POST", body: JSON.stringify(data) });
   },
   validate(id: number, opId: number): Promise<{ id: number }> {
@@ -983,6 +992,17 @@ export const tontineApi = {
     const response = await apiFetch(`${getAPIBase()}${T}/${id}/documents`, { method: "POST", body });
     if (!response.ok) throw new Error(await errorDetail(response, "L'envoi du bordereau a échoué"));
     return response.json();
+  },
+  async downloadStatement(id: number, month: string): Promise<void> {
+    const response = await apiFetch(`${getAPIBase()}${T}/${id}/statement.pdf?month=${month}`);
+    if (!response.ok) throw new Error(await errorDetail(response, "Relevé indisponible"));
+    const name = response.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1] ?? `releve-${month}.pdf`;
+    const url = URL.createObjectURL(await response.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
   },
   async openSlip(id: number, documentId: string): Promise<void> {
     const response = await apiFetch(`${getAPIBase()}${T}/${id}/documents/${documentId}`);

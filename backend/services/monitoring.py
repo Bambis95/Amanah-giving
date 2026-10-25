@@ -17,7 +17,7 @@ import traceback
 import uuid
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Deque, Dict, List, Optional, Tuple
 
 from core.config import settings
@@ -441,6 +441,7 @@ async def report_client_error(message: str, stack: str, page: str, user_agent: s
 class WatchState:
     db_down_since: Optional[datetime] = None
     last_cleanup: Optional[datetime] = None
+    tontine_day: Optional[date] = None  # the day the tontine cash alerts were last checked
     emails_seen: int = 0
 
 
@@ -587,6 +588,17 @@ async def check_once() -> None:
 
     await _check_backup(now)
     await _instances(now)
+
+    # Once a day: tontine treasurers keeping the money too long are reminded by email
+    if watch.tontine_day != now.date():
+        watch.tontine_day = now.date()
+        try:
+            from services.tontine_mail import notify_dormant_cash
+
+            async with db_manager.async_session_maker() as session:
+                await notify_dormant_cash(session, now.date())
+        except Exception:
+            logger.exception("Tontine cash alerts failed")
 
     if not watch.last_cleanup or now - watch.last_cleanup > timedelta(days=1):
         watch.last_cleanup = now

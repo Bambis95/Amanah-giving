@@ -271,7 +271,7 @@ async def test_alert(db: AsyncSession = Depends(get_db), actor: Actor = Depends(
     delivered = await asyncio.to_thread(mail.deliver, message, "test alert")
     await audit.record(db, actor, "system.test_alert", "Alerte de test envoyée" if delivered else "Alerte de test : échec de l'envoi")
     if not delivered:
-        error = mail.recent_failures[-1][3] if mail.recent_failures else ""
+        error = next((f[3] for f in reversed(mail.recent_failures) if f[2] == "test alert"), "")
         raise HTTPException(status_code=502, detail=f"L'email n'a pas pu partir. {smtp_advice(error)} (Réponse du serveur : {error[:200]})")
     return {"sent_to": recipients}
 

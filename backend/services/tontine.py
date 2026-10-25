@@ -13,7 +13,15 @@ from typing import Dict, List, Optional
 
 from models.tontine import TontineGroup, TontineMember, TontineOperation
 
-KINDS = {"savings": "Épargne", "rotating": "Natt tournante"}
+KINDS = {"savings": "Épargne", "rotating": "Natt tournante", "mbootaay": "Mbootaay (caisse de solidarité)"}
+# Mbootaay: what the fund pays for
+AID_CATEGORIES = {
+    "birth": "Naissance / baptême",
+    "wedding": "Mariage",
+    "death": "Décès",
+    "illness": "Maladie",
+    "other": "Autre événement",
+}
 FREQUENCIES = {"daily": "par jour", "weekly": "par semaine", "monthly": "par mois"}
 METHODS = {
     "cash": "Espèces",
@@ -167,6 +175,12 @@ class Ledger:
             "month_contributions": sum(o.amount for o in in_month if o.kind == "contribution"),
             "month_deposits": sum(o.amount for o in in_month if o.kind == "deposit"),
             "month_payouts": sum(o.amount for o in in_month if o.kind == "payout"),
+            # Mbootaay: the common fund (treasurer's cash + bank) and the month's aids by event
+            "fund": self.cash_in_hand() + self.bank_balance() if self.group.kind == "mbootaay" else None,
+            "month_aids": {
+                key: sum(o.amount for o in in_month if o.kind == "payout" and o.category == key)
+                for key in AID_CATEGORIES
+            } if self.group.kind == "mbootaay" else None,
             "total_contributions": sum(o.amount for o in live if o.kind == "contribution"),
             "pending_validation": sum(1 for o in live if o.kind in ("deposit", "payout") and not o.validated_at),
             "alerts": self.alerts(today, month),

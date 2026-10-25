@@ -14,6 +14,7 @@ TODAY = date(2026, 10, 20)
 @pytest.fixture(autouse=True)
 def fixed_day(monkeypatch):
     monkeypatch.setattr(tontines, "today", lambda: TODAY)
+    monkeypatch.setattr(tontines, "send_email", lambda message, context: None)  # receipts: see the mails fixture
 
 
 def make_group(client, **overrides):
@@ -70,10 +71,10 @@ def test_daily_sheet_balances_and_member_view(client, group):
     ids = {m["name"]: m["id"] for m in client.get(f"{URL}/{group}/day", params={"day": "2026-10-19"}).json()["members"]}
     for day in ("2026-10-18", "2026-10-19"):
         r = client.post(f"{URL}/{group}/day", json={"op_date": day, "method": "cash", "member_ids": [ids["Binta Ndiaye"], ids["Penda Fall"]]})
-        assert r.json() == {"added": 2, "skipped": 0}
+        assert (r.json()["added"], r.json()["skipped"]) == (2, 0)
     # Ticking twice the same day adds nothing
     again = client.post(f"{URL}/{group}/day", json={"op_date": "2026-10-19", "member_ids": [ids["Binta Ndiaye"]]})
-    assert again.json() == {"added": 0, "skipped": 1}
+    assert (again.json()["added"], again.json()["skipped"]) == (0, 1)
     assert client.post(f"{URL}/{group}/day", json={"op_date": "2026-10-21", "member_ids": [ids["Binta Ndiaye"]]}).status_code == 400
 
     rows = members(client, group)
@@ -145,3 +146,64 @@ def test_member_roles_are_the_presidents(client, group):
     assert add(client, group, "Nouvelle membre")
     binta = members(client, group)["Binta Ndiaye"]["id"]
     assert client.put(f"{URL}/{group}/members/{binta}", json={"name": "Binta Ndiaye", "role": "president"}).status_code == 403
+
+
+@pytest.fixture
+def mails(monkeypatch):
+    """Receipts and alerts captured instead of sent."""
+    import services.email
+
+    sent = []
+    monkeypatch.setattr(tontines, "send_email", lambda message, context: sent.append(message))
+    monkeypatch.setattr(services.email, "deliver", lambda message, context: sent.append(message) or True)
+    monkeypatch.setattr(services.email, "email_enabled", lambda: True)
+    return sent
+
+
+def test_receipts_reach_members_who_have_an_email(client, group, mails):
+    as_user(client, "fatou@example.com")
+    ids = {m["name"]: m["id"] for m in client.get(f"{URL}/{group}/day", params={"day": "2026-10-19"}).json()["members"]}
+    r = client.post(f"{URL}/{group}/day", json={"op_date": "2026-10-19", "member_ids": [ids["Binta Ndiaye"], ids["Penda Fall"]]})
+    assert r.json()["receipts"] == 1  # Penda has no email
+    [receipt] = mails
+    assert receipt["To"] == "binta@example.com" and "Natt des femmes de Fahu" in receipt["Subject"]
+    assert "500 F" in receipt.get_content() and "Penda" not in receipt.get_content()
+
+
+def test_mbootaay_aids_need_an_event(client, admin, mails):
+    gid = make_group(client, kind="mbootaay", amount=2000, frequency="monthly", name="Mbootaay des grandes dames")
+    khady = add(client, gid, "Khady Sow", "khady@example.com")
+    client.post(f"{URL}/{gid}/operations", json={"kind": "contribution", "member_id": khady, "op_date": "2026-10-03",
+                                                 "amount": 20000, "method": "cash"})
+    aid = {"kind": "payout", "member_id": khady, "op_date": "2026-10-12", "amount": 15000, "method": "wave", "source": "cash"}
+    assert client.post(f"{URL}/{gid}/operations", json=aid).status_code == 400
+    r = client.post(f"{URL}/{gid}/operations", json={**aid, "category": "birth", "note": "Baptême de sa fille"})
+    assert r.status_code == 201
+    summary = client.get(f"{URL}/{gid}").json()["summary"]
+    assert summary["month_aids"]["birth"] == 15000 and summary["fund"] == 5000
+    assert any("Naissance" in m.get_content() for m in mails)  # the receipt names the event
+
+
+def test_monthly_statement_pdf(client, group):
+    r = client.get(f"{URL}/{group}/statement.pdf", params={"month": "2026-10"})
+    assert r.status_code == 200 and r.content.startswith(b"%PDF")
+    as_user(client, "binta@example.com")
+    assert client.get(f"{URL}/{group}/statement.pdf").status_code == 403
+
+
+def test_dormant_cash_is_emailed_to_the_officers_every_three_days(client, group, mails):
+    from services.tontine_mail import notify_dormant_cash
+    from core.database import db_manager
+
+    as_user(client, "fatou@example.com")
+    pid = members(client, group)["Penda Fall"]["id"]
+    client.post(f"{URL}/{group}/operations", json={"kind": "contribution", "member_id": pid, "op_date": "2026-10-05",
+                                                   "amount": 6000, "method": "cash"})
+
+    async def run():
+        async with db_manager.async_session_maker() as db:
+            return await notify_dormant_cash(db, TODAY)
+
+    assert client.portal.call(run) == 1
+    assert sorted(m["To"] for m in mails) == ["awa@example.com", "fatou@example.com"]
+    assert client.portal.call(run) == 0  # not again before 3 days

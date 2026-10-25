@@ -16,7 +16,7 @@ from typing import List, Literal, Optional
 
 from core.database import get_db
 from dependencies.auth import client_ip, get_current_user, role_level
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from models.auth import User
 from models.tontine import TontineDocument, TontineGroup, TontineMember, TontineOperation
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
@@ -24,6 +24,9 @@ from routers.finance import MAX_DOCUMENT_BYTES, _prepare_document
 from schemas.auth import UserResponse
 from services import audit
 from services import tontine as ledger_service
+from services.email import send_email
+from services.tontine_mail import build_receipt
+from services.tontine_report import build_statement
 from services.audit import Actor
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,7 +54,7 @@ def _platform_manager(user: UserResponse) -> bool:
 
 class GroupIn(BaseModel):
     name: str = Field(..., min_length=2, max_length=120)
-    kind: Literal["savings", "rotating"]
+    kind: Literal["savings", "rotating", "mbootaay"]
     amount: int = Field(..., ge=25, le=MAX_AMOUNT)
     frequency: Literal["daily", "weekly", "monthly"]
     bank_name: Optional[str] = Field(None, max_length=120)
@@ -96,9 +99,13 @@ class OperationIn(BaseModel):
     period: Optional[str] = Field(None, max_length=10)
     reference: Optional[str] = Field(None, max_length=100)
     document_id: Optional[str] = Field(None, max_length=32)
+    category: Optional[Literal["birth", "wedding", "death", "illness", "other"]] = None
+    note: Optional[str] = Field(None, max_length=255)
 
     @model_validator(mode="after")
     def _shape(self):
+        if self.kind != "payout":
+            self.category = None
         if self.kind in ("contribution", "payout") and not self.member_id:
             raise ValueError("Choisissez le membre")
         if self.kind == "deposit":
@@ -210,6 +217,9 @@ async def _operations_out(db: AsyncSession, operations: List[TontineOperation], 
             "source": o.source,
             "period": o.period,
             "reference": o.reference,
+            "category": o.category,
+            "category_label": ledger_service.AID_CATEGORIES.get(o.category) if o.category else None,
+            "note": o.note,
             "document_id": o.document_id,
             "recorded_by": o.recorded_by,
             "recorded_by_name": names.get(o.recorded_by),
@@ -378,9 +388,34 @@ async def update_member(group_id: int, member_id: int, data: MemberIn, request: 
 
 # ---------- operations ----------
 
+async def _send_receipts(db: AsyncSession, group: TontineGroup, operations: List[TontineOperation], user: UserResponse,
+                         background: BackgroundTasks) -> int:
+    """One email per member who has an email, for what was just recorded for them."""
+    by_member: dict = {}
+    for o in operations:
+        if o.member_id:
+            by_member.setdefault(o.member_id, []).append(o)
+    if not by_member:
+        return 0
+    members = (await db.execute(select(TontineMember).where(TontineMember.id.in_(by_member)))).scalars().all()
+    sent = 0
+    for member in members:
+        if not member.email:
+            continue
+        ops = by_member[member.id]
+        start, end = ledger_service.month_bounds(ops[0].op_date.strftime("%Y-%m"))
+        month_total = (await db.execute(select(func.coalesce(func.sum(TontineOperation.amount), 0)).where(
+            TontineOperation.member_id == member.id, TontineOperation.kind == "contribution",
+            TontineOperation.cancelled_at.is_(None), TontineOperation.op_date.between(start, end),
+        ))).scalar()
+        background.add_task(send_email, build_receipt(member, group, ops, int(month_total), user.name or user.email), "tontine receipt")
+        sent += 1
+    return sent
+
+
 @router.post("/{group_id}/operations", status_code=status.HTTP_201_CREATED)
-async def record_operation(group_id: int, data: OperationIn, request: Request, db: AsyncSession = Depends(get_db),
-                           user: UserResponse = Depends(get_current_user)):
+async def record_operation(group_id: int, data: OperationIn, request: Request, background: BackgroundTasks,
+                           db: AsyncSession = Depends(get_db), user: UserResponse = Depends(get_current_user)):
     group, _, role = await _access(db, group_id, user)
     _officer(role)
     _check_date(data.op_date)
@@ -394,17 +429,20 @@ async def record_operation(group_id: int, data: OperationIn, request: Request, d
         document = await db.get(TontineDocument, data.document_id)
         if not document or document.group_id != group_id:
             raise HTTPException(status_code=404, detail="Justificatif introuvable")
-    if data.kind == "payout" and data.period and group.kind == "savings" and not re.match(MONTH, data.period):
+    if data.kind == "payout" and data.period and group.kind != "rotating" and not re.match(MONTH, data.period):
         raise HTTPException(status_code=400, detail="Période attendue : AAAA-MM")
+    if data.kind == "payout" and group.kind == "mbootaay" and not data.category:
+        raise HTTPException(status_code=400, detail="Choisissez l'événement : naissance, mariage, décès, maladie ou autre")
     operation = TontineOperation(group_id=group_id, recorded_by=user.id, **data.model_dump())
     if data.kind == "payout" and not operation.period:
-        operation.period = data.op_date.strftime("%Y-%m") if group.kind == "savings" else None
+        operation.period = data.op_date.strftime("%Y-%m") if group.kind != "rotating" else None
     db.add(operation)
     await db.commit()
     label = {"contribution": "Cotisation", "deposit": "Dépôt à la banque", "payout": "Versement"}[data.kind]
     await audit.record(db, _actor(request, user), f"tontine.{data.kind}", f"{label} de {data.amount} F ({group.name})",
                        "tontine_operation", operation.id, data.model_dump(mode="json"))
-    return {"id": operation.id}
+    receipts = await _send_receipts(db, group, [operation], user, background) if data.kind != "deposit" else 0
+    return {"id": operation.id, "receipts": receipts}
 
 
 @router.get("/{group_id}/day")
@@ -430,8 +468,8 @@ async def day_sheet(group_id: int, day: Optional[date] = None, db: AsyncSession 
 
 
 @router.post("/{group_id}/day", status_code=status.HTTP_201_CREATED)
-async def record_day(group_id: int, data: DayIn, request: Request, db: AsyncSession = Depends(get_db),
-                     user: UserResponse = Depends(get_current_user)):
+async def record_day(group_id: int, data: DayIn, request: Request, background: BackgroundTasks,
+                     db: AsyncSession = Depends(get_db), user: UserResponse = Depends(get_current_user)):
     """Ticks: one contribution of the group's amount for each member listed who has not paid that day yet."""
     group, _, role = await _access(db, group_id, user)
     _officer(role)
@@ -439,7 +477,7 @@ async def record_day(group_id: int, data: DayIn, request: Request, db: AsyncSess
     book = await _ledger(db, group)
     members = {m.id: m for m in book.members if ledger_service.active(m, data.op_date)}
     already = {o.member_id for o in book.live("contribution") if o.op_date == data.op_date}
-    added = []
+    added, created = [], []
     for member_id in dict.fromkeys(data.member_ids):
         if member_id not in members:
             raise HTTPException(status_code=404, detail="Membre introuvable")
@@ -448,13 +486,33 @@ async def record_day(group_id: int, data: DayIn, request: Request, db: AsyncSess
         operation = TontineOperation(group_id=group_id, kind="contribution", member_id=member_id, op_date=data.op_date,
                                      amount=group.amount, method=data.method, recorded_by=user.id)
         db.add(operation)
+        created.append(operation)
         added.append(members[member_id].name)
     await db.commit()
     if added:
         await audit.record(db, _actor(request, user), "tontine.contribution",
                            f"{len(added)} cotisation(s) du {data.op_date:%d/%m/%Y} ({group.name})", "tontine_group", group.id,
                            {"membres": added, "montant": group.amount, "moyen": data.method})
-    return {"added": len(added), "skipped": len(data.member_ids) - len(added)}
+    receipts = await _send_receipts(db, group, created, user, background)
+    return {"added": len(added), "skipped": len(data.member_ids) - len(added), "receipts": receipts}
+
+
+@router.get("/{group_id}/statement.pdf")
+async def statement_pdf(group_id: int, month: Optional[str] = Query(None, pattern=MONTH), db: AsyncSession = Depends(get_db),
+                        user: UserResponse = Depends(get_current_user)):
+    """The month's statement of the association, to print or share at the meeting (officers)."""
+    group, _, role = await _access(db, group_id, user)
+    _officer(role)
+    month = month or today().strftime("%Y-%m")
+    book = await _ledger(db, group)
+    start, end = ledger_service.month_bounds(month)
+    names = {m.id: m.name for m in book.members}
+    operations = await _operations_out(db, [o for o in book.operations if start <= o.op_date <= end and o.kind != "contribution"], names)
+    pdf = build_statement(group=_group_out(group), month=month, members=book.member_rows(month, today()),
+                          summary=book.summary(month, today()), operations=operations, author=user.name or user.email)
+    safe = re.sub(r"[^a-z0-9]+", "-", group.name.lower()).strip("-")[:40] or "association"
+    return Response(content=pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="releve-{safe}-{month}.pdf"'})
 
 
 @router.post("/{group_id}/operations/{operation_id}/validate")
