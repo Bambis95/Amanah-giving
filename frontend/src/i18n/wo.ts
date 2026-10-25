@@ -22,6 +22,15 @@ const wo: Dictionary = {
     loggedOut: "Génn nga",
     openMenu: "Ubbi menu bi",
   },
+  install: {
+    button: "Sampal appli bi",
+    iosTitle: "Sampal SENJAPO ci sa iPhone",
+    iosIntro: "Ñetti bës ci Safari, te SENJAPO dina ubbiku ni appli ci sa ekraŋ.",
+    iosStep1: "Bësal butoŋu « Partager » (kaare bi am fett buy jëm kaw).",
+    iosStep2: "Tànnal « Sur l'écran d'accueil ».",
+    iosStep3: "Bësal « Ajouter » : nataalu SENJAPO dina feeñ ci sa ekraŋ.",
+    close: "Dégg naa",
+  },
   footer: {
     initiative: (brand, carrier, short, partner) =>
       `${brand} mooy liggéeyu ${carrier} (${short}), ànd ak ${partner}.`,

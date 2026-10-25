@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SENJAPO - Pas de connexion</title>
+    <style>
+      :root { --bg: #fafaf8; --fg: #1a1d24; --muted: #5b616e; --primary: #0b4ea2; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #0e1117; --fg: #f1f2f4; --muted: #a3a8b3; --primary: #5b9bf0; } }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+        background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-align: center; }
+      main { max-width: 360px; }
+      img { width: 96px; height: 96px; border-radius: 24px; }
+      h1 { font-size: 1.35rem; margin: 20px 0 8px; }
+      p { color: var(--muted); line-height: 1.5; margin: 0 0 24px; }
+      button { border: 0; border-radius: 12px; padding: 12px 22px; font-size: 1rem; font-weight: 600; color: #fff; background: var(--primary); cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/pwa-192.png" alt="SENJAPO" />
+      <h1>Pas de connexion internet</h1>
+      <p>SENJAPO a besoin d'internet pour afficher les campagnes et enregistrer les dons. Vérifiez votre connexion, puis réessayez.</p>
+      <button type="button" onclick="location.reload()">Réessayer</button>
+    </main>
+  </body>
+</html>

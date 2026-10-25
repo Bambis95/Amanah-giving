@@ -22,6 +22,15 @@ const ar: Dictionary = {
     loggedOut: "تم تسجيل خروجك",
     openMenu: "فتح القائمة",
   },
+  install: {
+    button: "ثبّت التطبيق",
+    iosTitle: "ثبّت SENJAPO على iPhone",
+    iosIntro: "ثلاث لمسات في Safari، ويُفتح SENJAPO كتطبيق من شاشتك الرئيسية.",
+    iosStep1: "اضغط زر المشاركة (المربع الذي به سهم نحو الأعلى).",
+    iosStep2: "اختر «إضافة إلى الشاشة الرئيسية».",
+    iosStep3: "اضغط «إضافة»: ستظهر أيقونة SENJAPO على شاشتك.",
+    close: "فهمت",
+  },
   footer: {
     initiative: (brand, carrier, short, partner) => `${brand} مبادرة من ${carrier} (${short})، بالشراكة مع ${partner}.`,
     card: "بطاقة بنكية",

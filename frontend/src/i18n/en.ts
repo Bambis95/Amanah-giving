@@ -21,6 +21,15 @@ const en: Dictionary = {
     loggedOut: "You are signed out",
     openMenu: "Open the menu",
   },
+  install: {
+    button: "Install the app",
+    iosTitle: "Install SENJAPO on your iPhone",
+    iosIntro: "Three taps in Safari, and SENJAPO opens like an app from your home screen.",
+    iosStep1: "Tap the Share button (the square with an arrow pointing up).",
+    iosStep2: "Choose “Add to Home Screen”.",
+    iosStep3: "Tap “Add”: the SENJAPO icon appears on your screen.",
+    close: "Got it",
+  },
   footer: {
     initiative: (brand, carrier, short, partner) =>
       `${brand} is an initiative of the ${carrier} (${short}), in partnership with ${partner}.`,

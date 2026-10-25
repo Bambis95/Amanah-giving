@@ -21,6 +21,16 @@ const fr = {
     loggedOut: "Vous êtes déconnecté",
     openMenu: "Ouvrir le menu",
   },
+  // "Installer l'application" (installable site; Safari's steps on iPhone)
+  install: {
+    button: "Installer l'application",
+    iosTitle: "Installer SENJAPO sur votre iPhone",
+    iosIntro: "Trois gestes dans Safari, et SENJAPO s'ouvre comme une application depuis votre écran d'accueil.",
+    iosStep1: "Touchez le bouton Partager (le carré avec une flèche vers le haut).",
+    iosStep2: "Choisissez « Sur l'écran d'accueil ».",
+    iosStep3: "Touchez « Ajouter » : l'icône SENJAPO apparaît sur votre écran.",
+    close: "J'ai compris",
+  },
   footer: {
     initiative: (brand: string, carrier: string, short: string, partner: string) =>
       `${brand} est une initiative du ${carrier} (${short}), en partenariat avec ${partner}.`,

@@ -128,6 +128,13 @@ services:
         source: /*
         destination: /index.html
     headers:
+      # The service worker and the app manifest are re-read at every visit, so an update reaches installed apps
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+      - path: /manifest.json
+        name: Cache-Control
+        value: no-cache
       - path: /*
         name: X-Frame-Options
         value: DENY

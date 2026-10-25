@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { BadgeCheck, Facebook, Instagram, Mail, MessageCircle, Music2, Phone, Youtube } from "lucide-react";
 import Logo from "@/components/Logo";
+import InstallAppButton from "@/components/InstallAppButton";
 import { telHref } from "@/lib/contact";
 import { useSiteSettings, whatsappHref } from "@/hooks/use-site-settings";
 import { BRAND_NAME, CARRIER_NAME, CARRIER_RECEIPT, CARRIER_SHORT, PARTNER_LEGAL, PARTNER_NAME } from "@/lib/brand";
@@ -51,6 +52,7 @@ export default function Footer() {
               <span className="rounded-md bg-[#FF6600]/20 px-3 py-1.5 text-xs font-medium text-[#FF8A3D]">Orange Money</span>
               <span className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium">{t.footer.card}</span>
             </div>
+            <InstallAppButton className="border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white" />
           </div>
 
           <nav aria-label="Liens du pied de page" className="space-y-4">

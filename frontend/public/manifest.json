@@ -1,0 +1,25 @@
+{
+  "name": "SENJAPO - Solidarité nationale",
+  "short_name": "SENJAPO",
+  "description": "Plateforme Nationale de Collecte, de Solidarité et de Développement portée par le CCES.",
+  "lang": "fr",
+  "dir": "auto",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAF8",
+  "theme_color": "#FAFAF8",
+  "categories": ["finance", "social"],
+  "icons": [
+    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Faire un don", "url": "/donate?source=app", "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }] },
+    { "name": "Campagnes", "url": "/projects?source=app", "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }] },
+    { "name": "Mon espace", "url": "/mon-espace?source=app", "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }] }
+  ]
+}
