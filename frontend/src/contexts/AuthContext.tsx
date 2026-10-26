@@ -46,18 +46,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Once signed in, read the whole account state (e.g. "must turn on the authenticator app"),
+  // which the sign-in answers leave out
+  const signedIn = useCallback(async (fallback: AuthUser) => {
+    const me = await api.getMe().catch(() => null);
+    const user = me ?? fallback;
+    setUser(user);
+    return user;
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.login(email, password);
     if ("code_required" in result) return result; // presidents and admins: second step
-    setUser(result.user);
-    return result.user;
-  }, []);
+    return signedIn(result.user);
+  }, [signedIn]);
 
   const loginWithCode = useCallback(async (challenge: string, code: string) => {
     const result = await api.loginWithCode(challenge, code);
-    setUser(result.user);
-    return result.user;
-  }, []);
+    return signedIn(result.user);
+  }, [signedIn]);
 
   const register = useCallback(
     async (email: string, password: string, name?: string) => {
@@ -72,9 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const acceptInvitation = useCallback(async (token: string, password: string, name?: string) => {
     const result = await api.acceptInvitation(token, password, name);
-    setUser(result.user);
-    return result.user;
-  }, []);
+    return signedIn(result.user);
+  }, [signedIn]);
 
   const logout = useCallback(async () => {
     try {

@@ -121,7 +121,8 @@ export default function AdminPage() {
   }, [manager]);
 
   // Team accounts need their authenticator app first: nothing is loaded before (the server refuses anyway)
-  const needs2fa = !!user?.two_factor_required;
+  // (or the server refused the data for that reason: an older session, a role just changed)
+  const needs2fa = !!user?.two_factor_required || !!error?.includes("double authentification");
 
   useEffect(() => {
     if (staff && !needs2fa) load();
