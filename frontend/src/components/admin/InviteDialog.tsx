@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { adminApi, Invitation, InvitationCreated, StaffRole } from "@/api";
 import { BRAND_NAME } from "@/lib/brand";
 import { assignableRoles, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
+import { whatsappLink } from "@/components/tontine/labels";
 
 interface InviteDialogProps {
   open: boolean;
@@ -29,6 +30,8 @@ export default function InviteDialog({ open, onOpenChange, currentRole, onInvite
   const roles = assignableRoles(currentRole).filter((r): r is StaffRole => r !== "user");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  // Only used to open WhatsApp on this person's chat (not stored)
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<StaffRole>(roles[0]);
   const [saving, setSaving] = useState(false);
   const [created, setCreated] = useState<InvitationCreated | null>(null);
@@ -37,6 +40,7 @@ export default function InviteDialog({ open, onOpenChange, currentRole, onInvite
   const reset = () => {
     setEmail("");
     setName("");
+    setPhone("");
     setRole(roles[0]);
     setCreated(null);
     setCopied(false);
@@ -73,8 +77,15 @@ export default function InviteDialog({ open, onOpenChange, currentRole, onInvite
   };
 
   const whatsappText = created
-    ? `Bonjour${created.invitation.name ? ` ${created.invitation.name}` : ""}, voici votre invitation à rejoindre l'équipe ${BRAND_NAME} (${ROLE_LABELS[created.invitation.role].toLowerCase()}). Ouvrez ce lien pour choisir votre mot de passe (valable 48 h) : ${created.invite_url}`
+    ? [
+        `Bonjour${created.invitation.name ? ` ${created.invitation.name}` : ""}, voici votre invitation à rejoindre l'équipe ${BRAND_NAME} (${ROLE_LABELS[created.invitation.role].toLowerCase()}).`,
+        "",
+        `1. Ouvrez ce lien et choisissez votre mot de passe (valable 48 h, un seul usage) : ${created.invite_url}`,
+        `2. Votre identifiant de connexion est : ${created.invitation.email}`,
+        "3. Pour avoir l'application sur votre téléphone : en bas de la page d'accueil, touchez « Installer l'application » (sur iPhone : dans Safari, Partager puis « Sur l'écran d'accueil »).",
+      ].join("\n")
     : "";
+  const whatsappHref = (phone && whatsappLink(phone, whatsappText)) || `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -106,7 +117,7 @@ export default function InviteDialog({ open, onOpenChange, currentRole, onInvite
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
               <Button asChild variant="outline">
-                <a href={`https://wa.me/?text=${encodeURIComponent(whatsappText)}`} target="_blank" rel="noopener noreferrer">
+                <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Envoyer par WhatsApp
                 </a>
@@ -138,6 +149,13 @@ export default function InviteDialog({ open, onOpenChange, currentRole, onInvite
               <div className="space-y-2">
                 <Label htmlFor="invite-name-field">Nom complet</Label>
                 <Input id="invite-name-field" placeholder="Prénom Nom" value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invite-phone-field">Numéro WhatsApp (pour lui envoyer le lien)</Label>
+                <Input id="invite-phone-field" type="tel" inputMode="tel" placeholder="77 123 45 67" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <p className="text-xs text-muted-foreground">
+                  L'email reste son identifiant de connexion ; il n'a pas besoin d'ouvrir sa boîte mail si vous lui envoyez le lien par WhatsApp.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="invite-role-field">Rôle</Label>
