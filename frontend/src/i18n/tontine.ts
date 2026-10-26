@@ -185,6 +185,8 @@ const fr = {
   reportPlaceholder: "Expliquez ce qui se passe",
   reportSend: "Envoyer le signalement",
   reportSent: "Signalement envoyé à SENJAPO",
+  twoFactorTip: "Conseil : protégez votre association en activant la double authentification (Google Authenticator) dans « Mon espace ». C'est facultatif.",
+  twoFactorLink: "Activer",
 };
 
 export type TontineText = typeof fr;
@@ -358,6 +360,8 @@ const wo: TontineText = {
   reportPlaceholder: "Waxal li xew",
   reportSend: "Yónne",
   reportSent: "Yónne nañu ko SENJAPO",
+  twoFactorTip: "Digal : aar sa mbootaay ak double authentification (Google Authenticator) ci « Mon espace ». Doo ko wara def.",
+  twoFactorLink: "Ubbi ko",
 };
 
 const en: TontineText = {
@@ -528,6 +532,8 @@ const en: TontineText = {
   reportPlaceholder: "Explain what is happening",
   reportSend: "Send the report",
   reportSent: "Report sent to SENJAPO",
+  twoFactorTip: "Tip: protect your group by turning on two-step sign-in (Google Authenticator) in « Mon espace ». It is optional.",
+  twoFactorLink: "Turn on",
 };
 
 const ar: TontineText = {
@@ -702,6 +708,8 @@ const ar: TontineText = {
   reportPlaceholder: "اشرحوا ما يحدث",
   reportSend: "إرسال البلاغ",
   reportSent: "أُرسل البلاغ إلى SENJAPO",
+  twoFactorTip: "نصيحة: احموا جمعيتكم بتفعيل التحقق بخطوتين (Google Authenticator) في «Mon espace». هذا اختياري.",
+  twoFactorLink: "تفعيل",
 };
 
 const TEXTS: Record<Lang, TontineText> = { fr, wo, en, ar };

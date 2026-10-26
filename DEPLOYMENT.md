@@ -181,8 +181,8 @@ Quand le compte marchand est validé :
   **Libre-service** : toute personne qui a un compte crée sa tontine ou son Mbootaay (après avoir
   accepté la charte) et en devient la présidente. **Gratuit** : une association, membres illimités.
   **Premium** (`TONTINE_PREMIUM_PRICE`, 10 000 F par mois) : plusieurs associations, reçus par email,
-  relevé PDF, alertes par email, badge « vérifiée » ; le président et le trésorier y activent la double
-  authentification. Le paiement se fait pour l'instant par Wave / Orange Money au numéro officiel :
+  relevé PDF, alertes par email, badge « vérifiée » ; la double authentification y est recommandée (pas
+  obligatoire) au président et au trésorier. Le paiement se fait pour l'instant par Wave / Orange Money au numéro officiel :
   *Tableau de bord → Associations* → « Premium + 1 mois » (ou 12). Le même onglet donne le badge
   « vérifiée » (après avoir vu la pièce d'identité de la présidence) et suspend une association
   douteuse. Les signalements des membres arrivent dans *Santé du système*.

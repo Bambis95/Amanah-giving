@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, ArrowLeft, Banknote, CheckCircle2, Crown, FileDown, HandHeart, Info, Landmark, Loader2, Lock, RotateCw, Wallet, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Banknote, CheckCircle2, Crown, FileDown, HandHeart, Info, Landmark, Loader2, Lock, RotateCw, ShieldCheck, Wallet, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -178,6 +178,13 @@ export default function TontineGroupPage() {
               <p className="text-xs text-muted-foreground">{tt.notVerifiedHelp}</p>
             )}
             <PremiumDialog group={g} open={upsell} onOpenChange={setUpsell} />
+            {g.premium && (view.role === "president" || view.role === "treasurer") && !user.two_factor && (
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/50 p-3 text-sm text-foreground">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                <span className="min-w-0 flex-1">{tt.twoFactorTip}</span>
+                <Link to="/mon-espace" className="font-medium text-primary underline-offset-4 hover:underline">{tt.twoFactorLink}</Link>
+              </div>
+            )}
 
             {officer && s ? (
               <>

@@ -182,14 +182,10 @@ def is_premium(group: TontineGroup) -> bool:
 
 
 def _writable(group: TontineGroup, role: str, user: UserResponse) -> None:
-    """Nothing is recorded in a suspended group; Premium officers sign in with their authenticator app."""
+    """Nothing is recorded in a suspended group. (The authenticator app is recommended to the officers, not
+    required: many treasurers are not used to it; the screens remind them.)"""
     if group.suspended_at:
         raise HTTPException(status_code=423, detail="Association suspendue par SENJAPO : contactez la plateforme")
-    if is_premium(group) and role in ("president", "treasurer") and not user.two_factor:
-        raise HTTPException(status_code=403, detail=(
-            "En Premium, le président et le trésorier activent la double authentification (Google Authenticator) "
-            "dans « Mon espace » avant d'enregistrer des opérations."
-        ))
 
 
 def _premium_only(group: TontineGroup, feature: str) -> None:

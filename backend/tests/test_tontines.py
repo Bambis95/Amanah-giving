@@ -245,11 +245,11 @@ def test_club_grants_premium_verifies_and_suspends(client, admin):
     listed = {g["id"]: g for g in client.get(f"{URL}/admin/all").json()}
     assert listed[gid]["premium"] and listed[gid]["president_contact"] == "mame@example.com"
 
-    # Premium: the president needs her authenticator app before recording
+    # Premium: the authenticator app is recommended, not required, to record
     assert login(client, "mame@example.com").status_code == 200
     me = client.get(f"{URL}/{gid}").json()["members"][0]["id"]
     r = client.post(f"{URL}/{gid}/operations", json={"kind": "contribution", "member_id": me, "op_date": "2026-10-19", "amount": 500})
-    assert r.status_code == 403 and "double authentification" in r.json()["detail"]
+    assert r.status_code == 201
 
     # Suspended: nothing can be recorded, the reason is shown
     assert login(client, "admin@example.com").status_code == 200
