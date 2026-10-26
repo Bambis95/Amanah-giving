@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import {
   Activity,
+  ArrowUpRight,
+  HandCoins,
   PiggyBank,
   AlertTriangle,
   Clock,
@@ -252,6 +254,21 @@ export default function AdminPage() {
 
   const role = (user.role as Role) in ROLE_LABELS ? (user.role as Role) : "user";
 
+  // The person's own tontines and mbootaay (a page of its own, outside the dashboard)
+  const tontinesLink = (layout: "sidebar" | "bar") => (
+    <Link
+      to="/tontines"
+      className={cn(
+        "flex items-center gap-2.5 rounded-lg text-sm font-medium text-foreground/75 transition-colors hover:bg-muted hover:text-foreground",
+        layout === "sidebar" ? "w-full px-3 py-2.5" : "h-10 shrink-0 px-3.5"
+      )}
+    >
+      <HandCoins className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <span className={layout === "sidebar" ? "flex-1 text-left" : ""}>Mes tontines</span>
+      <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+    </Link>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -265,6 +282,7 @@ export default function AdminPage() {
               Tableau de bord
             </p>
             {sections.map((s) => navButton(s, "sidebar"))}
+            <div className="border-t border-border pt-1">{tontinesLink("sidebar")}</div>
           </nav>
         </aside>
 
@@ -349,6 +367,7 @@ export default function AdminPage() {
                 className="scrollbar-hide -mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-border px-4 pb-3 sm:-mx-6 sm:px-6 lg:hidden"
               >
                 {sections.map((s) => navButton(s, "bar"))}
+                {tontinesLink("bar")}
               </nav>
 
               {manager && incidents.critical > 0 && current.id !== "system" && (
