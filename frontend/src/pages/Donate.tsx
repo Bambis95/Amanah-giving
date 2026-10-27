@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +81,7 @@ function formatCFA(amount: number) {
 }
 
 export default function DonatePage() {
+  useSeo({ title: "Faire un don en ligne par Wave, Orange Money ou carte", description: "Donnez en quelques secondes par Wave, Orange Money ou carte bancaire, même depuis la diaspora. Reçu par email et suivi transparent de l'utilisation des fonds.", path: "/donate" });
   const { t: dict } = useI18n();
   const t = dict.donate;
   const causes = causeOptions(dict.categories);

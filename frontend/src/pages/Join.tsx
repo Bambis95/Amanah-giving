@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ const emptyForm = {
 };
 
 export default function JoinPage() {
+  useSeo({ title: "Proposer une campagne de collecte", description: "Vous portez un projet solidaire au Sénégal ? Proposez votre campagne à SENJAPO : vérification, mise en ligne et collecte par Wave, Orange Money et carte.", path: "/proposer" });
   const source = useVisitSource();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);

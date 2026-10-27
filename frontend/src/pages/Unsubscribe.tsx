@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { unsubscribeNewsletter } from "@/api";
 
 /** One-click unsubscribe (link at the bottom of every newsletter) */
 export default function UnsubscribePage() {
+  useSeo({ title: "Désabonnement", noindex: true });
   const [params] = useSearchParams();
   const token = params.get("token") ?? "";
   const [state, setState] = useState<"loading" | "done" | "error">(token ? "loading" : "error");

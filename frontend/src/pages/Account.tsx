@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const METHODS: Record<string, string> = { wave: "Wave", orange_money: "Orange Mo
 
 /** A signed-in donor's own page: donations with their receipts, name, password */
 export default function AccountPage() {
+  useSeo({ title: "Mon espace", noindex: true });
   const { user, loading: authLoading, keepAlive } = useAuth();
   const [donations, setDonations] = useState<Donation[] | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);

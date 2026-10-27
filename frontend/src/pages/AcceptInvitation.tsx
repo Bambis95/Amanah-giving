@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { BRAND_NAME } from "@/lib/brand";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
 
 export default function AcceptInvitationPage() {
+  useSeo({ title: "Invitation", noindex: true });
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const navigate = useNavigate();

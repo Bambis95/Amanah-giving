@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const PENDING_RETRIES = 8;
 const RETRY_DELAY_MS = 5000;
 
 export default function PaymentSuccessPage() {
+  useSeo({ title: "Merci pour votre don", noindex: true });
   const [searchParams] = useSearchParams();
   const t = useI18n().t.success;
   const sessionId = searchParams.get("session_id"); // Stripe

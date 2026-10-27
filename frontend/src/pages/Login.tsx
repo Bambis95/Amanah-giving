@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import LoginCodeStep from "@/components/LoginCodeStep";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
+  useSeo({ title: "Connexion", noindex: true });
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,7 +27,7 @@ export default function LoginPage() {
   const from = (location.state as { from?: string } | null)?.from || "/";
   const redirectTo = isStaff(user?.role) ? "/admin" : from;
 
-  const [tab, setTab] = useState("login");
+  const [tab, setTab] = useState((location.state as { tab?: string } | null)?.tab === "register" ? "register" : "login");
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

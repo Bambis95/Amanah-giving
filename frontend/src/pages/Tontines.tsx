@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import { tontineApi, TontineGroup, TontineKind } from "@/api";
 import { formatCFA } from "@/components/admin/format";
 import { useTontineText } from "@/i18n/tontine";
 import { GroupBadges } from "@/components/tontine/GroupStatus";
+import TontinesLanding from "@/components/tontine/TontinesLanding";
+import { useSeo } from "@/lib/seo";
 
 const EMPTY = {
   name: "", kind: "savings", amount: "500", frequency: "daily", bank_name: "", bank_account: "",
@@ -143,6 +145,11 @@ function CreateDialog({ open, onOpenChange, onCreated, manager }: {
 
 /** "Mes tontines": the associations this person belongs to (all of them for the club's president and admins) */
 export default function TontinesPage() {
+  useSeo({
+    title: "Tontine et mbootaay en ligne : le cahier numérique de votre association",
+    description: "Gérez votre tontine, natt ou mbootaay sur votre téléphone : cotisations, reçus WhatsApp, dépôts vérifiés par deux personnes, relevé PDF. Gratuit, en français et en wolof.",
+    path: "/tontines",
+  });
   const { user, loading: authLoading } = useAuth();
   const { tt } = useTontineText();
   const [data, setData] = useState<{ can_create: boolean; is_manager: boolean; premium_price: number; groups: TontineGroup[] } | null>(null);
@@ -156,7 +163,8 @@ export default function TontinesPage() {
   }, [user, load]);
 
   if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (!user) return <Navigate to="/login" replace state={{ from: "/tontines" }} />;
+  // Visitors (and search engines) get the presentation page; members get their groups
+  if (!user) return <TontinesLanding />;
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,7 @@ function StatTile({ icon: Icon, label, value, detail, tone }: StatTileProps) {
 }
 
 export default function AdminPage() {
+  useSeo({ title: "Tableau de bord", noindex: true });
   const { user, loading: authLoading } = useAuth();
   const [donations, setDonations] = useState<Donation[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);

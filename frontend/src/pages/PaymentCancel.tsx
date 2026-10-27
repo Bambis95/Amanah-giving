@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { XCircle, Heart, ArrowLeft } from "lucide-react";
 import { useI18n } from "@/i18n";
 
 export default function PaymentCancelPage() {
+  useSeo({ title: "Paiement annulé", noindex: true });
   const { t } = useI18n();
   return (
     <div className="min-h-screen bg-background">

@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +17,7 @@ const statusLabels: Record<string, string> = { active: "En cours", completed: "T
 
 // Public accountability page: platform totals and, for each public project, collected vs goal
 export default function TransparencyPage() {
+  useSeo({ title: "Transparence : comment les dons sont utilisés", description: "Chaque franc compte : montants collectés, dépenses par campagne et justificatifs. La transparence financière de la plateforme SENJAPO.", path: "/transparence" });
   const { stats, failed } = usePublicStats();
   const { platformFee } = useSiteStatus();
   const [projects, setProjects] = useState<Project[] | null>(null);

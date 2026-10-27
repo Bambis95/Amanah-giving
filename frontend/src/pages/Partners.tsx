@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const PARTNERSHIP_KINDS = [
 const emptyForm = { organization: "", contact: "", role: "", email: "", phone: "", kind: "", message: "" };
 
 export default function PartnersPage() {
+  useSeo({ title: "Devenir partenaire de SENJAPO", description: "Entreprises, fondations, ONG et institutions : soutenez des projets vérifiés au Sénégal et donnez de la visibilité à votre engagement avec SENJAPO.", path: "/partenaires" });
   const source = useVisitSource();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);

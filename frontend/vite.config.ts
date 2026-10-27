@@ -4,16 +4,52 @@ import path from 'path';
 import { viteSourceLocator } from '@metagptx/vite-plugin-source-locator';
 import { atoms } from '@metagptx/web-sdk/plugins';
 
-// Link previews (WhatsApp, Facebook…) need absolute addresses: set VITE_SITE_URL
-// (e.g. https://www.cndsa.org) when building the site; without it the tags are left out.
+// Link previews (WhatsApp, Facebook…) and search engines need absolute addresses: set VITE_SITE_URL
+// (e.g. https://www.senjapo.sn) when building the site; without it those tags are left out.
+// VITE_GOOGLE_SITE_VERIFICATION: the code Google Search Console gives to prove the site is yours.
 function socialPreview(): Plugin {
   const site = (process.env.VITE_SITE_URL || '').trim().replace(/\/+$/, '');
+  const googleCode = (process.env.VITE_GOOGLE_SITE_VERIFICATION || '').trim();
   return {
     name: 'social-preview',
     transformIndexHtml() {
-      if (!/^https?:\/\//.test(site)) return [];
+      const tags = [];
+      if (googleCode) tags.push({ tag: 'meta', attrs: { name: 'google-site-verification', content: googleCode }, injectTo: 'head' as const });
+      if (!/^https?:\/\//.test(site)) return tags;
       const meta = (property: string, content: string) => ({ tag: 'meta', attrs: { property, content }, injectTo: 'head' as const });
-      return [meta('og:url', `${site}/`), meta('og:image', `${site}/og-image.jpg`)];
+      tags.push(meta('og:url', `${site}/`), meta('og:image', `${site}/og-image.jpg`));
+      tags.push({ tag: 'link', attrs: { rel: 'canonical', href: `${site}/` }, injectTo: 'head' as const });
+      // Who runs the site, for search engines (knowledge panel, logo in results)
+      const organization = {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'NGO',
+            '@id': `${site}/#organisation`,
+            name: 'SENJAPO',
+            alternateName: 'Plateforme Nationale de Collecte, de Solidarité et de Développement',
+            url: `${site}/`,
+            logo: `${site}/logo-senjapo.jpg`,
+            image: `${site}/og-image.jpg`,
+            description: 'Plateforme nationale de dons en ligne (Wave, Orange Money, carte) pour des projets solidaires vérifiés au Sénégal, et cahier numérique des tontines et mbootaay.',
+            email: 'ccecce035@gmail.com',
+            telephone: '+221785718281',
+            areaServed: { '@type': 'Country', name: 'Sénégal' },
+            address: { '@type': 'PostalAddress', addressLocality: 'Thiès', addressCountry: 'SN' },
+            parentOrganization: { '@type': 'Organization', name: 'Club des Créateurs et Entrepreneurs du Sénégal (CCES)' },
+          },
+          {
+            '@type': 'WebSite',
+            '@id': `${site}/#site`,
+            url: `${site}/`,
+            name: 'SENJAPO',
+            inLanguage: ['fr', 'wo', 'en', 'ar'],
+            publisher: { '@id': `${site}/#organisation` },
+          },
+        ],
+      };
+      tags.push({ tag: 'script', attrs: { type: 'application/ld+json' }, children: JSON.stringify(organization), injectTo: 'head' as const });
+      return tags;
     },
   };
 }

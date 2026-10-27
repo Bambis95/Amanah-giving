@@ -123,6 +123,13 @@ services:
       - type: rewrite
         source: /api/*
         destination: https://senjapo-api.onrender.com/api/*
+      # Search engines: built by the API from FRONTEND_URL, with every campaign (routers/seo.py)
+      - type: rewrite
+        source: /robots.txt
+        destination: https://senjapo-api.onrender.com/api/v1/seo/robots.txt
+      - type: rewrite
+        source: /sitemap.xml
+        destination: https://senjapo-api.onrender.com/api/v1/seo/sitemap.xml
       # Single-page app: every other path (/projects, /admin...) is served by index.html
       - type: rewrite
         source: /*
@@ -150,4 +157,7 @@ services:
       # No VITE_API_BASE_URL: the site calls /api on its own address (relayed above).
       # The site's address (https://senjapo.onrender.com, later your domain): absolute links for the WhatsApp / social preview image
       - key: VITE_SITE_URL
+        sync: false
+      # Google Search Console: the "HTML tag" code (content="...") to prove the site is yours; empty = no tag
+      - key: VITE_GOOGLE_SITE_VERIFICATION
         sync: false

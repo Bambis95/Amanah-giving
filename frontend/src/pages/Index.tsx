@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ const STEP_TONES: Tone[] = ["primary", "highlight", "info"];
 const isOpen = (p: Project) => !p.status || p.status === "active";
 
 export default function IndexPage() {
+  useSeo({ title: "SENJAPO – Plateforme nationale de dons et de solidarité au Sénégal", description: "Faites un don en ligne par Wave, Orange Money ou carte bancaire pour des projets vérifiés au Sénégal : jeunes, Daaras, artisans, agriculteurs, femmes. Une initiative du CCES.", path: "/" });
   const [featured, setFeatured] = useState<Project[] | null>(null);
   const { stats: platformStats, failed: statsFailed } = usePublicStats();
   const { lang, t: dict } = useI18n();

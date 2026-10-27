@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import { api } from "@/api";
 
 export default function ResetPasswordPage() {
+  useSeo({ title: "Nouveau mot de passe", noindex: true });
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const navigate = useNavigate();

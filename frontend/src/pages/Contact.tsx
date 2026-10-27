@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,6 +69,7 @@ const contactCards = (site: SiteSettings, t: Dictionary["contact"]) => [
 const SUBJECTS = ["general", "donation", "project", "partnership", "volunteer", "other"];
 
 export default function ContactPage() {
+  useSeo({ title: "Contacter SENJAPO", description: "Une question sur un don, une campagne ou un partenariat ? Écrivez à l'équipe SENJAPO par formulaire, WhatsApp, téléphone ou email.", path: "/contact" });
   const t = useI18n().t.contact;
   const contactInfo = contactCards(useSiteSettings(), t);
   const [submitted, setSubmitted] = useState(false);

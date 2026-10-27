@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -43,6 +44,21 @@ export default function ProjectsPage() {
     if (!loading && sharedId) document.getElementById(`campagne-${sharedId}`)?.scrollIntoView({ block: "center" });
   }, [loading, sharedId]);
   const [total, setTotal] = useState(0);
+
+  // A shared campaign gets its own title, description and address in search results and previews
+  const shared = sharedId ? projects.find((p) => p.id === sharedId) : undefined;
+  useSeo(shared
+    ? {
+        title: `${shared.title} – campagne de solidarité`,
+        description: (shared.description || "").replace(/\s+/g, " ").slice(0, 160),
+        path: `/projects?campagne=${shared.id}`,
+        image: shared.image && /^(https?:)?\//.test(shared.image) ? shared.image : undefined,
+      }
+    : {
+        title: "Campagnes de solidarité à soutenir au Sénégal",
+        description: "Découvrez les campagnes vérifiées de SENJAPO et suivez chaque collecte : formation des jeunes, Daaras, artisans, agriculteurs, groupements de femmes, projets communautaires.",
+        path: "/projects",
+      });
 
   useEffect(() => {
     async function fetchProjects() {

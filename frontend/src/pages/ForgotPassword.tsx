@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import { api } from "@/api";
 
 export default function ForgotPasswordPage() {
+  useSeo({ title: "Mot de passe oublié", noindex: true });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sentMessage, setSentMessage] = useState<string | null>(null);

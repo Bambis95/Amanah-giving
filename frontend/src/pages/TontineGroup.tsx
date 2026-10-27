@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ function Alerts({ summary, lateCount }: { summary: TontineSummary; lateCount: nu
 
 /** One association: the officers' ledger (day sheet, members, operations), or a member's own account */
 export default function TontineGroupPage() {
+  useSeo({ title: "Mes tontines", noindex: true });
   const { id } = useParams();
   const groupId = Number(id);
   const { user, loading: authLoading } = useAuth();

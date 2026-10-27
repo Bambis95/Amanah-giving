@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import MembershipFeeCard from "@/components/MembershipFeeCard";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -34,6 +35,7 @@ const emptyForm = {
 };
 
 export default function MembershipPage() {
+  useSeo({ title: "Adhérer au Club des Créateurs et Entrepreneurs du Sénégal (CCES)", description: "Rejoignez le CCES : réseau d'entrepreneurs et de créateurs engagés pour le développement du Sénégal. Adhésion et cotisation en ligne.", path: "/adherer" });
   const source = useVisitSource();
   const { t: dict } = useI18n();
   const t = dict.membership;

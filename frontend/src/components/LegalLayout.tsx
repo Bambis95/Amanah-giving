@@ -1,8 +1,9 @@
-import { ReactNode, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { ReactNode } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { BRAND_NAME } from "@/lib/brand";
+import { useSeo } from "@/lib/seo";
 
 export interface LegalSection {
   id: string;
@@ -19,13 +20,8 @@ interface LegalLayoutProps {
 
 // Shared page for legal texts: header, table of contents (sticky on large screens) and numbered sections
 export default function LegalLayout({ title, updated, intro, sections }: LegalLayoutProps) {
-  useEffect(() => {
-    const previous = document.title;
-    document.title = `${title} · ${BRAND_NAME}`;
-    return () => {
-      document.title = previous;
-    };
-  }, [title]);
+  const { pathname } = useLocation();
+  useSeo({ title, description: `${title} de la plateforme ${BRAND_NAME}.`, path: pathname });
 
   return (
     <div className="min-h-screen bg-background">

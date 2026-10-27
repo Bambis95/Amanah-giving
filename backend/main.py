@@ -148,6 +148,7 @@ from routers.two_factor import admin_router as two_factor_admin_router
 from routers.two_factor import router as two_factor_router
 from routers.system import public_router as monitoring_public_router, router as system_router
 from routers.tontines import router as tontines_router
+from routers.seo import router as seo_router
 from services.backup import backup_loop
 
 
@@ -184,6 +185,7 @@ app.include_router(two_factor_admin_router)
 app.include_router(system_router)
 app.include_router(monitoring_public_router)
 app.include_router(tontines_router)
+app.include_router(seo_router)
 
 
 # ============================================================

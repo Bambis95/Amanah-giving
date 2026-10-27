@@ -1,3 +1,4 @@
+import { useSeo } from "@/lib/seo";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -34,6 +35,7 @@ import {
 const COMMITMENT_ICONS = [FileSearch, Route, Eye, Megaphone];
 
 export default function AboutPage() {
+  useSeo({ title: "À propos : le CCES et la plateforme SENJAPO", description: "SENJAPO est la plateforme nationale de collecte du Club des Créateurs et Entrepreneurs du Sénégal (CCES), en partenariat avec Diaayma Local. Mission, équipe et engagements.", path: "/about" });
   const site = useSiteSettings();
   const { t: dict } = useI18n();
   const t = dict.about;
